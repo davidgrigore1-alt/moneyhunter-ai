@@ -44,46 +44,51 @@ function loadTsModule(relativePath) {
 test("marketing registry defines the approved anchors in order", () => {
   const { marketingSections } = loadTsModule("src/lib/marketing/navigation.ts");
 
-  assert.equal(JSON.stringify(marketingSections.map((item) => item.id)), JSON.stringify(["produs", "cum-functioneaza", "integrari", "preturi", "securitate", "intrebari"]));
-  assert.equal(JSON.stringify(marketingSections.map((item) => item.href)), JSON.stringify(["#produs", "#cum-functioneaza", "#integrari", "#preturi", "#securitate", "#intrebari"]));
-  assert.equal(JSON.stringify(marketingSections.map((item) => item.label)), JSON.stringify(["Produs", "Cum funcționează", "Integrări", "Prețuri", "Securitate", "Întrebări"]));
+  assert.equal(JSON.stringify(marketingSections.map((item) => item.id)), JSON.stringify(["produs", "cum-functioneaza", "integrari", "securitate", "intrebari"]));
+  assert.equal(JSON.stringify(marketingSections.map((item) => item.href)), JSON.stringify(["#produs", "#cum-functioneaza", "#integrari", "#securitate", "#intrebari"]));
+  assert.equal(JSON.stringify(marketingSections.map((item) => item.label)), JSON.stringify(["Produs", "Cum funcționează", "Integrări", "Securitate", "Întrebări"]));
 });
 
-test("landing page uses centralized navigation and truthful pricing/copy", () => {
+test("landing centralizes navigation, removes public pricing and preserves protected plans", () => {
   const page = fs.readFileSync(path.resolve("src/app/(marketing)/page.tsx"), "utf8");
   const nav = fs.readFileSync(path.resolve("src/components/marketing/MarketingNav.tsx"), "utf8");
   const plans = fs.readFileSync(path.resolve("src/lib/billing/plans.ts"), "utf8");
+  const chapters = fs.readFileSync(path.resolve("src/components/marketing/LandingChapters.tsx"), "utf8");
+  const theatre = fs.readFileSync(path.resolve("src/components/marketing/ProductTheatre.tsx"), "utf8");
 
   assert.equal(nav.includes("marketingSections.map"), true);
-  for (const anchor of ["produs", "cum-functioneaza", "integrari", "preturi", "securitate", "intrebari"]) {
-    assert.equal(page.includes(`id="${anchor}"`), true, `landing must expose the ${anchor} navigation target`);
+  for (const anchor of ["produs", "cum-functioneaza", "integrari", "securitate", "intrebari"]) {
+    assert.equal(`${page}\n${chapters}\n${theatre}`.includes(`id="${anchor}"`), true, `landing must expose the ${anchor} navigation target`);
   }
   assert.equal(plans.includes('title: "Start"'), true);
   assert.equal(plans.includes('title: "Growth"'), true);
   assert.equal(plans.includes('title: "Scale"'), true);
   assert.equal(plans.includes('title: "Enterprise"'), true);
-  assert.equal(page.includes("MarketingPricingGrid"), true, "pricing uses the interactive monthly/annual grid");
+  assert.equal(/MarketingPricingGrid|#preturi|select_plan|OfferCatalog|priceCurrency/.test(`${page}\n${chapters}\n${nav}`), false, "public landing has no pricing or plan selection; protected plans remain intact");
   assert.equal(page.includes("FAQPage"), false);
   assert.equal(page.includes("fake"), false);
-  assert.equal(page.includes("Estimările rămân separate de venitul confirmat"), true);
-  assert.equal(page.includes("AI-ul explică. Echipa decide."), true);
-  assert.equal(page.includes("Aprobarea rămâne explicit umană."), true);
+  assert.equal(chapters.includes("Venitul se confirmă prin rezultatul comercial"), true);
+  assert.equal(theatre.includes("Revizuire necesară"), true);
+  assert.equal(theatre.includes("Pregătit · neexecutat"), true);
 });
 
 test("marketing hero keeps a semantic work surface and progressive motion", () => {
   const page = fs.readFileSync(path.resolve("src/app/(marketing)/page.tsx"), "utf8");
   const nav = fs.readFileSync(path.resolve("src/components/marketing/MarketingNav.tsx"), "utf8");
-  const preview = fs.readFileSync(path.resolve("src/components/marketing/ProductPreview.tsx"), "utf8");
+  const preview = fs.readFileSync(path.resolve("src/components/marketing/ProductTheatre.tsx"), "utf8");
   const showcases = fs.readFileSync(path.resolve("src/components/marketing/ProductShowcases.tsx"), "utf8");
   const reveal = fs.readFileSync(path.resolve("src/components/marketing/Reveal.tsx"), "utf8");
 
-  assert.equal(page.includes("marketing-canvas"), true, "marketing pages must opt into the isolated light token context");
-  assert.equal(preview.includes("data-marketing-product-frame"), true);
-  assert.equal(preview.includes("Context pentru decizie"), true);
-  assert.equal(preview.includes("Aprobare umană"), true);
-  assert.equal(preview.indexOf("Necesită atenție") < preview.indexOf("Context pentru decizie"), true, "queue content must precede its supporting detail in DOM order");
-  assert.equal(nav.includes("menuPanelRef"), true, "the mobile dialog must keep keyboard focus inside its panel");
-  assert.equal(nav.includes('event.key !== "Tab"'), true);
+  assert.equal(page.includes("s.canvas"), true, "public landing opts into its CSS module, not protected theme tokens");
+  assert.equal(preview.includes("Exemplu demonstrativ"), true);
+  assert.equal(preview.includes('aria-label="Etapele demonstrației"'), true);
+  assert.equal(preview.includes('data-theatre-viewport'), true);
+  assert.equal(preview.indexOf('<AnswerScene') < preview.indexOf('id="hero-evidence"'), true, "the answer and case precede their external source inspector in DOM order");
+  assert.equal(preview.includes('aria-hidden={beat !== 1} inert={beat !== 1}'), true, "an inactive editable scene cannot receive keyboard focus");
+  assert.equal(nav.includes("showModal()"), true, "native modal contains focus and makes the background inert");
+  assert.equal(nav.includes("opener.current?.focus()"), true);
+  assert.equal(preview.includes("document.hidden"), true);
+  assert.equal(preview.includes("prefers-reduced-motion: reduce"), true);
   assert.equal(reveal.includes("useState(true)"), true, "marketing content must remain visible before enhancement");
   assert.equal(reveal.includes("prefers-reduced-motion: reduce"), true);
   assert.equal(reveal.includes("startsInViewport"), true);

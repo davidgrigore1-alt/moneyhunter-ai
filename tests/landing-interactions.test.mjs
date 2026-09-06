@@ -151,12 +151,40 @@ test('unconnected public form fails closed and renders accessible isolated statu
 });
 test('landing has no provider or private-data boundary and all primary CTAs share one route',()=>{
   const root='src/components/marketing/';
-  for(const file of ['ProductTheatre.tsx','TheatreScenes.tsx','DemoRequestForm.tsx']) {
+  for(const file of ['ProductTheatre.tsx','TheatreScenes.tsx','WorkbookEvidence.tsx','WorkflowDemo.tsx','LandingChapters.tsx','LandingVisuals.tsx','ChapterMotion.tsx','DemoRequestForm.tsx']) {
     const source=fs.readFileSync(root+file,'utf8');
     assert.doesNotMatch(source,/fetch\(|localStorage|sessionStorage|supabase|openai|\/api\//i,file);
   }
   const page=fs.readFileSync('src/app/(marketing)/solicita-demo/page.tsx','utf8');
   assert.match(page,/<DemoRequestForm\s*\/>/);
   assert.equal(load('src/lib/marketing/conversion.ts').demoRequestHref,'/solicita-demo');
-  for(const file of ['src/app/(marketing)/page.tsx',root+'MarketingNav.tsx']) assert.match(fs.readFileSync(file,'utf8'),/<DemoRequestLink/);
+  for(const file of ['src/app/(marketing)/page.tsx',root+'MarketingNav.tsx',root+'LandingChapters.tsx']) assert.match(fs.readFileSync(file,'utf8'),/<DemoRequestLink/);
+});
+
+test('lower chapters render meaningful final states before client enhancement',()=>{
+  const {LandingChapters}=load('src/components/marketing/LandingChapters.tsx');
+  const html=renderToStaticMarkup(React.createElement(LandingChapters));
+  assert.equal((html.match(/data-chapter-motion=/g)||[]).length,6);
+  assert.equal((html.match(/data-phase="6" data-playing="false"/g)||[]).length,6);
+  assert.equal((html.match(/<details>/g)||[]).length,7);
+  for(const id of ['produs','dovezi','executie','integrari','masurare','securitate','intrebari','urmatorul-pas','workbook-range']) assert.ok(html.includes(`id="${id}"`),id);
+  assert.match(html,/href="#workbook-range"/);
+  assert.match(html,/Încă nedovedit/);
+  assert.match(html,/fără istoric presupus/);
+  assert.doesNotMatch(html,/type="submit"|<iframe|Redă|Parcurge/);
+});
+
+test('evidence and measurement preserve the approved illustrative case and source coordinates',()=>{
+  const {WorkbookEvidence}=load('src/components/marketing/WorkbookEvidence.tsx');
+  const {MeasurementScene}=load('src/components/marketing/LandingVisuals.tsx');
+  const workbook=renderToStaticMarkup(React.createElement(WorkbookEvidence));
+  const measurement=renderToStaticMarkup(React.createElement(MeasurementScene));
+  assert.match(workbook,/<th scope="row">8<\/th><td>Atelier Nord<\/td><td>Mentenanță<\/td><td>42\.000<\/td><td>Ana Popescu<\/td><td>04 sept\.<\/td>/);
+  assert.match(workbook,/<th scope="row">9<\/th><td>Meridian Systems/);
+  assert.match(workbook,/<th scope="row">10<\/th><td>Vector Industrial/);
+  assert.match(workbook,/Versiunea 3/);
+  assert.match(workbook,/A8:F8/);
+  assert.match(measurement,/930\.000/);
+  assert.match(measurement,/282\.000/);
+  assert.match(measurement,/nu există un rezultat comercial confirmat/);
 });

@@ -7,39 +7,30 @@ const read = (relativePath) => fs.readFileSync(path.resolve(relativePath), "utf8
 
 test("landing presents an evidence-led and human-controlled commercial path", () => {
   const landing = read("src/app/(marketing)/page.tsx");
-  const visuals = read("src/components/marketing/LandingV3Visuals.tsx");
+  const visuals = ["LandingChapters", "LandingVisuals", "ProductTheatre", "WorkbookEvidence", "WorkflowDemo"].map(name => read(`src/components/marketing/${name}.tsx`)).join("\n");
   const source = `${landing}\n${visuals}`;
 
-  assert.match(landing, /Vezi ce trebuie făcut înainte să pierzi oportunitatea/);
-  assert.match(landing, /AI-ul explică\. Echipa decide\./);
-  assert.match(source, /Dovadă lângă decizie/);
-  assert.match(source, /Control înainte de efect/);
-  assert.match(landing, /Estimările rămân separate de venitul confirmat/);
-  assert.match(source, /Nu pornește o execuție externă și nu ocolește aprobarea/);
-  assert.match(source, /Disponibil acum/);
-  assert.match(source, /Disponibil prin implementare/);
-  assert.match(source, /Un logo din ecosistem nu înseamnă automat că integrarea este deja activă/);
+  assert.match(source, /Exemplu demonstrativ/);
+  assert.match(source, /Revizuire necesară/);
+  assert.match(source, /estimarea, starea intervenției și confirmarea comercială distincte/);
+  assert.match(source, /Analiza și pregătirea nu trimit mesaje/);
+  assert.match(source, /Google Workspace: de validat la conectare/);
+  assert.match(source, /Conectări neimplementate/);
+  assert.match(source, /fără a implica un parteneriat/);
   assert.doesNotMatch(source, /ROI garantat|venit garantat|recuperare automată|Inteligență AI/i);
   assert.doesNotMatch(source, /live Gmail|live Google Calendar|voce activă/i);
 });
 
 test("landing workflow and relationship visuals preserve visible human-controlled semantics", () => {
-  const landing = read("src/app/(marketing)/page.tsx");
-  const visuals = read("src/components/marketing/LandingV3Visuals.tsx");
-  const globals = read("src/app/globals.css");
+  const visuals = read("src/components/marketing/WorkflowDemo.tsx");
+  const styles = read("src/components/marketing/chapters.module.css");
 
-  assert.match(landing, /SectionHeading compact eyebrow="Procese repetabile"/);
-  assert.match(visuals, /Construcția workflow-ului/);
-  assert.match(visuals, /Follow-up depășit/);
-  assert.match(visuals, /Revizuire necesară/);
-  assert.match(visuals, /Pregătește revenirea/);
-  assert.match(visuals, /Solicită context/);
-  assert.match(visuals, /Pregătit pentru revizuire · neexecutat/);
-  assert.match(visuals, /Patru relații verificate converg într-o singură decizie/);
-  assert.match(visuals, /Relație → context → decizie/);
-  assert.match(globals, /landing-v3-workflow-connectors/);
-  assert.match(globals, /landing-v3-workflow-build-node/);
-  assert.match(globals, /prefers-reduced-motion: reduce[\s\S]*landing-v3-workflow-build-node/);
+  for (const label of ["Semnal observat", "Context verificat", "Draft pregătit", "Revizuire umană", "Cere context"]) assert.ok(visuals.includes(label));
+  assert.match(visuals, /Pregătit · neexecutat/);
+  assert.match(visuals, /Pregătirea se oprește aici. Nicio execuție externă/);
+  assert.match(styles, /\.flowPath/);
+  assert.match(styles, /\.portIn/);
+  assert.match(styles, /prefers-reduced-motion:\s*reduce/);
   assert.doesNotMatch(visuals, /Email sent|Sequence launched|Automatically executed/);
 });
 

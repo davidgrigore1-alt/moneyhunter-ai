@@ -4,6 +4,7 @@ import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { DemoRequestLink } from "@/components/marketing/DemoRequestLink";
 import { LiquidLink } from "@/components/marketing/LiquidLink";
 import { ProductTheatre } from "@/components/marketing/ProductTheatre";
+import { LandingChapters, MarketingFooter } from "@/components/marketing/LandingChapters";
 import { marketingFont } from "@/components/marketing/font";
 import { canonicalUrl } from "@/lib/seo";
 import s from "@/components/marketing/landing.module.css";
@@ -27,6 +28,6 @@ export default function LandingPage() {
         <div className={h.heroActions}><DemoRequestLink material="primary" /><LiquidLink href="#cum-functioneaza" variant="quiet">Vezi cum funcționează<ArrowDownIcon aria-hidden="true" /></LiquidLink></div>
         <p className={h.heroNote}>Dovezi la vedere. Decizia la tine.</p>
       </div><ProductTheatre />
-    </div></section></main>
+    </div></section><LandingChapters /></main><MarketingFooter />
   </div>;
 }

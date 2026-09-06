@@ -6,14 +6,13 @@ import test from "node:test";
 const read = (file) => fs.readFileSync(path.resolve(file), "utf8");
 
 test("Phase 2 positioning defines commercial recovery without debt ambiguity", () => {
-  const landing = read("src/app/(marketing)/page.tsx");
-  const visuals = read("src/components/marketing/LandingV3Visuals.tsx");
+  const landing = read("src/components/marketing/LandingChapters.tsx");
+  const visuals = ["ProductTheatre", "TheatreScenes"].map(name => read(`src/components/marketing/${name}.tsx`)).join("\n");
   const plans = read("src/lib/billing/plans.ts");
-  assert.match(landing, /este construit în primul rând pentru execuție comercială/);
-  assert.match(landing, /CRM-ul îți spune ce ai\. ReveNew îți arată unde se rupe execuția/);
-  assert.match(landing, /AI-ul explică\. Echipa decide\./);
-  assert.match(visuals, /Nicio trimitere automată/);
-  assert.match(visuals, /Pregătit pentru revizuire/);
+  assert.match(landing, /firul execuției: ce necesită atenție, cine răspunde și care este următorul pas/);
+  assert.match(landing, /instrumentul pentru facturare și procese fiscale/);
+  assert.match(visuals, /Date ilustrative · nicio acțiune externă executată/);
+  assert.match(visuals, /Așteaptă revizuirea umană/);
   for (const plan of ["Start", "Growth", "Scale", "Enterprise"]) assert.match(plans, new RegExp(`title: "${plan}"`));
   assert.match(plans, /monthlyPrice: 59/);
   assert.match(plans, /annualPrice: 103/);
