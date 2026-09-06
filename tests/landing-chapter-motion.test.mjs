@@ -18,7 +18,7 @@ const rules = compile('src/lib/marketing/chapter-motion.ts', {});
 
 function harness(reduced = false) {
   const effects = [], elements = [], frames = new Map(), documentListeners = new Map(), mediaListeners = new Map();
-  let observer, id = 0, now = 0, refs = 0;
+  let observer, id = 0, now = 0;
   const document = { hidden: false, addEventListener: (name, fn) => documentListeners.set(name, fn), removeEventListener: name => documentListeners.delete(name) };
   const media = { matches: reduced, addEventListener: (name, fn) => mediaListeners.set(name, fn), removeEventListener: name => mediaListeners.delete(name) };
   class Observer {
@@ -29,10 +29,11 @@ function harness(reduced = false) {
   }
   const { ChapterMotion } = compile('src/components/marketing/ChapterMotion.tsx', {
     react: {
-      useRef: () => { const element = { dataset: {}, querySelectorAll:()=>[] }; if (refs++ % 2 === 0) elements.push(element); return { current: element }; },
+      useRef: () => { const element = { dataset: {}, querySelectorAll:()=>[] }; elements.push(element); return { current: element }; },
       useEffect: fn => effects.push(fn)
     },
     '@/lib/marketing/chapter-motion': rules,
+    '@/lib/marketing/source-convergence': compile('src/lib/marketing/source-convergence.ts',{}),
     '@/lib/marketing/flow-timing': compile('src/lib/marketing/flow-timing.ts',{}),
     './chapters.module.css': { default: { motion: 'motion' } }
   }, {
@@ -44,7 +45,7 @@ function harness(reduced = false) {
   const cleanups = [];
   return {
     elements, frames,
-    mount(name) { ChapterMotion({ name, children: name, duration: 600 }); cleanups.push(effects.shift()()); },
+    mount(name, duration = 600) { ChapterMotion({ name, children: name, duration }); cleanups.push(effects.shift()()); },
     visible(values) { observer.callback(values.map((visibility, index) => ({ target: elements[index], intersectionRect: { height: visibility * 600 }, boundingClientRect: { height: 600 } }))); },
     tick(count = 1) { for (let i = 0; i < count; i++) { now += 50; const pending = [...frames.values()]; frames.clear(); pending.forEach(fn => fn(now)); } },
     hide(hidden) { document.hidden = hidden; documentListeners.get('visibilitychange')(); },
@@ -94,6 +95,16 @@ test('reduced motion is static on mount and finishes an in-progress illustration
   assert.equal(staticPage.elements[0].dataset.playing, 'false');
   staticPage.cleanup();
   const h = harness(); h.mount('animated'); h.visible([1]); h.tick(4); h.reduce();
+  assert.equal(h.elements[0].dataset.phase, '6');
+  assert.equal(h.elements[0].dataset.playing, 'false');
+  assert.equal(h.frames.size, 0);
+  h.cleanup();
+});
+
+// Decorative playback has no public transport UI and must settle promptly.
+test('a long requested illustration duration still finishes within five seconds', () => {
+  const h = harness(); h.mount('workflow', 10800); h.visible([1]);
+  h.tick(102);
   assert.equal(h.elements[0].dataset.phase, '6');
   assert.equal(h.elements[0].dataset.playing, 'false');
   assert.equal(h.frames.size, 0);

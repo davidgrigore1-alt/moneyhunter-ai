@@ -13,10 +13,10 @@ test("landing presents an evidence-led and human-controlled commercial path", ()
   assert.match(source, /Scenariu de prezentare · companii și valori de exemplu/);
   assert.match(source, /Revizuire necesară/);
   assert.match(source, /Nu o încasare verificată/);
-  assert.match(source, /Analiza și pregătirea nu trimit mesaje/);
-  assert.match(source, /Google Workspace: de validat la conectare/);
-  assert.match(source, /Conectorii din această bandă nu sunt implementați/);
-  assert.match(source, /fără a implica un parteneriat/);
+  assert.match(source, /Nu execută autonom acțiuni externe/);
+  assert.match(source, /Gmail și Calendar pot furniza context după configurare, autorizare și sincronizare/);
+  assert.match(source, /nu au un conector ReveNew implementat/);
+  assert.match(source, /fără a indica un parteneriat/);
   assert.doesNotMatch(source, /ROI garantat|venit garantat|recuperare automată|Inteligență AI/i);
   assert.doesNotMatch(source, /live Gmail|live Google Calendar|voce activă/i);
 });
@@ -25,7 +25,7 @@ test("landing workflow and relationship visuals preserve visible human-controlle
   const visuals = read("src/components/marketing/WorkflowDemo.tsx");
   const styles = read("src/components/marketing/chapters.module.css");
 
-  for (const label of ["Revenire după termen", "Dovada este asociată", "Context suficient?", "Revenire pregătită", "Revizuire umană", "Cere context"]) assert.ok(visuals.includes(label));
+  for (const label of ["Revenire după termen", "Dovada este asociată", "Există un pas confirmat?", "Revenire pregătită", "Revizuire umană", "Cere context"]) assert.ok(visuals.includes(label));
   assert.match(visuals, /Propunere editabilă/);
   assert.match(visuals, /Alternative posibile, încă neselectate/);
   assert.match(visuals, /Așteaptă verificarea și decizia Anei/);

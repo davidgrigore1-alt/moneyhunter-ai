@@ -67,7 +67,7 @@ test("landing centralizes navigation, removes public pricing and preserves prote
   assert.equal(/MarketingPricingGrid|#preturi|select_plan|OfferCatalog|priceCurrency/.test(`${page}\n${chapters}\n${nav}`), false, "public landing has no pricing or plan selection; protected plans remain intact");
   assert.equal(page.includes("FAQPage"), false);
   assert.equal(page.includes("fake"), false);
-  assert.equal(chapters.includes("Această înregistrare nu reprezintă verificarea unei încasări bancare"), true);
+  assert.equal(chapters.includes("Nu reprezintă o încasare bancară verificată"), true);
   assert.equal(theatre.includes("Revizuire necesară"), true);
   assert.equal(theatre.includes("Pregătit · neexecutat"), true);
 });

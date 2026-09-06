@@ -1,22 +1,22 @@
 /* Marketing E0 only. All chapter styles remain independent. */
 .hero, .navShell, .liquid {
-  --mkt-black-0: #040506; --mkt-black-1: #080a0c; --mkt-black-2: #090909; --mkt-black-3: #101010; --mkt-black-4: #151515;
+  --mkt-black-0: #040404; --mkt-black-1: #090909; --mkt-black-2: #090909; --mkt-black-3: #101010; --mkt-black-4: #151515;
   --mkt-border-subtle: #ffffff12; --mkt-border: #ffffff1c; --mkt-border-strong: #ffffff2b;
   --mkt-white: #f7f5ef; --mkt-text-secondary: #afb2b7; --mkt-text-tertiary: #7d8289;
-  --mkt-champagne: #e8cd8f; --mkt-champagne-strong: #f0dba8; --mkt-champagne-soft: #dfc47e21;
+  --mkt-champagne: #dcc57e; --mkt-champagne-strong: #dcc57e; --mkt-champagne-soft: #dcc57e21;
   --e0-ease: cubic-bezier(.2,.8,.2,1);
   font-synthesis: none; font-optical-sizing: none; font-variation-settings: "opsz" 14;
   color-scheme: dark; color: var(--mkt-white);
 }
 .hero *, .navShell * { box-sizing: border-box; }
 .hero :where(h1,h2,h3,p,figure,blockquote,dl,dd) { margin: 0; }
-.hero :where(button,a,textarea):focus-visible, .navShell :where(button,a):focus-visible, .liquid:focus-visible { outline: 2px solid #edcf8f; outline-offset: 5px; }
+.hero :where(button,a,textarea):focus-visible, .navShell :where(button,a):focus-visible, .liquid:focus-visible { outline: 2px solid #dcc57e; outline-offset: 5px; }
 .hero :where(button,a), .navShell :where(button,a) { -webkit-tap-highlight-color: transparent; }
 .hero svg, .navShell svg { flex-shrink: 0; width: 18px; height: 18px; stroke-width: 1.5; }
 .container { width: min(100% - 32px, 1540px); margin-inline: auto; }
-.navShell { position: sticky; z-index: 80; top: 0; background: #080a0ced; border-bottom: 1px solid var(--mkt-border-subtle); backdrop-filter: blur(20px); }
+.navShell { position: sticky; z-index: 80; top: 0; background: #090909; border-bottom: 1px solid var(--mkt-border-subtle); }
 .navInner { display: flex; align-items: center; gap: 30px; min-height: 68px; padding-inline: 16px; }
-.brandLink { flex-shrink: 0; border-radius: 9px; }
+.brandLink { display:flex; align-items:center; flex-shrink:0; border-radius:9px; line-height:1; }
 .brandLink > span { font-size: 24px; gap: 9px; letter-spacing: -.8px; }
 .brandLink img { width: 37px; height: 37px; box-shadow: 0 0 0 1px #ffffff18; }
 .desktopNav { display: flex; align-items: center; gap: 26px; margin-inline: auto; font-size: 12px; font-weight: 480; }
@@ -36,8 +36,8 @@
 
 
 /* Champagne dark action: theme-presets --rn-accent-400, isolated from legacy marketing overrides. */
-.liquid { --marketing-action:220 197 126; display:inline-flex; align-items:center; justify-content:center; min-height:48px; padding:12px 24px; border:1px solid rgb(255 255 255 / .2); border-radius:9px; background:rgb(var(--marketing-action) / .96); color:#101010; font-size:14px; font-weight:600; line-height:1.4; text-align:center; text-decoration:none; cursor:pointer; box-shadow:inset 0 1px rgb(255 255 255 / .18); transition:transform 120ms cubic-bezier(.2,.8,.2,1),background-color 140ms; }
-.liquid.primary, .liquid.nav { background:rgb(var(--marketing-action) / .96); color:#101010; }
+.liquid { --marketing-action:220 197 126; display:inline-flex; align-items:center; justify-content:center; min-height:48px; padding:12px 24px; border:1px solid rgb(255 255 255 / .2); border-radius:9px; background:rgb(var(--marketing-action)); color:#101010; font-size:14px; font-weight:600; line-height:1.4; text-align:center; text-decoration:none; cursor:pointer; box-shadow:inset 0 1px rgb(255 255 255 / .18); transition:transform 120ms cubic-bezier(.2,.8,.2,1),background-color 140ms; }
+.liquid.primary, .liquid.nav { background:rgb(var(--marketing-action)); color:#101010; }
 .liquid.quiet { background:#181818; color:#f5f5f3; border-color:#ffffff30; box-shadow:none; }
 .liquid.nav { min-height:46px; padding:10px 19px; font-size:13px; }
 .liquid:focus-visible { outline:2px solid #dcc57e; outline-offset:4px; }
@@ -267,9 +267,6 @@
 .beatSegment[data-complete=true] i { transform: scaleX(1); opacity: .45; }
 .beatSegment[aria-current=step] i { transform: scaleX(var(--beat-fill,0)); }
 .beatSegment[data-reset=true] i { opacity: .12; transition: opacity 900ms; }
-.pauseControl { display: inline-flex; gap: 5px; align-items: center; min-height: 30px; padding: 5px; color: #8e969f; font-size: 10px; border-radius: 4px; }
-.pauseControl svg { width: 10px; height: 10px; }
-.pauseControl:disabled { cursor: default; }
 .scopeNote { margin: 6px auto 0 !important; text-align: center; color: #79838e; font-size: 10px; }
 
 @media (min-width:1700px) { .heroCopy { padding-top: 29px; padding-bottom: 28px; } .stage { grid-template-columns: 200px minmax(0,1fr) 200px; } .caseBody { padding: 24px 28px 16px; } .workbench { grid-template-columns: minmax(0,1.25fr) minmax(0,1fr); } .intelligence,.preparedWork { padding-inline: 18px; } .conclusion h3 { font-size: 23px; } }
@@ -388,3 +385,18 @@
   .windowDots i { width: 7px; height: 7px; }
   .reviewOptions > span + span { display: none; }
 }
+
+.theatre:focus-visible { outline:2px solid #dcc57e; outline-offset:5px; }
+.keyboardHint { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+
+/* Local optical material: neutral reflection over a single champagne pigment. */
+.liquid { position:relative; isolation:isolate; overflow:hidden; box-shadow:inset 0 1px 0 #ffffff80,inset 0 -1px 0 #00000020; }
+.liquid::before { content:""; position:absolute; inset:1px; border-radius:7px; border:1px solid #ffffff24; pointer-events:none; background:linear-gradient(180deg,#ffffff20,transparent 48%,#00000004); }
+.liquid::after { content:""; position:absolute; inset:0; pointer-events:none; background:radial-gradient(110px circle at var(--light-x,50%) var(--light-y,0px),#ffffff50,transparent 80%); opacity:0; transition:opacity 160ms; }
+.liquid>span { position:relative; z-index:1; }
+.liquid.quiet { background:#ffffff06; box-shadow:inset 0 1px 0 #ffffff16; }
+.liquid.quiet::before { border-color:#ffffff08; background:linear-gradient(180deg,#ffffff0c,transparent 70%); }
+.liquid:active { transform:translateY(1px); }
+@media(hover:hover) and (pointer:fine) { .liquid:not([aria-disabled=true]):hover::after { opacity:1; } .liquid.quiet:hover { background:#ffffff0d; } }
+@media(prefers-reduced-motion:reduce) { .liquid:active { transform:none; } }
+@media(forced-colors:active) { .liquid::before,.liquid::after { display:none; } }

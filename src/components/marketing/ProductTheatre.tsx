@@ -3,7 +3,7 @@ import { paintFlow } from "@/lib/marketing/flow-timing";
 
 import Image from "next/image";
 import { useEffect, useReducer, useRef, useState, type CSSProperties } from "react";
-import { ArrowRightIcon, BoltIcon, BuildingOffice2Icon, ChartBarIcon, ChevronDownIcon, DocumentTextIcon, FolderIcon, InboxIcon, LockClosedIcon, MagnifyingGlassIcon, PauseIcon, ShieldCheckIcon, Squares2X2Icon, UserGroupIcon, WrenchScrewdriverIcon } from "@heroicons/react/24/outline";
+import { ArrowRightIcon, BoltIcon, BuildingOffice2Icon, ChartBarIcon, ChevronDownIcon, DocumentTextIcon, FolderIcon, InboxIcon, LockClosedIcon, MagnifyingGlassIcon, ShieldCheckIcon, Squares2X2Icon, UserGroupIcon, WrenchScrewdriverIcon } from "@heroicons/react/24/outline";
 import { landingDemo as d } from "@/lib/marketing/demo";
 import { beatDuration, playbackReducer, staticPlayback, theatreBeats } from "@/lib/marketing/theatre-playback";
 import { theatreQuestion, theatreSources } from "@/lib/marketing/theatre-portfolio";
@@ -105,7 +105,7 @@ export function ProductTheatre() {
     else document.getElementById("theatre-source-facts")?.focus();
   }
 
-  return <figure ref={figure} className={s.theatre} id="cum-functioneaza" aria-labelledby="theatre-caption" data-beat={phase} data-running={running} data-enhanced={enhanced}>
+  return <figure ref={figure} className={s.theatre} id="cum-functioneaza" aria-labelledby="theatre-caption" aria-describedby="theatre-keyboard" aria-keyshortcuts="Space" tabIndex={0} onKeyDown={event => { if (event.target === event.currentTarget && event.key === " " && !reduced) { event.preventDefault(); dispatch({ type: "toggle" }); } }} data-beat={phase} data-running={running} data-enhanced={enhanced}>
     <figcaption id="theatre-caption" className={s.theatreCaption}><span><span className={s.captionRule} />UN CAZ. TOT CONTEXTUL.</span><span>Scenariu de prezentare · companii și valori de exemplu</span></figcaption>
     <div ref={stage} className={s.stage}>
       <div className={s.device} data-theatre-viewport>
@@ -155,6 +155,7 @@ export function ProductTheatre() {
       <span className={t.evidenceBridge} data-active={beat <= 1} aria-hidden="true" />
       <span className={t.reviewBridge} data-active={beat === 3} aria-hidden="true" />
     </div>
-    <div className={s.playbackBar}><div className={s.beatControls} role="group" aria-label="Etapele demonstrației">{theatreBeats.map((label,index) => <span key={label} className={s.beatSegment} aria-label={label} aria-current={beat === index ? "step" : undefined} data-complete={index < beat} data-reset={phase === 5}><i /></span>)}</div><button type="button" className={s.pauseControl} disabled={!enhanced || reduced} aria-label={playback.mode === "playing" ? "Pauză animație" : "Continuă animația"} onClick={() => dispatch({ type: "toggle" })}><PauseIcon aria-hidden="true" />{playback.mode === "playing" ? "Pauză" : reduced ? "Mișcare redusă" : "Continuă"}</button></div>
+    <div className={s.playbackBar}><div className={s.beatControls} role="group" aria-label="Etapele demonstrației">{theatreBeats.map((label,index) => <span key={label} className={s.beatSegment} aria-label={label} aria-current={beat === index ? "step" : undefined} data-complete={index < beat} data-reset={phase === 5}><i /></span>)}</div></div>
+    <span id="theatre-keyboard" className={s.keyboardHint}>Demonstrație automată. Cu demonstrația focalizată, apasă Spațiu pentru a opri sau relua mișcarea.</span>
   </figure>;
 }

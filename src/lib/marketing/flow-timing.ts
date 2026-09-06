@@ -12,7 +12,8 @@ export function paintFlow(root: HTMLElement, elapsed: number, duration: number) 
   if (!nodes.length) return;
   const frame = flowFrame(elapsed, nodes.length, duration);
   nodes.forEach((node, i) => { node.dataset.flowState = frame.nodes[i]; node.style.setProperty("--edge-fill", String(frame.edges[i] ?? 0)); });
-  root.querySelectorAll<HTMLElement>("[data-flow-panel]").forEach((panel, i) => { panel.hidden = i !== frame.active; });
+  const inspected = elapsed >= duration && root.dataset.inspectedNode !== undefined ? Number(root.dataset.inspectedNode) : frame.active;
+  root.querySelectorAll<HTMLElement>("[data-flow-panel]").forEach((panel, i) => { panel.hidden = i !== inspected; });
   root.querySelectorAll<SVGPathElement>("[data-flow-edge]").forEach((path, i) => {
     const progress = frame.edges[i];
     path.style.strokeDashoffset = String(1 - progress);

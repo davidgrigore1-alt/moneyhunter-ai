@@ -151,7 +151,7 @@ test('unconnected public form fails closed and renders accessible isolated statu
 });
 test('landing has no provider or private-data boundary and all primary CTAs share one route',()=>{
   const root='src/components/marketing/';
-  for(const file of ['ProductTheatre.tsx','TheatreScenes.tsx','WorkbookEvidence.tsx','WorkflowDemo.tsx','LandingChapters.tsx','LandingVisuals.tsx','ChapterMotion.tsx','DemoRequestForm.tsx']) {
+  for(const file of ['ProductTheatre.tsx','TheatreScenes.tsx','WorkbookEvidence.tsx','WorkflowDemo.tsx','LandingChapters.tsx','LandingVisuals.tsx','ChapterMotion.tsx','DemoRequestForm.tsx','QualificationRouter.tsx']) {
     const source=fs.readFileSync(root+file,'utf8');
     assert.doesNotMatch(source,/fetch\(|localStorage|sessionStorage|supabase|openai|\/api\//i,file);
   }
@@ -164,16 +164,16 @@ test('landing has no provider or private-data boundary and all primary CTAs shar
 test('lower chapters render meaningful final states before client enhancement',()=>{
   const {LandingChapters}=load('src/components/marketing/LandingChapters.tsx');
   const html=renderToStaticMarkup(React.createElement(LandingChapters));
-  assert.equal((html.match(/data-chapter-motion=/g)||[]).length,6);
-  assert.equal((html.match(/data-phase="6" data-playing="false"/g)||[]).length,6);
-  assert.equal((html.match(/<details>/g)||[]).length,7);
+  assert.equal((html.match(/data-chapter-motion=/g)||[]).length,4);
+  assert.equal((html.match(/data-phase="6" data-playing="false"/g)||[]).length,4);
+  assert.equal((html.match(/<details>/g)||[]).length,9);
   for(const id of ['produs','dovezi','executie','integrari','masurare','securitate','intrebari','urmatorul-pas','workbook-range']) assert.ok(html.includes(`id="${id}"`),id);
   assert.match(html,/href="#workbook-range"/);
   assert.match(html,/Nu o încasare verificată/);
   assert.match(html,/ÎN DEZVOLTARE/);
-  const order=["produs","masurare","executie","integrari","dovezi","securitate","intrebari","urmatorul-pas"].map(id=>html.indexOf(`id="${id}"`));
+  const order=["produs","ce-se-schimba","masurare","executie","integrari","dovezi","securitate","potrivire","incepem","intrebari","urmatorul-pas"].map(id=>html.indexOf(`id="${id}"`));
   assert.ok(order.every((position,index)=>index===0 || position>order[index-1]));
-  assert.doesNotMatch(html,/type="submit"|<iframe|Redă|Parcurge/);
+  assert.doesNotMatch(html,/type="submit"|<iframe|Redă|Parcurge|Pauză animație|Continuă animația/);
 });
 
 test('evidence and measurement preserve the approved illustrative case and source coordinates',()=>{
@@ -193,4 +193,29 @@ test('evidence and measurement preserve the approved illustrative case and sourc
   assert.match(measurement,/Radu Matei/);
   assert.match(measurement,/Nu o încasare verificată/);
   assert.match(measurement,/Reconcilierea facturilor și plăților nu este disponibilă/);
+});
+
+
+test('qualification is bounded, distinguishes low fit and never grants CRM connectivity',()=>{
+ const {qualify}=load('src/lib/marketing/qualification.ts');
+ for(const process of ['offers','handoff','renewals','retail']) for(const context of ['files','crm','mixed']) for(const team of ['one','several']) {
+  const result=qualify({process,context,team});
+  for(const field of ['fit','risk','sources','reveal','prepare','decision','outcome']) assert.ok(result[field]?.length>15);
+  if(process==='retail') assert.match(result.fit,/limitată/);
+  if(context==='crm') assert.match(result.sources,/se evaluează înainte de activare/);
+  assert.doesNotMatch(JSON.stringify(result),/venit garantat|integrare activă|analiză AI live/);
+ }
+});
+
+test('source labels retain pixel proportions while traveling through a stretched canvas',()=>{
+ const {paintSources,sourceProgress}=load('src/lib/marketing/source-convergence.ts');
+ const packet={ownerSVGElement:{clientWidth:1250,clientHeight:66},style:{},setAttribute(key,value){this[key]=value;}};
+ const path={dataset:{length:'100'},getPointAtLength:value=>({x:value,y:value})};
+ paintSources({querySelectorAll:()=>[packet],querySelector:()=>path},960,4800);
+ assert.match(packet.transform,/scale\(0.8 2\)/);
+ assert.equal(packet.style.opacity,'1');
+ paintSources({querySelectorAll:()=>[packet],querySelector:()=>path},4800,4800);
+ assert.equal(packet.style.opacity,'0');
+ assert.equal(sourceProgress(0,4800,4),0);
+ assert.equal(sourceProgress(4800,4800,4),1);
 });

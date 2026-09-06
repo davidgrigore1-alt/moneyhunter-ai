@@ -2,9 +2,10 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { chapterFinalPhase, chapterPhase, chooseVisibleChapter } from "@/lib/marketing/chapter-motion";
 import { paintFlow } from "@/lib/marketing/flow-timing";
+import { paintSources } from "@/lib/marketing/source-convergence";
 import s from "./chapters.module.css";
 
-type Scene = { element: HTMLDivElement; visibility: number; elapsed: number; duration: number; complete: boolean; paused: boolean };
+type Scene = { element: HTMLDivElement; visibility: number; elapsed: number; duration: number; complete: boolean };
 const scenes = new Set<Scene>();
 let dispose: (() => void) | undefined;
 function startCoordinator() {
@@ -13,11 +14,12 @@ function startCoordinator() {
   const paint = (scene: Scene, playing: boolean) => {
     scene.element.dataset.playing = String(playing);
     paintFlow(scene.element, scene.complete ? scene.duration : scene.elapsed, scene.duration);
+    if (scene.element.dataset.chapterMotion === "ecosystem") paintSources(scene.element, scene.complete ? scene.duration : scene.elapsed, scene.duration);
     scene.element.dataset.phase = String(scene.complete ? chapterFinalPhase : chapterPhase(scene.elapsed, scene.duration));
   };
   const tick = (now: number) => {
     const candidates = Array.from(scenes);
-    const selected = document.hidden || reduced.matches ? -1 : chooseVisibleChapter(candidates.map(scene => ({...scene, complete: scene.complete || scene.paused})));
+    const selected = document.hidden || reduced.matches ? -1 : chooseVisibleChapter(candidates);
     const current = candidates[selected];
     candidates.forEach(scene => paint(scene, scene === current));
     if (current) {
@@ -56,13 +58,12 @@ export function ChapterMotion({ children, name, className = "", duration = 6200 
   children: ReactNode; name: string; className?: string; duration?: number;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const state = useRef<Scene | null>(null);
   useEffect(() => {
     if (!ref.current || !("IntersectionObserver" in window)) return;
-    const scene: Scene = { element: ref.current, visibility: 0, elapsed: 0, duration, complete: false, paused: false };
-    state.current = scene;
+    // Finite illustrations settle within five seconds; text is always readable.
+    const scene: Scene = { element: ref.current, visibility: 0, elapsed: 0, duration: Math.min(duration, 4800), complete: false };
     scenes.add(scene); coordinator ??= startCoordinator(); coordinator.register(scene);
     return () => { coordinator?.unregister(scene); if (!scenes.size) dispose?.(); };
   }, [duration]);
-  return <div ref={ref} className={`${s.motion} ${className}`} data-chapter-motion={name} data-phase="6" data-playing="false">{children}<button type="button" className={s.motionPause} aria-label="Pauză animație capitol" onClick={event => { const scene = state.current; if (!scene) return; scene.paused = !scene.paused; event.currentTarget.textContent = scene.paused ? "Continuă animația" : "Pauză animație"; event.currentTarget.setAttribute("aria-pressed", String(scene.paused)); coordinator?.update(); }} aria-pressed="false">Pauză animație</button></div>;
+  return <div ref={ref} className={`${s.motion} ${className}`} data-chapter-motion={name} data-phase="6" data-playing="false">{children}</div>;
 }
