@@ -74,8 +74,8 @@ test('the server-rendered theatre starts with Intelligence and keeps Reports and
   assert.match(html, /data-beat="0" data-running="false" data-enhanced="false"/);
   assert.equal(staticPlayback.beat,0);
   assert.equal(playbackReducer(staticPlayback,{type:'start'}).beat,0);
-  assert.equal((html.match(/Exemplu demonstrativ/g)||[]).length,1);
-  assert.equal((html.match(/Date ilustrative · nicio acțiune externă executată\./g)||[]).length,1);
+  assert.equal((html.match(/Scenariu de prezentare · companii și valori de exemplu/g)||[]).length,1);
+  assert.equal((html.match(/Pregătit · revizuire necesară/g)||[]).length,1);
   assert.doesNotMatch(html,/ARR estimat|Spațiu demonstrativ|nu se trimite/);
 });
 
@@ -169,8 +169,10 @@ test('lower chapters render meaningful final states before client enhancement',(
   assert.equal((html.match(/<details>/g)||[]).length,7);
   for(const id of ['produs','dovezi','executie','integrari','masurare','securitate','intrebari','urmatorul-pas','workbook-range']) assert.ok(html.includes(`id="${id}"`),id);
   assert.match(html,/href="#workbook-range"/);
-  assert.match(html,/Încă nedovedit/);
-  assert.match(html,/fără istoric presupus/);
+  assert.match(html,/Nu o încasare verificată/);
+  assert.match(html,/ÎN DEZVOLTARE/);
+  const order=["produs","masurare","executie","integrari","dovezi","securitate","intrebari","urmatorul-pas"].map(id=>html.indexOf(`id="${id}"`));
+  assert.ok(order.every((position,index)=>index===0 || position>order[index-1]));
   assert.doesNotMatch(html,/type="submit"|<iframe|Redă|Parcurge/);
 });
 
@@ -179,12 +181,16 @@ test('evidence and measurement preserve the approved illustrative case and sourc
   const {MeasurementScene}=load('src/components/marketing/LandingVisuals.tsx');
   const workbook=renderToStaticMarkup(React.createElement(WorkbookEvidence));
   const measurement=renderToStaticMarkup(React.createElement(MeasurementScene));
-  assert.match(workbook,/<th scope="row">8<\/th><td>Atelier Nord<\/td><td>Mentenanță<\/td><td>42\.000<\/td><td>Ana Popescu<\/td><td>04 sept\.<\/td>/);
-  assert.match(workbook,/<th scope="row">9<\/th><td>Meridian Systems/);
-  assert.match(workbook,/<th scope="row">10<\/th><td>Vector Industrial/);
-  assert.match(workbook,/Versiunea 3/);
+  assert.match(workbook,/Atelier Nord/);
+  assert.match(workbook,/04 septembrie/);
+  assert.match(workbook,/F8 · NOTA ORIGINALĂ/);
+  assert.doesNotMatch(workbook,/<table|Meridian Systems|Vector Industrial/);
+  assert.match(workbook,/versiunea 3/);
   assert.match(workbook,/A8:F8/);
-  assert.match(measurement,/930\.000/);
-  assert.match(measurement,/282\.000/);
-  assert.match(measurement,/nu există un rezultat comercial confirmat/);
+  assert.match(measurement,/Orizont Service/);
+  assert.match(measurement,/48\.000/);
+  assert.match(measurement,/46\.000/);
+  assert.match(measurement,/Radu Matei/);
+  assert.match(measurement,/Nu o încasare verificată/);
+  assert.match(measurement,/Reconcilierea facturilor și plăților nu este disponibilă/);
 });

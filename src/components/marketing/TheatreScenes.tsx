@@ -6,6 +6,7 @@ import { ArrowDownTrayIcon, ArrowPathIcon, ArrowRightIcon, BoltIcon, ChartBarIco
 import { landingDemo as d } from "@/lib/marketing/demo";
 import { formatIllustrativeRON as money, portfolioHistory, portfolioTotal, portfolioRingSegments, reviewTotal, theatreCompanies, theatreQuestion } from "@/lib/marketing/theatre-portfolio";
 import { CompanyMark, PersonAvatar } from "./MarketingEntityMark";
+import { paintFlow } from "@/lib/marketing/flow-timing";
 import s from "./theatre.module.css";
 
 function SceneHeading({ eyebrow, title, children }: { eyebrow: string; title: string; children?: ReactNode }) {
@@ -108,9 +109,10 @@ export function WorkflowScene() {
       };
       const [a,b,c,d,e,f] = [port(nodes[0],true),port(nodes[1],false),port(nodes[1],true),port(nodes[2],false),port(nodes[2],true),port(nodes[3],false)];
       const middle = (c[1]+d[1])/2;
-      const path = `M${a}H${b[0]} M${c}H${element.clientWidth-6}V${middle}H6V${d[1]}H${d[0]} M${e}H${f[0]}`;
+      const paths = [`M${a}H${b[0]}`, `M${c}H${element.clientWidth-6}V${middle}H6V${d[1]}H${d[0]}`, `M${e}H${f[0]}`];
       svg.setAttribute("viewBox",`0 0 ${element.clientWidth} ${element.clientHeight}`);
-      svg.querySelectorAll("path").forEach(line => line.setAttribute("d",path));
+      svg.querySelectorAll<SVGPathElement>("path").forEach((line,i) => { line.setAttribute("d",paths[i % 3]); if (line.hasAttribute("data-flow-edge")) line.dataset.length = String(line.getTotalLength()); });
+      const clock=element.closest<HTMLElement>("figure"); if(clock) paintFlow(clock,clock.dataset.flowDuration ? Number(clock.dataset.flowElapsed) : matchMedia("(prefers-reduced-motion: reduce)").matches ? 5100 : 0,Number(clock.dataset.flowDuration || 5100));
     };
     const observer = new ResizeObserver(connect);
     observer.observe(element); connect();
@@ -123,14 +125,14 @@ export function WorkflowScene() {
       <div className={s.flowCanvas}>
         <div className={s.flowContext}><CompanyMark /><span><b>Atelier Nord</b><small>Contract de mentenanță · 42.000 RON estimat</small></span><EllipsisHorizontalIcon /></div>
         <div ref={graph} className={s.flowGraph}>
-          <svg ref={wires} className={s.flowWires} aria-hidden="true"><path className={s.wireBase} /><path className={s.wireTrace} pathLength="1" /></svg>
-          {workflowNodes.map((node,index) => <div key={node.title} className={s.flowNode} data-node={index} style={{ "--node": index } as CSSProperties}><span className={s.nodePort} /><div className={s.nodeStatus}>{index < 3 ? <CheckIcon /> : <LockClosedIcon />}{node.state}</div><div className={s.nodeBody}><span className={s.nodeIcon}><node.icon /></span><span><b>{node.title}</b><small>{node.detail}</small></span></div><span className={s.nodePortOut} /></div>)}
+          <svg ref={wires} className={s.flowWires} aria-hidden="true">{[0,1,2].map(i=><path key={`base${i}`} className={s.wireBase} />)}{[0,1,2].map(i=><path key={i} className={s.wireTrace} data-flow-edge={i} pathLength="1" />)}{[0,1,2].map(i=><circle key={`dot${i}`} data-flow-dot={i} r="2.5" fill="#dcc57e" opacity="0" />)}</svg>
+          {workflowNodes.map((node,index) => <div key={node.title} className={s.flowNode} data-node={index} data-flow-node={index} data-flow-state="complete" style={{ "--node": index } as CSSProperties}><span className={s.nodePort} /><div className={s.nodeStatus}>{index < 3 ? <CheckIcon /> : <LockClosedIcon />}{node.state}</div><div className={s.nodeBody}><span className={s.nodeIcon}><node.icon /></span><span><b>{node.title}</b><small>{node.detail}</small></span></div><span className={s.nodePortOut} /></div>)}
           <span className={s.branchLabel}>Pregătire internă</span>
         </div>
         <div className={s.decisionBranches} aria-label="Ramuri posibile, neselectate"><div><b>Aprobă intern</b><small>→ lucru pregătit</small></div><div><b>Cere context</b><small>→ revizuire deschisă</small></div></div>
         <div className={s.canvasFooter}><span><LockClosedIcon />Decizie în așteptare</span><span>− <b>100%</b> +</span></div>
       </div>
-      <aside className={s.runPanel}><h3>Firul de verificare</h3><p>Același caz, până la decizie.</p><ol>{workflowNodes.map((node,index) => <li key={node.title} style={{ "--node": index } as CSSProperties}><span className={s.runDot} /><div><b>{node.title}</b><small>{node.detail}</small></div><span>0{index+1}</span></li>)}</ol><div className={s.runSummary}><ShieldCheckIcon /><span>Pregătit ≠ executat</span><h4>De aici, decide Ana.</h4><p>Propunerea poate fi revizuită, editată sau amânată.</p><div><PersonAvatar /><b>Ana Popescu</b></div></div></aside>
+      <aside className={s.runPanel}><h3>Firul de verificare</h3><p>Același caz, până la decizie.</p><ol>{workflowNodes.map((node,index) => <li key={node.title} data-flow-rail={index} style={{ "--node": index } as CSSProperties}><span className={s.runDot} /><div><b>{node.title}</b><small>{node.detail}</small></div><span>0{index+1}</span></li>)}</ol><div className={s.runSummary}><ShieldCheckIcon /><span>Pregătit ≠ executat</span><h4>De aici, decide Ana.</h4><p>Propunerea poate fi revizuită, editată sau amânată.</p><div><PersonAvatar /><b>Ana Popescu</b></div></div></aside>
     </div>
   </div>;
 }

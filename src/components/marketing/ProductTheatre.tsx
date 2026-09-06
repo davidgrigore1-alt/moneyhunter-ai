@@ -1,4 +1,5 @@
 "use client";
+import { paintFlow } from "@/lib/marketing/flow-timing";
 
 import Image from "next/image";
 import { useEffect, useReducer, useRef, useState, type CSSProperties } from "react";
@@ -70,6 +71,7 @@ export function ProductTheatre() {
     if (phase === 5 && query.current && figure.current) {
       query.current.textContent = "";
       figure.current.dataset.query = "typing";
+      paintFlow(figure.current, 0, beatDuration[3]);
     }
     if (reduced && query.current && figure.current) {
       query.current.textContent = theatreQuestion;
@@ -81,6 +83,7 @@ export function ProductTheatre() {
     const paint = () => {
       const elapsed = beatDuration[phase] - Math.max(0, remaining - (performance.now() - started));
       figure.current?.style.setProperty("--beat-fill", String(elapsed / beatDuration[phase]));
+      if (phase === 3 && figure.current) paintFlow(figure.current, elapsed, beatDuration[3]);
       if (phase === 0 && query.current && figure.current) {
         const length = Math.floor(theatreQuestion.length * Math.min(1, Math.max(0, (elapsed - 220) / 1350)));
         const text = theatreQuestion.slice(0, length);
@@ -103,7 +106,7 @@ export function ProductTheatre() {
   }
 
   return <figure ref={figure} className={s.theatre} id="cum-functioneaza" aria-labelledby="theatre-caption" data-beat={phase} data-running={running} data-enhanced={enhanced}>
-    <figcaption id="theatre-caption" className={s.theatreCaption}><span><span className={s.captionRule} />UN CAZ. TOT CONTEXTUL.</span><span>Exemplu demonstrativ <i aria-hidden="true" /> 6 septembrie 2026</span></figcaption>
+    <figcaption id="theatre-caption" className={s.theatreCaption}><span><span className={s.captionRule} />UN CAZ. TOT CONTEXTUL.</span><span>Scenariu de prezentare · companii și valori de exemplu</span></figcaption>
     <div ref={stage} className={s.stage}>
       <div className={s.device} data-theatre-viewport>
         <div className={s.deviceBar}><span className={s.windowDots} aria-hidden="true"><i /><i /><i /></span><span>ReveNew <span className={s.chromeSlash}>/</span> Spațiul echipei</span><span aria-hidden="true" /></div>
@@ -123,7 +126,7 @@ export function ProductTheatre() {
               <section className={t.scene} data-view="3" data-active={beat === 3} aria-hidden={beat !== 3} inert={beat !== 3}><WorkflowScene /></section>
               <section className={t.scene} data-view="4" data-active={beat === 4} aria-hidden={beat !== 4} inert={beat !== 4}><ReportsScene /></section>
             </div>
-            <div className={t.shellFooter}><span><LockClosedIcon />Date ilustrative · nicio acțiune externă executată.</span><span className={t.sessionDot} /></div>
+            <div className={t.shellFooter}><span><LockClosedIcon />Pregătit · revizuire necesară</span><span className={t.sessionDot} /></div>
           </div>
         </div>
       </div>

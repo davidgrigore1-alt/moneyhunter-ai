@@ -18,7 +18,7 @@ const rules = compile('src/lib/marketing/chapter-motion.ts', {});
 
 function harness(reduced = false) {
   const effects = [], elements = [], frames = new Map(), documentListeners = new Map(), mediaListeners = new Map();
-  let observer, id = 0, now = 0;
+  let observer, id = 0, now = 0, refs = 0;
   const document = { hidden: false, addEventListener: (name, fn) => documentListeners.set(name, fn), removeEventListener: name => documentListeners.delete(name) };
   const media = { matches: reduced, addEventListener: (name, fn) => mediaListeners.set(name, fn), removeEventListener: name => mediaListeners.delete(name) };
   class Observer {
@@ -29,10 +29,11 @@ function harness(reduced = false) {
   }
   const { ChapterMotion } = compile('src/components/marketing/ChapterMotion.tsx', {
     react: {
-      useRef: () => { const element = { dataset: {} }; elements.push(element); return { current: element }; },
+      useRef: () => { const element = { dataset: {}, querySelectorAll:()=>[] }; if (refs++ % 2 === 0) elements.push(element); return { current: element }; },
       useEffect: fn => effects.push(fn)
     },
     '@/lib/marketing/chapter-motion': rules,
+    '@/lib/marketing/flow-timing': compile('src/lib/marketing/flow-timing.ts',{}),
     './chapters.module.css': { default: { motion: 'motion' } }
   }, {
     document, window: { IntersectionObserver: Observer }, IntersectionObserver: Observer,

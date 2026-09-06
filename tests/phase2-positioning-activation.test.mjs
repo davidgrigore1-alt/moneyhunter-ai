@@ -11,7 +11,7 @@ test("Phase 2 positioning defines commercial recovery without debt ambiguity", (
   const plans = read("src/lib/billing/plans.ts");
   assert.match(landing, /firul execuției: ce necesită atenție, cine răspunde și care este următorul pas/);
   assert.match(landing, /instrumentul pentru facturare și procese fiscale/);
-  assert.match(visuals, /Date ilustrative · nicio acțiune externă executată/);
+  assert.match(visuals, /Pregătit · revizuire necesară/);
   assert.match(visuals, /Așteaptă revizuirea umană/);
   for (const plan of ["Start", "Growth", "Scale", "Enterprise"]) assert.match(plans, new RegExp(`title: "${plan}"`));
   assert.match(plans, /monthlyPrice: 59/);

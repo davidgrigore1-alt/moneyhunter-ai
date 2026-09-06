@@ -67,7 +67,7 @@ test("landing centralizes navigation, removes public pricing and preserves prote
   assert.equal(/MarketingPricingGrid|#preturi|select_plan|OfferCatalog|priceCurrency/.test(`${page}\n${chapters}\n${nav}`), false, "public landing has no pricing or plan selection; protected plans remain intact");
   assert.equal(page.includes("FAQPage"), false);
   assert.equal(page.includes("fake"), false);
-  assert.equal(chapters.includes("Venitul se confirmă prin rezultatul comercial"), true);
+  assert.equal(chapters.includes("Această înregistrare nu reprezintă verificarea unei încasări bancare"), true);
   assert.equal(theatre.includes("Revizuire necesară"), true);
   assert.equal(theatre.includes("Pregătit · neexecutat"), true);
 });
@@ -80,7 +80,7 @@ test("marketing hero keeps a semantic work surface and progressive motion", () =
   const reveal = fs.readFileSync(path.resolve("src/components/marketing/Reveal.tsx"), "utf8");
 
   assert.equal(page.includes("s.canvas"), true, "public landing opts into its CSS module, not protected theme tokens");
-  assert.equal(preview.includes("Exemplu demonstrativ"), true);
+  assert.equal(preview.includes("Scenariu de prezentare · companii și valori de exemplu"), true);
   assert.equal(preview.includes('aria-label="Etapele demonstrației"'), true);
   assert.equal(preview.includes('data-theatre-viewport'), true);
   assert.equal(preview.indexOf('<AnswerScene') < preview.indexOf('id="hero-evidence"'), true, "the answer and case precede their external source inspector in DOM order");

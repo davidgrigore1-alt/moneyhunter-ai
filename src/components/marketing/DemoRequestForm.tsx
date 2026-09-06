@@ -1,6 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
-import { ArrowUpRightIcon, CheckCircleIcon, ExclamationCircleIcon } from "@heroicons/react/24/outline";
+import { CheckCircleIcon, ExclamationCircleIcon } from "@heroicons/react/24/outline";
 import { isDemoRequestAccepted, validateDemoRequest, type DemoRequestErrors, type DemoRequestResult, type DemoRequestValues, type DemoSubmitState } from "@/lib/marketing/demo-request";
 import s from "./landing.module.css";
 
@@ -50,7 +50,7 @@ export function DemoRequestForm({ submitRequest }: Props) {
       <div className={s.formFields}>{fields.map(field => <div className={s.formField} key={field.key}><label htmlFor={`demo-${field.key}`}>{field.label}{!field.required ? <span>opțional</span> : null}</label><input id={`demo-${field.key}`} name={field.key} type={field.type} autoComplete={field.autoComplete} required={field.required} maxLength={field.maxLength} disabled={state === "pending"} value={values[field.key]} aria-invalid={!!errors[field.key]} aria-describedby={errors[field.key] ? `demo-${field.key}-error` : undefined} onChange={event => update(field.key,event.target.value)} onBlur={() => validateField(field.key)} />{errors[field.key] ? <p id={`demo-${field.key}-error`} className={s.fieldError}>{errors[field.key]}</p> : null}</div>)}</div>
       <div className={s.formField}><label htmlFor="demo-goal">Ce ai vrea să îmbunătățești?<span>opțional</span></label><textarea id="demo-goal" name="goal" rows={4} maxLength={2000} disabled={state === "pending"} value={values.goal} aria-invalid={!!errors.goal} aria-describedby={errors.goal ? "demo-goal-error" : undefined} onChange={event => update("goal",event.target.value)} onBlur={() => validateField("goal")} />{errors.goal ? <p id="demo-goal-error" className={s.fieldError}>{errors.goal}</p> : null}</div>
       <DemoSubmissionStatus state={state} />
-      <div className={s.formSubmit}><button type="submit" className={`${s.liquid} ${s.primary}`} disabled={!submitRequest || state === "pending"} aria-describedby={!submitRequest ? "demo-unavailable" : undefined}>{state === "pending" ? "Se trimite solicitarea…" : "Trimite solicitarea"}<ArrowUpRightIcon aria-hidden="true" /></button><p>Fără creare de cont. Fără programare automată.</p></div>
+      <div className={s.formSubmit}><button type="submit" className={`${s.liquid} ${s.primary}`} disabled={!submitRequest || state === "pending"} aria-describedby={!submitRequest ? "demo-unavailable" : undefined}>{state === "pending" ? "Se trimite solicitarea…" : "Trimite solicitarea"}</button><p>Fără creare de cont. Fără programare automată.</p></div>
     </>}
   </form>;
 }

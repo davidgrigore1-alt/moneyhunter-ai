@@ -252,8 +252,6 @@
 .runSummary > div { display: flex; align-items: center; gap: 6px; margin-top: 12px; font-size: 11px; color: #a5b6bf; }
 .runSummary b { font-weight: 460; }
 .runSummary .personAvatar { width: 20px; height: 23px; }
-.scene[data-view="3"][data-active=true] .flowNode,.scene[data-view="3"][data-active=true] .runPanel li { animation: nodeResolve 650ms calc(var(--node)*740ms + 250ms) both; }
-.scene[data-view="3"][data-active=true] .wireTrace { animation: traceFlow 2400ms 550ms ease both; }
 @keyframes nodeResolve { from { opacity: .35; transform: translateY(2px); } to { opacity: 1; transform: none; } }
 @keyframes traceFlow { to { stroke-dashoffset: 0; } }
 
@@ -532,7 +530,6 @@
 .connectedSources .localSource { grid-column: 2; font-size: 9px; }
 .connectedState i { width: 4px; height: 4px; background: #82bda2; border-radius: 50%; }
 .connectedSources .localSource { color: #c1b18e; }
-.scene[data-view="3"][data-active=true] .flowNode:not([data-node="3"]) .nodeBody { animation: nodeFocus 1250ms calc(var(--node)*740ms + 250ms) both; }
 @keyframes nodeFocus { 0% { border-color: #ffffff20; } 35%,60% { border-color: #ddc78f; } 100% { border-color: #ffffff30; } }
 @media (max-width:767px) {
   .correlatedSources > span { font-size: 11px; }
@@ -599,3 +596,9 @@
 }
 
 @media (prefers-reduced-motion:reduce) { .scene,.scene * { animation: none !important; transition: none !important; } .flowNode,.runPanel li { opacity: 1; } .wireTrace { stroke-dashoffset: 0; } }
+/* Arrival state is derived from the theatre clock, including paused frames. */
+.flowNode[data-flow-state], .runPanel li[data-flow-state] { opacity:1; }
+.flowNode[data-flow-state="pending"], .runPanel li[data-flow-state="pending"] { opacity:.35; }
+.flowNode[data-flow-state="processing"] .nodeBody { border-color:#dcc57e; }
+
+@media(max-width:767px) { .flowNode:not(:last-of-type)::after { transform:scaleY(var(--edge-fill,1)); transform-origin:top; } }

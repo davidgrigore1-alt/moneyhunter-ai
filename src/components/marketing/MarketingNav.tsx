@@ -32,7 +32,7 @@ export function MarketingNav() {
   return <header className={`${s.navShell} ${marketingFont.className}`}>
     <div className={`${s.container} ${s.navInner}`}>
       <Link prefetch={false} href="/" className={s.brandLink} aria-label="ReveNew — pagina principală"><MarketingBrand /></Link>
-      <nav aria-label="Navigare principală" className={s.desktopNav}>{marketingSections.map(item => <Link prefetch={false} key={item.id} href={`/${item.href}`}>{item.label}</Link>)}</nav>
+      <nav aria-label="Navigare principală" className={s.desktopNav}>{marketingSections.map(item => <Link prefetch={false} key={item.id} href={`/${item.href}`}>{item.id === "cum-functioneaza" ? "Explorează produsul" : item.label}</Link>)}</nav>
       <div className={s.navActions}><Link prefetch={false} href={authPath("/login", "login")} className={s.login}>Autentificare</Link><DemoRequestLink material="nav" /></div>
       <button ref={opener} className={`${s.liquid} ${s.menuButton}`} type="button" aria-label="Deschide meniul" aria-haspopup="dialog" aria-controls="marketing-mobile-menu" aria-expanded="false" onClick={openMenu}><Bars3Icon aria-hidden="true" /></button>
     </div>
@@ -49,6 +49,6 @@ export function MarketingNav() {
         <DemoRequestLink material="nav" onClick={closeMenu} /><Link prefetch={false} href={authPath("/login", "login")} className={s.login}>Autentificare</Link>
       </div>
     </dialog>
-    <noscript><nav className={s.noScriptNav} aria-label="Navigare fără JavaScript">{marketingSections.map(item => <Link prefetch={false} key={item.id} href={`/${item.href}`}>{item.label}</Link>)}<Link prefetch={false} href={authPath("/login", "login")}>Autentificare</Link></nav></noscript>
+    <noscript><nav className={s.noScriptNav} aria-label="Navigare fără JavaScript">{marketingSections.map(item => <Link prefetch={false} key={item.id} href={`/${item.href}`}>{item.id === "cum-functioneaza" ? "Explorează produsul" : item.label}</Link>)}<Link prefetch={false} href={authPath("/login", "login")}>Autentificare</Link></nav></noscript>
   </header>;
 }
