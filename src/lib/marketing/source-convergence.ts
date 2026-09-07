@@ -1,5 +1,12 @@
 export function sourceProgress(elapsed: number, duration: number, index: number) {
-  return Math.max(0, Math.min(1, (elapsed / duration - index * .14) / .4));
+  const ratio = elapsed / duration;
+  const total = 5;
+  const lane = 1 / (total + 1.2);
+  const activeWindow = lane * 0.78;
+  const start = index * lane;
+  const inRange = (ratio - start) / activeWindow;
+
+  return Math.max(0, Math.min(1, inRange));
 }
 /** Uses the chapter's elapsed time; no independent timer or CSS drawing clock. */
 export function paintSources(root: HTMLElement, elapsed: number, duration: number) {
