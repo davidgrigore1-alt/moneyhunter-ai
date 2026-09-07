@@ -5,6 +5,7 @@ import { ChapterMotion } from "./ChapterMotion";
 import { revenueExample as result } from "@/lib/marketing/revenue-example";
 import { AccessRole } from "./AccessRole";
 import s from "./chapters.module.css";
+import p from "./final-polish.module.css";
 
 export function CommercialThread() {
   return <div className={s.commercialScene}>
@@ -33,13 +34,23 @@ const activeSources = [
   { name: "XLSX", detail: "Oferta și promisiunea", src: "/marketing/excel-source.png" }
 ] as const;
 
-const evaluationGroups = [
+type EvaluationProvider = {
+  name: string;
+  src: string;
+  detail?: string;
+  wide?: boolean;
+};
+
+type EvaluationGroup = {
+  label: string;
+  providers: EvaluationProvider[];
+};
+
+const evaluationGroups: EvaluationGroup[] = [
   {
-    label: "Workspace",
+    label: "Spațiu de lucru",
     providers: [
-      { name: "Microsoft 365", src: "/brands/applications/microsoft-365.svg" },
-      { name: "Outlook", src: "/brands/applications/outlook.svg" },
-      { name: "Teams", src: "/brands/applications/teams.svg" },
+      { name: "Microsoft 365", src: "/brands/applications/microsoft-365.svg", detail: "Outlook · Teams" },
     ],
   },
   {
@@ -47,30 +58,30 @@ const evaluationGroups = [
     providers: [
       { name: "Salesforce", src: "/brands/applications/salesforce.svg" },
       { name: "HubSpot", src: "/brands/applications/hubspot.svg" },
-      { name: "Pipedrive", src: "/brands/applications/pipedrive.svg", wordmark: true },
+      { name: "Pipedrive", src: "/brands/applications/pipedrive.svg", wide: true },
     ],
   },
   {
-    label: "Comunicări",
+    label: "Comunicare",
     providers: [
       { name: "Slack", src: "/brands/applications/slack.svg" },
-      { name: "Zoom", src: "/marketing/providers/zoom.svg", wordmark: true },
+      { name: "Zoom", src: "/marketing/providers/zoom.svg", wide: true },
     ],
   },
   {
-    label: "Documente / cunoștințe",
+    label: "Documente și cunoștințe",
     providers: [
       { name: "Notion", src: "/marketing/providers/notion.svg" },
       { name: "Dropbox", src: "/marketing/providers/dropbox.svg" },
     ],
   },
   {
-    label: "Sisteme România",
+    label: "Business / România",
     providers: [
-      { name: "SmartBill", src: "/marketing/providers/smartbill.png" },
+      { name: "SmartBill", src: "/marketing/providers/smartbill.png", detail: "Evaluare de integrare la cerere", wide: true },
     ],
   },
-] as const;
+];
 
 const sourcePaths = [
   "M100 0V36Q100 52 116 52H484Q500 52 500 68V132",
@@ -81,7 +92,7 @@ const sourcePaths = [
 ];
 
 export function ConnectedEcosystem() {
-  return <ChapterMotion name="ecosystem" className={s.ecosystem} duration={6000}>
+  return <ChapterMotion name="ecosystem" className={s.ecosystem} duration={7600}>
     <div className={s.supportedLabel}><span className={s.statusDot} /><strong>Surse suportate</strong><span>Pornim de la contextul deja existent</span></div>
     <div className={s.activeEcosystem}>
       <div className={s.sourceRail}>
@@ -121,31 +132,44 @@ export function ConnectedEcosystem() {
       <div className={s.ecosystemOutput} data-enter="6"><span>Situație<strong>Continuare de verificat</strong></span><span>Responsabil<strong>Ana Popescu</strong></span><span>Următor pas<strong>Confirmă discuția și pregătește revenirea.</strong></span></div>
     </div>
 
-    <div className={s.evaluationField}>
-      <div className={s.evaluationHeading}>
+    <div className={p.integrationField}>
+      <div className={p.integrationHeader}>
         <div>
-          <span className={s.miniLabel}>Evaluare la cerere</span>
-          <h3>Ai un alt sistem? Pornim de la cel care îl folosești deja.</h3>
+          <span className={p.integrationKicker}>Evaluare la cerere</span>
+          <h3>Ai un alt sistem? Pornim de la cel pe care echipa îl folosește deja.</h3>
+          <p>Nu reconstruim procesul de la zero. Stabilim ce poate fi conectat în siguranță, în funcție de flux, acces și datele disponibile.</p>
         </div>
+        <span className={p.integrationState}>Evaluare înainte de implementare</span>
       </div>
-      <div className={s.integrationSurface}>
+
+      <div className={p.integrationGrid}>
         {evaluationGroups.map(group => (
-          <article className={s.integrationCluster} key={group.label}>
+          <section className={p.integrationCluster} key={group.label} aria-label={group.label}>
             <h4>{group.label}</h4>
-            <div className={s.integrationItems}>
-              {group.providers.map(provider => (
-                <div key={provider.name} className={s.integrationItem}>
-                  <Image src={provider.src} width={40} height={24} alt={provider.name} />
-                  <span>{provider.name}</span>
-                </div>
-              ))}
+            <div className={p.integrationItems}>
+              {group.providers.map(provider => {
+                const wideStyle = provider.wide ? { width: 84, flexBasis: 84, justifyContent: "flex-start" as const } : undefined;
+                const wideImageStyle = provider.wide ? { width: "auto", maxWidth: 84, height: 26, objectFit: "contain" as const } : undefined;
+                return (
+                  <div key={provider.name} className={p.integrationItem}>
+                    <span className={p.integrationLogo} style={wideStyle}>
+                      <Image src={provider.src} width={provider.wide ? 84 : 30} height={30} alt={provider.name} style={wideImageStyle} />
+                    </span>
+                    <span className={p.integrationItemText}>
+                      <strong>{provider.name}</strong>
+                      {provider.detail ? <small>{provider.detail}</small> : null}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
-          </article>
+          </section>
         ))}
       </div>
-      <p>Nu îți cerem să reconstruiești procesele. Implementăm pornind de la datele tale. Aceste sisteme sunt evaluate pentru conectare în funcție de acces, date disponibile și risc.</p>
-      <div className={s.integrationLegend}>
-        <span>Sistemele din afara surselor curente</span><strong>Necesită evaluare tehnică înainte de implementare</strong>
+
+      <div className={p.integrationFooter}>
+        <p>Sistemele de mai sus nu sunt prezentate ca integrări active. Le evaluăm numai dacă procesul și accesul companiei justifică legătura.</p>
+        <span>Sursele curente rămân Gmail · Calendar · Drive · CSV · XLSX</span>
       </div>
     </div>
   </ChapterMotion>;

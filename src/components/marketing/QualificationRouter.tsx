@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronRightIcon, HandThumbUpIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
 import { qualify, type Qualification } from "@/lib/marketing/qualification";
 import s from "./commercial.module.css";
 
@@ -19,29 +18,29 @@ type Group = {
 
 const groups: readonly Group[] = [
   {
-    title: "PROCES",
+    title: "Proces",
     key: "process",
     options: [
-      { value: "offers", label: "Oferte care cer revenire", helper: "Oferta a fost trimisă, dar pasul următor nu e mereu clar." },
-      { value: "handoff", label: "Predări între colegi", helper: "Conversația trece între responsabili fără o tranziție clară." },
-      { value: "renewals", label: "Reînnoiri / aprobări", helper: "Relația continuă, dar revenirea nu are mereu un responsabil." }
+      { value: "offers", label: "Oferte care cer revenire", helper: "Oferta a plecat, dar următorul pas nu este mereu confirmat." },
+      { value: "handoff", label: "Predări între colegi", helper: "Contextul trebuie să treacă odată cu responsabilitatea." },
+      { value: "renewals", label: "Reînnoiri / aprobări", helper: "Relația continuă, dar termenul poate rămâne fără acțiune clară." },
     ],
   },
   {
-    title: "UNDE TRĂIEȘTE CONTEXTUL",
+    title: "Unde trăiește contextul",
     key: "context",
     options: [
-      { value: "files", label: "Email + fișiere", helper: "Conversații, documente și atașamente relevante." },
-      { value: "crm", label: "CRM + email", helper: "Date comerciale + note + corespondență." },
-      { value: "mixed", label: "Mai multe sisteme", helper: "Combinăm surse care susțin aceeași situație." },
+      { value: "files", label: "Email + fișiere", helper: "Conversații, documente și registre comerciale." },
+      { value: "crm", label: "CRM + email", helper: "Evidențe comerciale și corespondență." },
+      { value: "mixed", label: "Mai multe sisteme", helper: "Contextul util este împărțit între mai multe surse." },
     ],
   },
   {
-    title: "CINE ATINGE PROCESUL",
+    title: "Cine atinge procesul",
     key: "team",
     options: [
-      { value: "several", label: "Mai mulți colegi", helper: "Există mai multe roluri implicate." },
-      { value: "one", label: "Un responsabil", helper: "Un punct de decizie clar pentru aprobare." }
+      { value: "several", label: "Mai mulți colegi", helper: "Există mai multe roluri, predări sau aprobări." },
+      { value: "one", label: "Un responsabil", helper: "Un singur rol ține controlul final." },
     ],
   },
 ];
@@ -67,84 +66,84 @@ export function QualificationRouter() {
   return (
     <div className={s.router}>
       <div className={s.routerInputs}>
-        <span className={s.eyebrow}>POTRIVIRE REVENew</span>
-        <p className={s.routerLead}>Alege cum arată procesul tău. Rezultatul se generează din reguli predefinite.</p>
+        <div className={s.routerIntro}>
+          <span className={s.eyebrow}>POTRIVIRE REVENew</span>
+          <h3>Configurează un proces apropiat de realitatea ta.</h3>
+          <p>Alege trei lucruri. ReveNew îți arată unde s-ar putea pierde continuitatea și ce ar primi echipa.</p>
+        </div>
 
-        {groups.map(group => (
-          <div className={s.pickerGroup} key={group.title}>
-            <span className={s.pickerTitle}>{group.title}</span>
-            <div role="radiogroup" aria-label={group.title} className={s.pickerGrid}>
-              {group.options.map(option => {
-                const selected = option.value === input[group.key];
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    role="radio"
-                    aria-checked={selected}
-                    className={selected ? `${s.choice} ${s.choiceSelected}` : s.choice}
-                    onClick={() => updateSelection(group.key, option.value)}
-                  >
-                    <span>{option.label}</span>
-                    <small>{option.helper}</small>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ))}
+        {groups.map(group => {
+          const selectedOption = group.options.find(option => option.value === input[group.key]) ?? group.options[0];
+          const twoColumns = group.options.length === 2;
 
-        <p className={s.guidance}>
-          Ghid orientativ pe baza selecției. Fără transmitere de date. Fără AI pe acest pas.
-        </p>
+          return (
+            <fieldset className={s.pickerGroup} key={group.title}>
+              <legend className={s.pickerTitle}>{group.title}</legend>
+              <p className={s.pickerHelper}>{selectedOption.helper}</p>
+              <div
+                role="radiogroup"
+                aria-label={group.title}
+                className={twoColumns ? `${s.pickerGrid} ${s.pickerGridTwo}` : s.pickerGrid}
+              >
+                {group.options.map(option => {
+                  const selected = option.value === input[group.key];
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      aria-label={`${option.label}. ${option.helper}`}
+                      className={selected ? `${s.choice} ${s.choiceSelected}` : s.choice}
+                      onClick={() => updateSelection(group.key, option.value)}
+                    >
+                      <span className={s.choiceDot} aria-hidden="true" />
+                      <span>{option.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </fieldset>
+          );
+        })}
+
+        <p className={s.guidance}>Ghid orientativ pe baza selecțiilor. Fără transmitere de date și fără analiză AI pe acest pas.</p>
       </div>
 
       <div className={s.routerResult} aria-live="polite" aria-atomic="true">
-        <span className={s.eyebrow}>REVENew ÎȚI ARATĂ</span>
+        <div className={s.resultHeading}>
+          <span className={s.eyebrow}>REVENew ÎȚI ARATĂ</span>
+          <span className={s.resultState}>Diagnostic ghidat</span>
+        </div>
         <h3>{result.fit}</h3>
 
-        <dl className={s.resultGrid}>
-          <div>
-            <dt>RISC PROBABIL</dt>
-            <dd>{result.risk}</dd>
-          </div>
-          <div>
-            <dt>CE AR LEGA REVENew</dt>
-            <dd>{result.reveal}</dd>
-          </div>
-          <div>
-            <dt>CE AR SCOATE LA VEDERE</dt>
-            <dd>{result.prepare}</dd>
-          </div>
-          <div>
-            <dt>PAS PREGĂTIT</dt>
-            <dd>{result.outcome}</dd>
-          </div>
-          <div>
-            <dt>DECIZIA RĂMÂNE LA</dt>
-            <dd>{result.decision}</dd>
-          </div>
-          <div>
-            <dt>SURSELE RELEVANTE</dt>
-            <dd>{result.sources}</dd>
-          </div>
-        </dl>
+        <div className={s.riskPanel}>
+          <span>Unde se poate rupe execuția</span>
+          <p>{result.risk}</p>
+        </div>
 
-        <div className={s.resultStrip}>
-          <div>
-            <HandThumbUpIcon aria-hidden="true" />
-            <span>Potrivit de la lansare</span>
-          </div>
-          <div>
-            <ChevronRightIcon aria-hidden="true" />
-            <strong>Ceva de verificat</strong>
-            <small>{result.reveal}</small>
-          </div>
-          <div>
-            <ShieldCheckIcon aria-hidden="true" />
-            <strong>Decizie umană</strong>
-            <small>{result.decision}</small>
-          </div>
+        <div className={s.diagnosisGrid}>
+          <article>
+            <span>Ce ar lega ReveNew</span>
+            <p>{result.reveal}</p>
+          </article>
+          <article>
+            <span>Ce devine vizibil</span>
+            <p>{result.prepare}</p>
+          </article>
+          <article>
+            <span>Pas pregătit</span>
+            <p>{result.outcome}</p>
+          </article>
+          <article>
+            <span>Decizia rămâne la</span>
+            <p>{result.decision}</p>
+          </article>
+        </div>
+
+        <div className={s.sourcesLine}>
+          <span>Surse relevante</span>
+          <p>{result.sources}</p>
         </div>
       </div>
     </div>
