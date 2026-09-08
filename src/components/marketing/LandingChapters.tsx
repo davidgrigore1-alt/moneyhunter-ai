@@ -1,13 +1,17 @@
 import Link from "next/link";
 import { LiquidLink } from "./LiquidLink";
 import { DemoRequestLink } from "./DemoRequestLink";
-import { MarketingBrand } from "./MarketingBrand";
+import { MarketingPublicBrand as MarketingBrand } from "./MarketingBrandTile";
+import { ArrowRightIcon, DocumentTextIcon, UserIcon, ListBulletIcon, ShieldCheckIcon, FlagIcon } from "@heroicons/react/24/outline";
 import { WorkbookEvidence } from "./WorkbookEvidence";
 import { QualificationRouter } from "./QualificationRouter";
 import { WorkflowDemo } from "./WorkflowDemo";
-import { CommercialThread, ConnectedEcosystem, MeasurementScene, TrustArchitecture } from "./LandingVisuals";
+import { CommercialThread, ConnectedEcosystem, EvaluatedEcosystem, MeasurementScene, TrustArchitecture } from "./LandingVisuals";
 import s from "./chapters.module.css";
 import p from "./final-polish.module.css";
+import r from "./reference.module.css";
+import { ReferenceComparison } from "./ReferenceComparison";
+import { ChapterMotion } from "./ChapterMotion";
 
 const faqs = [
   ["Înlocuiește ReveNew CRM-ul?", "Nu trebuie să înlocuiești CRM-ul ca să începi discuția. ReveNew urmărește continuitatea comercială: caz, dovezi, responsabil, pas următor și rezultat. Stabilim cum lucrează alături de evidențele tale, în funcție de sursele și conectările disponibile."],
@@ -22,18 +26,15 @@ const faqs = [
 ] as const;
 
 export function LandingChapters() {
-  return <div className={s.chapters}>
+  return <div className={`${s.chapters} ${r.page}`}>
     <section id="produs" className={`${s.chapter} ${s.light}`} aria-labelledby="commercial-break-title"><div className={s.container}>
       <div className={s.heading}><div><p className={s.overline}>01 / Unde se pierde continuitatea</p><h2 id="commercial-break-title">Oferta a plecat.<br />Următorul pas nu trebuie să dispară.</h2></div><p className={s.lead}>Un termen promis. O conversație rămasă deschisă. ReveNew aduce la vedere ce trebuie verificat, cine răspunde și ce urmează.</p></div>
-      <CommercialThread />
+      <p className={r.disclosure}>Scenariu demonstrativ · companii și valori de exemplu</p><CommercialThread />
     </div></section>
 
     <section id="ce-se-schimba" className={`${s.chapter} ${s.neutral}`} aria-labelledby="change-title"><div className={s.container}>
-      <div className={s.heading}><div><p className={s.overline}>02 / Ce se schimbă cu ReveNew</p><h2 id="change-title">Din informații răspândite,<br />un caz cu un pas clar.</h2></div><p className={s.lead}>ReveNew leagă informația comercială pe care compania o are deja și scoate la vedere unde se rupe execuția: ce caz necesită atenție, pe ce dovezi, cine răspunde, ce pas urmează și ce rezultat a fost confirmat.</p></div>
-      <div className={s.valueComparison}>
-        {[["Cazul", "Oferta și promisiunea rămân între fișier, email și colegi. Blocajul poate fi observat târziu.", "Cazul care cere atenție apare împreună cu dovezile și informația care lipsește."], ["Responsabilitatea", "La predarea între colegi, poate rămâne neclar cine continuă discuția.", "Responsabilul este vizibil; când lipsește, echipa știe ce trebuie clarificat."], ["Următorul pas", "O revenire promisă poate rămâne fără termen, acțiune sau revizuire.", "Echipa primește o propunere de pas următor, pe care persoana autorizată o verifică și o decide."], ["Rezultatul", "O ofertă deschisă poate fi confundată cu un rezultat obținut.", "Estimarea rămâne separată de rezultatul consemnat, cu autor și motiv de verificat."]].map(([label,before,after])=><div className={s.comparisonRow} key={label}><h3>{label}</h3><p><span>Fără un fir comun</span>{before}</p><p><span>Cu ReveNew</span>{after}</p></div>)}
-      </div>
-      <ol className={s.commercialChain} aria-label="De la context la rezultat">{["Context", "Ruptură", "Dovezi", "Responsabil", "Pas pregătit", "Decizie umană", "Rezultat verificabil"].map(step=><li key={step}>{step}</li>)}</ol>
+      <div className={s.heading}><div><p className={s.overline}>02 / Ce se schimbă cu ReveNew</p><h2 id="change-title">Din informații răspândite,<br />un caz cu un pas clar.</h2></div><p className={s.lead}>Informațiile există deja. ReveNew le leagă într-un caz cu dovezi, un responsabil și o continuare de verificat.</p></div>
+      <ReferenceComparison />
     </div></section>
 
     <section id="masurare" className={`${s.chapter} ${s.dark}`} aria-labelledby="measurement-title"><div className={s.container}>
@@ -48,6 +49,8 @@ export function LandingChapters() {
       <div className={s.heading}><div><p className={s.overline}>05 / Instrumentele echipei tale</p><h2 id="integrations-title">Instrumentele rămân.<br />Informația lucrează împreună.</h2></div><p className={s.lead}>Conversația, întâlnirea și documentul ajung în același caz comercial — în limitele accesului acordat.</p></div><ConnectedEcosystem /><p className={s.integrationNote}>Alegem sursele potrivite procesului tău. <a href="#intrebari">Vezi detaliile despre acces și integrări.</a></p>
     </div></section>
 
+    <section id="ecosistem-evaluare" className={`${s.chapter} ${s.deep}`} aria-label="Evaluarea altor sisteme"><div className={s.container}><EvaluatedEcosystem /></div></section>
+
     <section id="dovezi" className={`${s.chapter} ${s.neutral}`} aria-label="Dovezi inspectabile"><div className={s.container}><WorkbookEvidence /></div></section>
 
     <section id="securitate" className={`${s.chapter} ${s.deep}`} aria-labelledby="trust-title"><div className={s.container}>
@@ -55,60 +58,50 @@ export function LandingChapters() {
     </div></section>
 
     <section id="potrivire" className={`${s.chapter} ${s.light}`} aria-labelledby="fit-title"><div className={s.container}>
-      <div className={s.heading}><div><p className={s.overline}>08 / Potrivire comercială</p><h2 id="fit-title">Vezi unde s-ar aplica<br />în compania ta.</h2></div><p className={s.lead}>Oferte, predări între colegi sau reînnoiri. Alege o situație apropiată de realitatea ta și vezi ce ar deveni vizibil pentru echipă.</p></div>
+      <div className={s.heading}><div><p className={s.overline}>08 / Potrivire comercială</p><h2 id="fit-title">Vezi unde s-ar aplica<br />în compania ta.</h2></div><p className={s.lead}>Alege un proces pe care îl recunoști. Vezi de ce merită urmărit și unde se poate pierde continuitatea.</p></div>
       <QualificationRouter />
     </div></section>
 
     <section id="incepem" className={`${s.chapter} ${s.deep} ${s.collaborationStart}`} aria-labelledby="start-title"><div className={s.container}>
-      <div className={s.heading}><div><p className={s.overline}>09 / Colaborarea</p><h2 id="start-title">Începem cu<br />un singur proces.</h2></div><p className={s.lead}>Nu îți cerem să schimbi compania. Alegem un flux comercial real, confirmăm contextul necesar și vedem dacă ReveNew aduce cazurile potrivite în fața echipei.</p></div>
+      <div className={s.heading}><div><p className={s.overline}>09 / Colaborarea</p><h2 id="start-title">Începem cu<br />un singur proces.</h2></div><p className={s.lead}>Păstrăm sistemele și felul în care lucrează echipa. Alegem un flux real și aducem în față cazurile care cer atenție.</p></div>
 
-      <ol className={p.startRail} aria-label="Cum începe colaborarea">
+      <ChapterMotion name="collaboration" duration={550} className={r.collaboration}><ol className={p.startRail} aria-label="Cum începe colaborarea" data-enter="1">
         <li className={p.startStep}>
           <div className={p.startStepTop}><span className={p.startIndex}>01</span><h3>Alegem procesul</h3></div>
-          <p>Delimităm un flux unde continuitatea contează și stabilim cine îl deține.</p>
+          <p>Identificăm un flux comercial real unde continuitatea contează.</p>
         </li>
         <li className={p.startStep}>
           <div className={p.startStepTop}><span className={p.startIndex}>02</span><h3>Confirmăm sursele și accesul</h3></div>
-          <p>Folosim numai datele necesare și numai accesul autorizat pentru procesul convenit.</p>
+          <p>Lucrăm doar cu contextul necesar și autorizat.</p>
         </li>
         <li className={p.startStep}>
           <div className={p.startStepTop}><span className={p.startIndex}>03</span><h3>Aducem cazurile în fața echipei</h3></div>
-          <p>ReveNew prezintă situațiile care cer atenție cu contextul necesar pentru revizuire.</p>
+          <p>Echipa vede cazul, dovezile și pasul pregătit.</p>
         </li>
       </ol>
 
-      <div className={p.startOutcome}>
-        <div className={p.startOutcomeLead}>
-          <span>Ce primește echipa</span>
-          <p>Un caz comercial pregătit pentru o decizie, nu încă un dashboard de urmărit.</p>
-        </div>
-        <div className={p.startOutcomeItems}>
-          {["Prioritate", "Dovadă", "Responsabil", "Pas pregătit", "Revizuire"].map(item => <div className={p.startOutcomeItem} key={item}><strong>{item}</strong></div>)}
-        </div>
+      <div className={r.implementationOutput}>
+        <div className={r.outputHeading}><span>Ce primește echipa</span><h3>Un caz pregătit pentru decizie.</h3><p>De la semnal la revizuire, într-un singur fir.</p></div>
+        <div className={r.outputItems}>{[
+          {title:"Prioritate clară",detail:"Ce cere atenție",Icon:FlagIcon},
+          {title:"Dovadă",detail:"Fragmentul din sursă",Icon:DocumentTextIcon},
+          {title:"Responsabil",detail:"Cine continuă cazul",Icon:UserIcon},
+          {title:"Pas pregătit",detail:"Propunerea de verificat",Icon:ListBulletIcon},
+          {title:"Revizuire umană",detail:"Decizia echipei",Icon:ShieldCheckIcon}
+        ].map(({title,detail,Icon})=><div key={title}><Icon aria-hidden="true"/><strong>{title}</strong><span>{detail}</span></div>)}</div>
       </div>
-
-      <dl className={p.engagementGrid}>
-        <div className={p.engagementCard}>
-          <dt>Cine intră în prima discuție</dt>
-          <dd>Responsabilul procesului și persoana care poate autoriza sursele necesare.</dd>
-        </div>
-        <div className={p.engagementCard}>
-          <dt>Ce validăm înainte să extindem</dt>
-          <dd>Dacă ReveNew găsește cazuri utile, dacă echipa le poate revizui și ce rezultat merită urmărit.</dd>
-        </div>
-      </dl>
-
-      <p className={p.collabClose}>Prima discuție pornește de la un caz real al companiei tale. <a href="/solicita-demo">Discută cu noi</a></p>
+      </ChapterMotion>
+      <div className={r.implementationClose}><p>Prima discuție: responsabilul procesului și persoana care autorizează sursele.</p><LiquidLink href="/solicita-demo" variant="quiet">Discută cu noi despre primul proces <ArrowRightIcon aria-hidden="true"/></LiquidLink></div>
     </div></section>
 
     <section id="intrebari" className={`${s.chapter} ${s.faqSection}`} aria-labelledby="faq-title"><div className={`${s.container} ${s.faqLayout}`}>
       <div className={p.faqIntro}><p className={s.overline}>Întrebările deciziei</p><h2 id="faq-title">Înainte să începem.</h2><p className={s.lead}>Răspunsurile importante înainte să pui procesul și datele pe masă.</p></div>
-      <div className={p.faqList}>
-        {faqs.map(([question,answer], index)=><details className={p.faqItem} key={question}><summary className={p.faqQuestion}><span className={p.faqNumber}>{String(index + 1).padStart(2,"0")}</span><span className={p.faqQuestionText}>{question}</span><span className={p.faqToggle} aria-hidden="true">+</span></summary><div className={p.faqAnswer}><p>{answer}</p></div></details>)}
-      </div>
+      <ChapterMotion name="faq" duration={400} className={p.faqList}>
+        {faqs.map(([question,answer], index)=><details className={p.faqItem} key={question} data-enter="1"><summary className={p.faqQuestion}><span className={p.faqNumber}>{String(index + 1).padStart(2,"0")}</span><span className={p.faqQuestionText}>{question}</span><span className={p.faqToggle} aria-hidden="true">+</span></summary><div className={p.faqAnswer}><p>{answer}</p></div></details>)}
+      </ChapterMotion>
     </div></section>
 
-    <section className={s.closing} id="urmatorul-pas" aria-labelledby="closing-title"><div className={s.container}><div className={s.closingMark} aria-hidden="true"><MarketingBrand /></div><h2 id="closing-title">Vezi ce rămâne<br />între ofertă și rezultat.</h2><p className={s.lead}>Pornim de la un proces real al echipei tale și vedem unde se pierde continuitatea, cine trebuie să intervină și ce rezultat poate fi urmărit.</p><div className={s.closingActions}><DemoRequestLink material="primary" /><LiquidLink href="#cum-functioneaza" variant="quiet">Explorează produsul</LiquidLink></div></div></section>
+    <section className={s.closing} id="urmatorul-pas" aria-labelledby="closing-title"><ChapterMotion name="closing" duration={450} className={s.container}><div className={s.closingMark} aria-hidden="true"><MarketingBrand /></div><h2 id="closing-title">Mai puțin context pierdut.<br />Mai multă claritate.</h2><p className={s.lead}>Pornim de la un proces real al companiei tale.</p><div className={s.closingActions}><DemoRequestLink material="primary" /><LiquidLink href="#cum-functioneaza" variant="quiet">Explorează produsul</LiquidLink></div></ChapterMotion></section>
   </div>;
 }
 

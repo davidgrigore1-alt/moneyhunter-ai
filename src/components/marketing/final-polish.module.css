@@ -17,7 +17,7 @@
   display:block;
   margin-bottom:8px;
   color:#dcc57e;
-  font-size:10px;
+  font-size:12px;
   font-weight:650;
   letter-spacing:.085em;
   text-transform:uppercase;
@@ -45,7 +45,7 @@
   border-radius:999px;
   color:#d9c587;
   background:#14120d;
-  font-size:10px;
+  font-size:12px;
   font-weight:600;
   letter-spacing:.035em;
   white-space:nowrap;
@@ -68,7 +68,7 @@
 .integrationCluster h4 {
   margin:0 0 16px;
   color:#85858d;
-  font-size:10px;
+  font-size:12px;
   font-weight:600;
   letter-spacing:.07em;
   text-transform:uppercase;
@@ -110,7 +110,7 @@
 }
 .integrationItemText small {
   color:#7f7f86;
-  font-size:10px;
+  font-size:12px;
   line-height:1.4;
 }
 .integrationCluster:last-child {
@@ -153,7 +153,7 @@
 .integrationFooter span {
   flex-shrink:0;
   color:#6f6f76;
-  font-size:10px;
+  font-size:12px;
   letter-spacing:.035em;
   text-transform:uppercase;
 }
@@ -184,8 +184,9 @@
 }
 .startStepTop {
   display:flex;
-  align-items:center;
-  gap:12px;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:18px;
   min-height:38px;
 }
 .startIndex {
@@ -196,9 +197,9 @@
   flex:0 0 36px;
   border:1px solid #6d6040;
   border-radius:50%;
-  background:#0b0b0b;
+  background:#1b1913;
   color:#dcc57e;
-  font-size:10px;
+  font-size:12px;
   font-weight:650;
   letter-spacing:.035em;
 }
@@ -209,6 +210,7 @@
   font-weight:560;
   letter-spacing:-.02em;
 }
+@media(min-width:601px) { .startStep h3 { min-height:44px; } }
 .startStep p {
   margin:15px 0 0;
   max-width:360px;
@@ -234,7 +236,7 @@
 .startOutcomeLead span {
   display:block;
   color:#dcc57e;
-  font-size:10px;
+  font-size:12px;
   font-weight:650;
   letter-spacing:.07em;
   text-transform:uppercase;
@@ -259,13 +261,7 @@
   padding:18px 16px;
 }
 .startOutcomeItem+.startOutcomeItem { border-left:1px solid #2d2d2d; }
-.startOutcomeItem::before {
-  content:"";
-  width:5px;
-  height:5px;
-  border-radius:50%;
-  background:#dcc57e;
-}
+
 .startOutcomeItem strong {
   color:#f2f1ed;
   font-size:12px;
@@ -322,6 +318,8 @@
   transition:background-color 180ms ease;
 }
 .faqItem[open] { background:#f7f6f2; }
+.faqItem:hover { background:#f7f7f4; }
+.faqItem:focus-within { background:#f5f3ed; }
 .faqQuestion {
   display:grid;
   grid-template-columns:38px minmax(0,1fr) 34px;
@@ -333,9 +331,10 @@
   cursor:pointer;
 }
 .faqQuestion::-webkit-details-marker { display:none; }
+.faqQuestion:focus-visible { outline:2px solid #99814d; outline-offset:-3px; border-radius:4px; }
 .faqNumber {
   color:#9c8b59;
-  font-size:10px;
+  font-size:12px;
   font-weight:600;
   letter-spacing:.04em;
 }
@@ -371,7 +370,7 @@
 }
 .faqAnswer {
   padding:0 58px 22px 56px;
-  animation:faqReveal 180ms ease;
+  animation:faqReveal 260ms ease;
 }
 .faqAnswer p {
   margin:0;
@@ -436,7 +435,7 @@
   }
   .startStep { padding:0 0 24px; }
   .startStep:last-child { padding-bottom:0; }
-  .startStepTop { align-items:flex-start; }
+  .startStepTop { flex-direction:row; align-items:flex-start; gap:12px; }
   .startStep h3 { padding-top:7px; }
   .startStep p { margin:8px 0 0 48px; }
   .startOutcome { grid-template-columns:1fr; gap:0; }
@@ -452,3 +451,11 @@
   .faqAnswer { padding:0 34px 20px 40px; }
   .faqQuestionText { font-size:15px; }
 }
+
+/* Native details preserve keyboard and no-JS behavior; modern browsers also animate closing. */
+@supports (interpolate-size:allow-keywords) {
+ .faqItem { interpolate-size:allow-keywords; }
+ .faqItem::details-content { block-size:0; overflow:hidden; opacity:0; transition:block-size 260ms ease,opacity 260ms ease,content-visibility 260ms allow-discrete; }
+ .faqItem[open]::details-content { block-size:auto; opacity:1; }
+}
+@media(prefers-reduced-motion:reduce) { .faqItem::details-content,.faqAnswer,.faqToggle { transition:none; animation:none; } }

@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { authPath } from "@/lib/auth/redirects";
 import { marketingSections } from "@/lib/marketing/navigation";
-import { MarketingBrand } from "./MarketingBrand";
+import { MarketingPublicBrand as MarketingBrand } from "./MarketingBrandTile";
 import { DemoRequestLink } from "./DemoRequestLink";
 import { marketingFont } from "./font";
 import s from "./hero.module.css";

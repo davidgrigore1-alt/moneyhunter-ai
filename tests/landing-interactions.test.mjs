@@ -164,16 +164,17 @@ test('landing has no provider or private-data boundary and all primary CTAs shar
 test('lower chapters render meaningful final states before client enhancement',()=>{
   const {LandingChapters}=load('src/components/marketing/LandingChapters.tsx');
   const html=renderToStaticMarkup(React.createElement(LandingChapters));
-  assert.equal((html.match(/data-chapter-motion=/g)||[]).length,4);
-  assert.equal((html.match(/data-phase="6" data-playing="false"/g)||[]).length,4);
-  assert.equal((html.match(/<details>/g)||[]).length,9);
+  assert.equal((html.match(/data-chapter-motion=/g)||[]).length,11);
+  assert.equal((html.match(/data-phase="6" data-playing="false"/g)||[]).length,11);
+  assert.doesNotMatch(html,/data-chapter-motion="fit"/);
+  assert.equal((html.match(/<details\b/g)||[]).length,10);
   for(const id of ['produs','dovezi','executie','integrari','masurare','securitate','intrebari','urmatorul-pas','workbook-range']) assert.ok(html.includes(`id="${id}"`),id);
   assert.match(html,/href="#workbook-range"/);
   assert.match(html,/Nu o încasare verificată/);
-  assert.match(html,/ÎN DEZVOLTARE/);
+  assert.match(html,/Facturarea și încasarea rămân separat/);
   const order=["produs","ce-se-schimba","masurare","executie","integrari","dovezi","securitate","potrivire","incepem","intrebari","urmatorul-pas"].map(id=>html.indexOf(`id="${id}"`));
   assert.ok(order.every((position,index)=>index===0 || position>order[index-1]));
-  assert.doesNotMatch(html,/type="submit"|<iframe|Redă|Parcurge|Pauză animație|Continuă animația/);
+  assert.doesNotMatch(html,/<iframe|Redă|Parcurge|Pauză animație|Continuă animația/);
 });
 
 test('evidence and measurement preserve the approved illustrative case and source coordinates',()=>{
@@ -192,7 +193,7 @@ test('evidence and measurement preserve the approved illustrative case and sourc
   assert.match(measurement,/46\.000/);
   assert.match(measurement,/Radu Matei/);
   assert.match(measurement,/Nu o încasare verificată/);
-  assert.match(measurement,/Reconcilierea facturilor și plăților nu este disponibilă/);
+  assert.match(measurement,/Reconcilierea automată a facturilor și plăților nu este disponibilă/);
 });
 
 
@@ -202,20 +203,44 @@ test('qualification is bounded, distinguishes low fit and never grants CRM conne
   const result=qualify({process,context,team});
   for(const field of ['fit','risk','sources','reveal','prepare','decision','outcome']) assert.ok(result[field]?.length>15);
   if(process==='retail') assert.match(result.fit,/limitată/);
-  if(context==='crm') assert.match(result.sources,/se evaluează înainte de activare/);
+  if(context==='crm') assert.match(result.sources,/se validează înainte de activare/);
   assert.doesNotMatch(JSON.stringify(result),/venit garantat|integrare activă|analiză AI live/);
  }
 });
 
-test('source labels retain pixel proportions while traveling through a stretched canvas',()=>{
- const {paintSources,sourceProgress}=load('src/lib/marketing/source-convergence.ts');
+test('source labels preserve pixel size, dwell for reading and travel one at a time',()=>{
+ const {paintSources,sourceFrame}=load('src/lib/marketing/source-convergence.ts');
  const packet={ownerSVGElement:{clientWidth:1250,clientHeight:66},style:{},setAttribute(key,value){this[key]=value;}};
- const path={dataset:{length:'100'},getPointAtLength:value=>({x:value,y:value})};
- paintSources({querySelectorAll:()=>[packet],querySelector:()=>path},960,4800);
+ const path={dataset:{},d:'M100 0V132',getAttribute(){return this.d},setAttribute(key,value){this.d=value},getTotalLength:()=>132,getPointAtLength:value=>({x:100,y:value})};
+ const root={querySelectorAll:()=>[packet],querySelector:q=>q.includes('route')?path:null};
+ paintSources(root,400,9500);
  assert.match(packet.transform,/scale\(0.8 2\)/);
  assert.equal(packet.style.opacity,'1');
- paintSources({querySelectorAll:()=>[packet],querySelector:()=>path},4800,4800);
+ assert.equal(sourceFrame(829,9500,0).progress,0);
+ assert.ok(sourceFrame(1000,9500,0).progress>0);
+ assert.equal(sourceFrame(1480,9500,0).progress,1);
+ for(let time=0;time<=9500;time+=25) {
+  const states=Array.from({length:5},(_,i)=>sourceFrame(time,9500,i));
+  assert.ok(states.filter(s=>s.active).length<=1);
+ }
+ assert.equal(sourceFrame(1800,9500,0).active,false);
+ assert.equal(sourceFrame(1800,9500,1).active,false,'pause after the first arrival');
+ paintSources(root,9500,9500);
  assert.equal(packet.style.opacity,'0');
- assert.equal(sourceProgress(0,4800,4),0);
- assert.equal(sourceProgress(4800,4800,4),1);
+ assert.equal(sourceFrame(9500,9500,4).merged,true);
+ packet.ownerSVGElement.clientWidth=300;
+ paintSources(root,1000,9500);
+ assert.equal(path.d,'M500 0V132');
+});
+
+test('executive diagnostic starts with guidance and waits for an explicit submission',()=>{
+ const {QualificationRouter}=load('src/components/marketing/QualificationRouter.tsx');
+ const html=renderToStaticMarkup(React.createElement(QualificationRouter));
+ assert.match(html,/data-diagnostic-state="introduction"/);
+ assert.match(html,/Arată-mi unde se poate rupe execuția/);
+ assert.match(html,/Cât din continuitate depinde de memoria echipei/);
+ assert.doesNotMatch(html,/Unde poate apărea ruptura|Ce câștigă conducerea/);
+ assert.match(html,/<button[^>]*type="submit"/);
+ assert.equal((html.match(/<fieldset/g)||[]).length,3);
+ assert.equal((html.match(/type="radio"/g)||[]).length,8);
 });

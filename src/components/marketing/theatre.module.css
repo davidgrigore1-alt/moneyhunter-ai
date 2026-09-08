@@ -166,6 +166,12 @@
 .companyRegister td { height: 47px; padding: 6px; border-bottom: 1px solid #ffffff0a; color: #cccbd1; vertical-align: middle; overflow: hidden; }
 .companyRegister td:first-child { padding-left: 13px; }
 .companyRegister tr[data-highlight=true] { background: #e8ce8c09; box-shadow: inset 2px 0 #e8ce8c; }
+.companyRegister th:nth-child(n+3) { text-align:center; }
+.companyRegister td:nth-child(n+3) { text-align:center; }
+.companyRegister .connection > span { justify-content:center; }
+.companyRegister .ownerCell { justify-content:center; text-align:left; }
+.companyRegister .ownerCell>span:last-child { min-width:46px; }
+.companyRegister .arrCell { font-feature-settings:"tnum"; letter-spacing:-.15px; }
 .registerIdentity { display: flex; align-items: center; gap: 7px; min-width: 0; }
 .rowCheck { display: inline-grid; place-items: center; width: 10px; height: 10px; flex-shrink: 0; border: 1px solid #7f8b9640; border-radius: 3px; }
 .rowCheck svg { width: 8px; height: 8px; color: #d7c18b; }
@@ -574,8 +580,8 @@
 .evidenceStrip i { width: 2px; height: 2px; border-radius: 50%; background: #8e8373; }
 .flowNode[data-node="1"] .nodeIcon { color: #8bb2d7; border-color: #8bb2d726; }
 .flowNode[data-node="2"] .nodeIcon { color: #dcc58a; border-color: #dcc58a26; }
-.decisionBranches { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: -7px 16px 0 calc(50% + 15px); padding-top: 13px; color: #b1a89b; }
-.decisionBranches::before { content: ''; position: absolute; width: 50%; height: 10px; left: 25%; top: 0; border: 1px solid #c9b78b38; border-bottom: 0; }
+.decisionBranches { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: -7px 16px 0 calc(50% + 15px); padding-top: 13px; color: #b1a89b; text-align:center; }
+.decisionBranches::before { content: ''; position: absolute; width:calc(50% + 5px); height:10px; left:calc(25% - 2.5px); top:0; border:1px solid #c9b78b60; border-bottom:0; }
 .decisionBranches::after { content: ''; position: absolute; height: 30px; width: 1px; background: #c9b78b38; top: -30px; left: 50%; }
 .decisionBranches b { display: block; font-size: 10px; font-weight: 450; }
 .decisionBranches small { display: block; margin-top: 2px; font-size: 9px; color: #85818a; }
@@ -602,3 +608,50 @@
 .flowNode[data-flow-state="processing"] .nodeBody { border-color:#dcc57e; }
 
 @media(max-width:767px) { .flowNode:not(:last-of-type)::after { transform:scaleY(var(--edge-fill,1)); transform-origin:top; } }
+
+/* Approved internal screen corrections; shell and playback remain unchanged. */
+.companyRegister tr[data-highlight=true]:hover { background-color:#e8ce8c10; }
+.topicChip svg { flex-shrink:0; }
+.tableTotals { font-variant-numeric:tabular-nums; }
+.registerSelection { min-height:36px; }
+.nodeSequence { margin-left:auto; font-size:9px; color:#9b988f; font-variant-numeric:tabular-nums; }
+.workflowScene .nodeBody { background:#161616; border-color:#ffffff27; }
+.workflowScene .nodeBody>span:last-child { min-width:0; }
+.workflowScene .nodeBody small { display:flex; align-items:center; gap:5px; line-height:1.35; }
+.workflowScene .nodeBody small img { flex-shrink:0; object-fit:contain; }
+.workflowScene .nodeBody small svg { width:12px; height:12px; flex-shrink:0; }
+.workflowScene .nodeBody small .personAvatar { width:16px; height:16px; font-size:7px; }
+.workflowScene .nodeBody small .personAvatar svg { width:100%; height:100%; }
+.workflowScene .flowNode[data-node="3"] .nodeBody { border-color:#cbb57c; background:#1c1b18; }
+.workflowScene .nodeStatus { letter-spacing:.01em; }
+.workflowScene .decisionBranches small { color:#a09d9e; }
+@media(min-width:768px) {
+ .workflowScene .nodeBody { min-height:76px; }
+ .workflowScene .nodePort,.workflowScene .nodePortOut { bottom:35.5px; }
+}
+@media(max-width:767px) {
+ .companyRegister td:nth-child(3) { text-align:right; }
+ .companyRegister td:nth-child(7) { text-align:left; }
+ .workflowScene .nodeSequence { padding-right:2px; }
+}
+
+/* One measured track contract for the illustrative register and its totals. */
+@media(min-width:768px) {
+ .companiesScene { --register-inset:18px; --company-columns:minmax(0,25fr) minmax(0,16fr) minmax(0,16fr) minmax(0,11fr) minmax(0,8fr) minmax(0,12fr) minmax(0,12fr); }
+ .companyRegister table,.companyRegister thead,.companyRegister tbody { display:block; }
+ .companyRegister tr,.companiesScene .tableTotals { display:grid; grid-template-columns:var(--company-columns); gap:0; }
+ .companyRegister th,.companyRegister td { display:flex; align-items:center; justify-content:center; min-width:0; width:auto!important; }
+ .companyRegister th { min-height:35px; }
+ .companyRegister td { height:47px; }
+ .companyRegister th:nth-child(-n+2),.companyRegister td:nth-child(-n+2) { justify-content:flex-start; }
+ .companyRegister th small { margin-left:3px; }
+ .companyRegister .ownerCell { width:76px; justify-content:flex-start; }
+ .companiesScene .tableTotals { margin-inline:calc(-1 * var(--register-inset)); }
+ .tableTotals>span:first-child { grid-column:1; padding-left:13px; }
+ .tableTotals>span:nth-child(2) { grid-column:3 / 6; text-align:center; white-space:nowrap; }
+ .tableTotals>span:last-child { grid-column:6 / 8; text-align:right; padding-inline:6px; }
+ .companiesScene .registerSelection { margin-left:calc(13px - var(--register-inset)); margin-right:calc(6px - var(--register-inset)); }
+ .decisionBranches { position:absolute; left:var(--branch-left); top:var(--branch-top); width:var(--branch-width); margin:0; }
+}
+@media(min-width:1700px) { .companiesScene { --register-inset:22px; } }
+.decisionBranches::after { top:calc(-1 * var(--branch-stem,22px)); height:var(--branch-stem,22px); transform:translateX(-.5px); }

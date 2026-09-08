@@ -109,9 +109,17 @@ export function WorkflowScene() {
       };
       const [a,b,c,d,e,f] = [port(nodes[0],true),port(nodes[1],false),port(nodes[1],true),port(nodes[2],false),port(nodes[2],true),port(nodes[3],false)];
       const middle = (c[1]+d[1])/2;
-      const paths = [`M${a}H${b[0]}`, `M${c}H${element.clientWidth-6}V${middle}H6V${d[1]}H${d[0]}`, `M${e}H${f[0]}`];
+      const paths = [`M${a}H${b[0]}`, `M${c}H${element.clientWidth-14}q8 0 8 8V${middle-8}q0 8 -8 8H14q-8 0 -8 8V${d[1]-8}q0 8 8 8H${d[0]}`, `M${e}H${f[0]}`];
       svg.setAttribute("viewBox",`0 0 ${element.clientWidth} ${element.clientHeight}`);
       svg.querySelectorAll<SVGPathElement>("path").forEach((line,i) => { line.setAttribute("d",paths[i % 3]); if (line.hasAttribute("data-flow-edge")) line.dataset.length = String(line.getTotalLength()); });
+      const branches = element.parentElement?.querySelector<HTMLElement>(`.${s.decisionBranches}`);
+      if (branches) {
+        const review = nodes[3];
+        branches.style.setProperty("--branch-left", `${review.offsetLeft}px`);
+        branches.style.setProperty("--branch-width", `${review.offsetWidth}px`);
+        branches.style.setProperty("--branch-top", `${element.offsetTop + review.offsetTop + review.offsetHeight + 22}px`);
+        branches.style.setProperty("--branch-stem", `${branches.offsetTop - element.offsetTop - review.offsetTop - review.offsetHeight}px`);
+      }
       const clock=element.closest<HTMLElement>("figure"); if(clock) paintFlow(clock,clock.dataset.flowDuration ? Number(clock.dataset.flowElapsed) : matchMedia("(prefers-reduced-motion: reduce)").matches ? 5100 : 0,Number(clock.dataset.flowDuration || 5100));
     };
     const observer = new ResizeObserver(connect);
@@ -126,7 +134,7 @@ export function WorkflowScene() {
         <div className={s.flowContext}><CompanyMark /><span><b>Atelier Nord</b><small>Contract de mentenanță · 42.000 RON estimat</small></span><EllipsisHorizontalIcon /></div>
         <div ref={graph} className={s.flowGraph}>
           <svg ref={wires} className={s.flowWires} aria-hidden="true">{[0,1,2].map(i=><path key={`base${i}`} className={s.wireBase} />)}{[0,1,2].map(i=><path key={i} className={s.wireTrace} data-flow-edge={i} pathLength="1" />)}{[0,1,2].map(i=><circle key={`dot${i}`} data-flow-dot={i} r="2.5" fill="#dcc57e" opacity="0" />)}</svg>
-          {workflowNodes.map((node,index) => <div key={node.title} className={s.flowNode} data-node={index} data-flow-node={index} data-flow-state="complete" style={{ "--node": index } as CSSProperties}><span className={s.nodePort} /><div className={s.nodeStatus}>{index < 3 ? <CheckIcon /> : <LockClosedIcon />}{node.state}</div><div className={s.nodeBody}><span className={s.nodeIcon}><node.icon /></span><span><b>{node.title}</b><small>{node.detail}</small></span></div><span className={s.nodePortOut} /></div>)}
+          {workflowNodes.map((node,index) => <div key={node.title} className={s.flowNode} data-node={index} data-flow-node={index} data-flow-state="complete" style={{ "--node": index } as CSSProperties}><span className={s.nodePort} /><div className={s.nodeStatus}>{index < 3 ? <CheckIcon /> : <LockClosedIcon />}{node.state}<span className={s.nodeSequence}>0{index+1}</span></div><div className={s.nodeBody}><span className={s.nodeIcon}><node.icon /></span><span><b>{node.title}</b><small>{index===0?<Image src="/brands/google/gmail.svg" width={13} height={13} alt="Gmail"/>:index===1?<Image src="/marketing/excel-source.png" width={18} height={13} alt="Excel"/>:index===2?<DocumentTextIcon/>:<PersonAvatar/>}{node.detail}</small></span></div><span className={s.nodePortOut} /></div>)}
           <span className={s.branchLabel}>Pregătire internă</span>
         </div>
         <div className={s.decisionBranches} aria-label="Ramuri posibile, neselectate"><div><b>Aprobă intern</b><small>→ lucru pregătit</small></div><div><b>Cere context</b><small>→ revizuire deschisă</small></div></div>

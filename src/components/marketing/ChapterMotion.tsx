@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, type ReactNode } from "react";
 import { chapterFinalPhase, chapterPhase, chooseVisibleChapter } from "@/lib/marketing/chapter-motion";
-import { paintFlow } from "@/lib/marketing/flow-timing";
+import { paintFlow } from "@/lib/marketing/landing-flow-timing";
 import { paintSources } from "@/lib/marketing/source-convergence";
 import s from "./chapters.module.css";
 
@@ -54,14 +54,14 @@ function startCoordinator() {
 let coordinator: ReturnType<typeof startCoordinator> | undefined;
 
 /** SSR is complete. Enhancement runs only the most visible chapter, once. */
-export function ChapterMotion({ children, name, className = "", duration = 6200 }: {
+export function ChapterMotion({ children, name, className = "", duration = 450 }: {
   children: ReactNode; name: string; className?: string; duration?: number;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!ref.current || !("IntersectionObserver" in window)) return;
-    // Finite illustrations settle within five seconds; text is always readable.
-    const scene: Scene = { element: ref.current, visibility: 0, elapsed: 0, duration: Math.min(duration, 4800), complete: false };
+    // Each narrative owns its reading time; the coordinator only arbitrates visibility.
+    const scene: Scene = { element: ref.current, visibility: 0, elapsed: 0, duration: Math.max(1, duration), complete: false };
     scenes.add(scene); coordinator ??= startCoordinator(); coordinator.register(scene);
     return () => { coordinator?.unregister(scene); if (!scenes.size) dispose?.(); };
   }, [duration]);

@@ -29,12 +29,12 @@ function harness(reduced = false) {
   }
   const { ChapterMotion } = compile('src/components/marketing/ChapterMotion.tsx', {
     react: {
-      useRef: () => { const element = { dataset: {}, querySelectorAll:()=>[] }; elements.push(element); return { current: element }; },
+      useRef: () => { const element = { dataset: {}, querySelectorAll:()=>[], querySelector:()=>null }; elements.push(element); return { current: element }; },
       useEffect: fn => effects.push(fn)
     },
     '@/lib/marketing/chapter-motion': rules,
     '@/lib/marketing/source-convergence': compile('src/lib/marketing/source-convergence.ts',{}),
-    '@/lib/marketing/flow-timing': compile('src/lib/marketing/flow-timing.ts',{}),
+    '@/lib/marketing/landing-flow-timing': compile('src/lib/marketing/landing-flow-timing.ts',{'./flow-timing': compile('src/lib/marketing/flow-timing.ts',{})}),
     './chapters.module.css': { default: { motion: 'motion' } }
   }, {
     document, window: { IntersectionObserver: Observer }, IntersectionObserver: Observer,
@@ -60,6 +60,9 @@ test('finite chapters choose one meaningful visible scene and hold the last phas
   assert.equal(rules.chapterPhase(-5, 600), 0);
   assert.equal(rules.chapterPhase(300, 600), 3);
   assert.equal(rules.chapterPhase(9000, 600), 6);
+  assert.equal(rules.chapterPhase(8350, 9000), 6);
+  assert.equal(rules.chapterPhase(17100, 18000), 5);
+  assert.equal(rules.chapterPhase(17300, 18000), 6);
 });
 
 test('hidden and offscreen time do not advance a chapter, then playback resumes', () => {
@@ -101,10 +104,13 @@ test('reduced motion is static on mount and finishes an in-progress illustration
   h.cleanup();
 });
 
-// Decorative playback has no public transport UI and must settle promptly.
-test('a long requested illustration duration still finishes within five seconds', () => {
-  const h = harness(); h.mount('workflow', 10800); h.visible([1]);
+// Narrative reading time must not be silently capped by the coordinator.
+test('source reading time is preserved and its final state is held without a loop', () => {
+  const h = harness(); h.mount('ecosystem', 8500); h.visible([1]);
   h.tick(102);
+  assert.notEqual(h.elements[0].dataset.phase, '6');
+  assert.equal(h.elements[0].dataset.playing, 'true');
+  h.tick(80);
   assert.equal(h.elements[0].dataset.phase, '6');
   assert.equal(h.elements[0].dataset.playing, 'false');
   assert.equal(h.frames.size, 0);

@@ -1,151 +1,48 @@
 "use client";
-
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowRightIcon, CalendarDaysIcon, DocumentTextIcon, UserIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
 import { qualify, type Qualification } from "@/lib/marketing/qualification";
-import s from "./commercial.module.css";
+import r from "./reference.module.css";
 
-type Option = {
-  value: string;
-  label: string;
-  helper: string;
-};
-
-type Group = {
-  title: string;
-  options: Option[];
-  key: keyof Qualification;
-};
-
-const groups: readonly Group[] = [
-  {
-    title: "Proces",
-    key: "process",
-    options: [
-      { value: "offers", label: "Oferte care cer revenire", helper: "Oferta a plecat, dar următorul pas nu este mereu confirmat." },
-      { value: "handoff", label: "Predări între colegi", helper: "Contextul trebuie să treacă odată cu responsabilitatea." },
-      { value: "renewals", label: "Reînnoiri / aprobări", helper: "Relația continuă, dar termenul poate rămâne fără acțiune clară." },
-    ],
-  },
-  {
-    title: "Unde trăiește contextul",
-    key: "context",
-    options: [
-      { value: "files", label: "Email + fișiere", helper: "Conversații, documente și registre comerciale." },
-      { value: "crm", label: "CRM + email", helper: "Evidențe comerciale și corespondență." },
-      { value: "mixed", label: "Mai multe sisteme", helper: "Contextul util este împărțit între mai multe surse." },
-    ],
-  },
-  {
-    title: "Cine atinge procesul",
-    key: "team",
-    options: [
-      { value: "several", label: "Mai mulți colegi", helper: "Există mai multe roluri, predări sau aprobări." },
-      { value: "one", label: "Un responsabil", helper: "Un singur rol ține controlul final." },
-    ],
-  },
-];
-
-function isValidValue<K extends keyof Qualification>(key: K, value: string): value is Qualification[K] {
-  return groups.find(group => group.key === key)?.options.some(option => option.value === value) ?? false;
-}
+const groups = [
+ { title:"Ce situație recunoști?", key:"process", options:[{value:"offers",label:"Oferte fără revenire"},{value:"handoff",label:"Predări între colegi"},{value:"renewals",label:"Reînnoiri"}] },
+ { title:"Unde este contextul?", key:"context", options:[{value:"files",label:"Email + fișiere"},{value:"crm",label:"CRM"},{value:"mixed",label:"Mai multe sisteme"}] },
+ { title:"Cine răspunde?", key:"team", options:[{value:"one",label:"Un responsabil"},{value:"several",label:"Mai mulți colegi"}] }
+] as const;
 
 export function QualificationRouter() {
-  const [input, setInput] = useState<Qualification>({
-    process: "offers",
-    context: "files",
-    team: "several",
-  });
-
-  const result = qualify(input);
-
-  function updateSelection<K extends keyof Qualification>(key: K, value: string) {
-    if (!isValidValue(key, value)) return;
-    setInput(previous => ({ ...previous, [key]: value } as Qualification));
+ const [input,setInput]=useState<Qualification>({process:"offers",context:"files",team:"several"});
+ const [submitted,setSubmitted]=useState<{input:Qualification; revision:number}|null>(null);
+ const target=useRef<HTMLDivElement>(null);
+ const result=submitted?qualify(submitted.input):null;
+ const changed=!!submitted && groups.some(group=>input[group.key]!==submitted.input[group.key]);
+ useEffect(()=>{
+  if(!submitted)return;
+  target.current?.focus({preventScroll:true});
+  if (matchMedia("(max-width:600px)").matches) {
+   target.current?.scrollIntoView({block:"start",behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth"});
   }
-
-  return (
-    <div className={s.router}>
-      <div className={s.routerInputs}>
-        <div className={s.routerIntro}>
-          <span className={s.eyebrow}>POTRIVIRE REVENew</span>
-          <h3>Configurează un proces apropiat de realitatea ta.</h3>
-          <p>Alege trei lucruri. ReveNew îți arată unde s-ar putea pierde continuitatea și ce ar primi echipa.</p>
-        </div>
-
-        {groups.map(group => {
-          const selectedOption = group.options.find(option => option.value === input[group.key]) ?? group.options[0];
-          const twoColumns = group.options.length === 2;
-
-          return (
-            <fieldset className={s.pickerGroup} key={group.title}>
-              <legend className={s.pickerTitle}>{group.title}</legend>
-              <p className={s.pickerHelper}>{selectedOption.helper}</p>
-              <div
-                role="radiogroup"
-                aria-label={group.title}
-                className={twoColumns ? `${s.pickerGrid} ${s.pickerGridTwo}` : s.pickerGrid}
-              >
-                {group.options.map(option => {
-                  const selected = option.value === input[group.key];
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      role="radio"
-                      aria-checked={selected}
-                      aria-label={`${option.label}. ${option.helper}`}
-                      className={selected ? `${s.choice} ${s.choiceSelected}` : s.choice}
-                      onClick={() => updateSelection(group.key, option.value)}
-                    >
-                      <span className={s.choiceDot} aria-hidden="true" />
-                      <span>{option.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </fieldset>
-          );
-        })}
-
-        <p className={s.guidance}>Ghid orientativ pe baza selecțiilor. Fără transmitere de date și fără analiză AI pe acest pas.</p>
-      </div>
-
-      <div className={s.routerResult} aria-live="polite" aria-atomic="true">
-        <div className={s.resultHeading}>
-          <span className={s.eyebrow}>REVENew ÎȚI ARATĂ</span>
-          <span className={s.resultState}>Diagnostic ghidat</span>
-        </div>
-        <h3>{result.fit}</h3>
-
-        <div className={s.riskPanel}>
-          <span>Unde se poate rupe execuția</span>
-          <p>{result.risk}</p>
-        </div>
-
-        <div className={s.diagnosisGrid}>
-          <article>
-            <span>Ce ar lega ReveNew</span>
-            <p>{result.reveal}</p>
-          </article>
-          <article>
-            <span>Ce devine vizibil</span>
-            <p>{result.prepare}</p>
-          </article>
-          <article>
-            <span>Pas pregătit</span>
-            <p>{result.outcome}</p>
-          </article>
-          <article>
-            <span>Decizia rămâne la</span>
-            <p>{result.decision}</p>
-          </article>
-        </div>
-
-        <div className={s.sourcesLine}>
-          <span>Surse relevante</span>
-          <p>{result.sources}</p>
-        </div>
-      </div>
-    </div>
-  );
+ },[submitted]);
+ return <div className={r.router}>
+  <form className={r.diagnostic} onSubmit={event=>{event.preventDefault();setSubmitted(previous=>({input:{...input},revision:(previous?.revision??0)+1}));}}>
+   {groups.map((group,i)=><fieldset key={group.key}><legend><span>0{i+1}</span>{group.title}</legend><div className={r.choices}>{group.options.map(option=><label key={option.value}><input type="radio" name={group.key} value={option.value} checked={input[group.key]===option.value} onChange={()=>setInput(current=>({...current,[group.key]:option.value}))}/><span>{option.label}</span></label>)}</div></fieldset>)}
+   <button className={r.diagnosticSubmit} type="submit">Arată-mi unde se poate rupe execuția <ArrowRightIcon aria-hidden="true"/></button>
+   <p className={r.diagnosticNote} aria-live="polite">{changed?"Selecții modificate. Apasă pentru a actualiza explicația.":input.context==="files"?"Ghid orientativ · selecții locale, fără trimitere de date.":"Conectarea sistemelor se evaluează înainte de implementare."}</p>
+  </form>
+  <div className={r.fitResult} ref={target} tabIndex={-1} aria-labelledby="diagnostic-title" data-diagnostic-state={submitted?"result":"introduction"}>
+   <div key={submitted?.revision??"introduction"} className={r.fitAnswer}>
+    <span className={r.fitScenario}>{submitted?`${groups[0].options.find(option=>option.value===submitted.input.process)?.label} · ${submitted.input.context==="files"?"Email + fișiere":submitted.input.context==="crm"?"CRM":"Mai multe sisteme"} · ${submitted.input.team==="one"?"Un responsabil":"Echipă"}`:"Un reper pentru conducerea companiei"}</span>
+    <h3 id="diagnostic-title" className={r.diagnosticTitle}>{submitted?"Unde merită să privești mai atent.":"Cât din continuitate depinde de memoria echipei?"}</h3>
+    {!submitted&&<p className={r.fitIntro}>Când o ofertă, o promisiune sau un caz trece între sisteme și oameni, următorul pas poate deveni neclar.</p>}
+    <div className={r.signalRibbon} aria-label="ReveNew urmărește patru repere">{[{Icon:CalendarDaysIcon,label:"Termen"},{Icon:UserIcon,label:"Responsabil"},{Icon:DocumentTextIcon,label:"Dovadă"},{Icon:ArrowRightIcon,label:"Pas următor"}].map(({Icon,label})=><span key={label}><Icon aria-hidden="true"/>{label}</span>)}</div>
+    {result?<dl className={r.executiveAnswers}>
+     <div><dt>De ce este relevant</dt><dd>{result.fit}</dd></div>
+     <div><dt>Unde poate apărea ruptura</dt><dd>{result.risk}</dd></div>
+     <div><dt>Ce ar vedea echipa</dt><dd>{result.prepare}</dd></div>
+     <div><dt>Ce câștigă conducerea</dt><dd>{result.leadership}</dd></div>
+    </dl>:<div className={r.fitInvitation}><strong>Identifică punctele în care se poate pierde firul.</strong><p>Alege situația din compania ta. Vezi unde ar putea apărea o ruptură și ce ar aduce ReveNew în atenția managementului.</p></div>}
+    <div className={r.fitConclusion}><ShieldCheckIcon aria-hidden="true"/><strong>Decizia rămâne la echipa ta.</strong></div>
+   </div>
+  </div>
+ </div>;
 }
