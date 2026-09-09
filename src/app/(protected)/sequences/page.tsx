@@ -5,7 +5,7 @@ import {
   formatProductDateTime,
   presentSequenceState,
 } from "@/lib/ui/presentation";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ProductButton";
 import {
   NewSequenceBuilder,
   SequenceStepBuilder,
@@ -35,7 +35,7 @@ const sequenceStates = new Set([
 const stepLabels = {
   email: "Email pregătit",
   wait: "Așteptare",
-  manual_task: "Task manual",
+  manual_task: "Acțiune manuală",
 } as const;
 
 type SequenceStep = {
@@ -45,10 +45,10 @@ type SequenceStep = {
 };
 
 const regionClass =
-  "border-y border-[rgb(var(--border))] bg-[rgb(var(--surface))]";
+  "rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]";
 
 const innerSurfaceClass =
-  "border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))]";
+  "rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface))]";
 
 function sequenceLabel(value: string) {
   return sequenceStates.has(
@@ -95,6 +95,7 @@ export default async function SequencesPage() {
 
   return (
     <PageShell
+      entity="sequences"
       wide
       eyebrow="Comunicare controlată"
       title="Secvențe și mesaje"
@@ -123,7 +124,7 @@ export default async function SequencesPage() {
               <p className="micro-label">Execuție controlată</p>
 
               <h2 className="mt-1 text-base font-semibold text-[rgb(var(--foreground))]">
-                Secvențe de outreach
+                Secvențe de comunicare
               </h2>
 
               <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">
@@ -427,7 +428,7 @@ export default async function SequencesPage() {
               </p>
 
               <h2 className="mt-1 text-base font-semibold text-[rgb(var(--foreground))]">
-                Șabloane de workspace
+                Șabloane ale echipei
               </h2>
 
               <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">
@@ -658,7 +659,7 @@ export default async function SequencesPage() {
               </strong>
 
               <p className="mt-1">
-                V1 pregătește emailuri; nu le trimite autonom.
+                ReveNew pregătește emailuri; nu le trimite autonom.
               </p>
             </div>
           </div>

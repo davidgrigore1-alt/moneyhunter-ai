@@ -166,6 +166,8 @@ export type CopilotMultiRecordPlanPreview = {
   externalSend: false;
 };
 export type CopilotAnswer = {
+  decisionCases?: import("@/lib/commercial-interventions-server").InterventionView[];
+  productHelp?: { title: string; steps: string[] };
   analysisToken?: string;
   comparisons?: import("./intelligence-comparison-core").IntelligenceComparison[];
   clarification?: {question:string;candidates:import("./intelligence-comparison-core").IdentityCandidate[]};

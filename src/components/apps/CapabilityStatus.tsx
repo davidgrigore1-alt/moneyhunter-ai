@@ -56,7 +56,7 @@ export function CapabilityStatus({
   return (
     <span
       className={cn(
-        "inline-flex min-h-[22px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-2 text-[11px] font-semibold leading-none",
+        "inline-flex min-h-[22px] max-w-full items-center gap-1.5 rounded-full border px-2 text-[11px] font-semibold leading-4",
         tones[status],
         className,
       )}

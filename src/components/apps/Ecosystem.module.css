@@ -1,0 +1,18 @@
+.available header, .evaluation header { margin-bottom: 18px; }
+.available h2, .evaluation h2 { font-size: 20px; font-weight: 600; letter-spacing: -.025em; }
+.available header p, .evaluation header p { margin-top: 6px; font-size: 13px; color: rgb(var(--text-muted)); line-height: 1.6; }
+.sources { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 12px; }
+.source { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; gap: 12px; padding: 18px; border: 1px solid rgb(var(--border)); border-radius: 12px; background: rgb(var(--surface-subtle)); }
+.source:hover { border-color: rgb(var(--primary) / .45); }
+.source h3 { font-size: 15px; font-weight: 600; }
+.source p { font-size: 12px; line-height: 1.65; color: rgb(var(--text-muted)); flex: 1; }
+.local, .open { font-size: 12px; color: rgb(var(--text-secondary)); line-height: 1.6; }
+.open { margin-top: 4px; }
+.grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; }
+.card { display: grid; gap: 10px; padding: 18px; text-align: left; border: 1px solid rgb(var(--border)); border-radius: 12px; background: rgb(var(--surface-subtle)); min-width: 0; }
+.card:hover { border-color: rgb(var(--primary) / .4); }
+.card h3 { font-size: 15px; font-weight: 600; }
+.card p { font-size: 12px; line-height: 1.65; color: rgb(var(--text-muted)); }
+.card small { font-size: 12px; color: rgb(var(--primary)); }
+@media(max-width:1100px) { .sources { grid-template-columns: repeat(3,minmax(0,1fr)); } .grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media(max-width:600px) { .sources, .grid { grid-template-columns: 1fr; } .source { gap: 9px; } }

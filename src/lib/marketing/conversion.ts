@@ -1,2 +1,2 @@
-// User-approved public destination. Delivery remains unavailable until an approved channel exists.
+// Public acquisition form. Confirmation requires a persisted server receipt.
 export const demoRequestHref = "/solicita-demo";

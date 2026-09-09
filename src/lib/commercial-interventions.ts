@@ -18,7 +18,7 @@ export type CommercialIntervention = {
   priority: "critical" | "important" | "watch"; category: InterventionCategory; summary: string; recommendation: string;
   reasons: Array<{ type: InterventionCategory; label: string; at: string | null }>; evidence: InterventionEvidence[];
   estimatedExposure: number | null; currency: string; owner: string; stage: string;
-  meetingAt: string | null; changedAt: string | null;
+  meetingAt: string | null; changedAt: string | null; deadline?: string | null;
   rankingReasons: string[];
   safeAction: "prepare_email" | "create_task" | "update_next_action" | "review"; reviewHref: string | null;
   /** Server-only freshness material; replaced by a hash before presentation. */
@@ -116,7 +116,7 @@ export function buildCommercialInterventions(input: {
       company: state.organization.name ?? "Companie neconfirmată", priority, category: primary.type, summary, recommendation, reasons, evidence, rankingReasons,
       estimatedExposure: state.financial.estimatedValue, currency: state.financial.currency,
       owner: state.ownership.ownerName ?? "Responsabil neconfirmat", stage: state.stage,
-      meetingAt: meeting >= instant ? context.meeting!.at : null, changedAt: primary.at ?? state.activity.lastMeaningfulActivityAt,
+      meetingAt: meeting >= instant ? context.meeting!.at : null, changedAt: primary.at ?? state.activity.lastMeaningfulActivityAt, deadline: opportunity.deadline ?? null,
       safeAction, reviewHref,
       revision: JSON.stringify({ updatedAt: opportunity.updatedAt, lifecycle: state.lifecycle, owner: state.ownership, nextAction: state.nextAction, actions: opportunity.actions, documents: opportunity.documents.map(({ id, status, editedAt, readyAt, sentAt }) => ({ id, status, editedAt, readyAt, sentAt })), approval: state.approval, response: state.response, outreach: state.outreach, context, reasons, safeAction })
     };

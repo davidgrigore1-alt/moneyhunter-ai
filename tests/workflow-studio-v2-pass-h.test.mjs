@@ -20,7 +20,7 @@ test("canvas editor keeps the canonical G2 definition and explicit save semantic
   assert.match(builder, /FlowConnector/);
   assert.match(builder, /beforeunload/);
   assert.match(builder, /Salvează modificările/);
-  assert.match(builder, /Testează fără mutații/);
+  assert.match(builder, /Testează fără executare/);
   assert.match(builder, /name="conditions"[\s\S]*name="actions"/);
   assert.match(builder, /Când[\s\S]*Dacă[\s\S]*ReveNew verifică[\s\S]*Atunci/);
 });

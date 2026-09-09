@@ -61,7 +61,7 @@ export default async function RecoverablePage(
       title="Impact comercial"
       description="Valoarea comercială detectată, intervențiile confirmate și rezultatele verificabile"
       actions={<><Button href="/inbox" variant="secondary">Vezi Inbox comercial</Button><Button href="/opportunities/analyze">Adaugă oportunitate</Button></>}
-      breadcrumbs={[{ label: "Control Center", href: "/dashboard" }, { label: "Recuperare venituri" }]}
+      breadcrumbs={[{ label: "Control Center", href: "/dashboard" }, { label: "Recuperare comercială" }]}
     >
       <form className="mb-3 flex flex-wrap items-center gap-2 print:hidden" action="/recoverable">
         {searchParams.opportunity?<input type="hidden" name="opportunity" value={searchParams.opportunity}/>:null}

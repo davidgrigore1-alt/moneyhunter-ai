@@ -4,7 +4,7 @@ import { Select } from "@/components/ui/Select";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ProductButton";
 import { StatusNotice } from "@/components/ui/StatusNotice";
 import { useToast } from "@/components/ui/ToastProvider";
 import { createCrmOpportunity } from "@/lib/crm/workspace-actions";

@@ -1,3 +1,4 @@
+import { evidenceHref } from "@/lib/evidence-reference";
 import Link from "next/link";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { ControlCenterViews } from "@/components/dashboard/ControlCenterViews";
@@ -637,7 +638,7 @@ export default async function DashboardPage(
                     >
                       {change.href ? (
                         <Link
-                          href={change.href}
+                          href={evidenceHref(change.href) ?? "/opportunities"}
                           className="focus-ring rounded font-medium hover:underline"
                         >
                           {change.label}

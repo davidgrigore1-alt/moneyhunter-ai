@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageShell } from "@/components/dashboard/PageShell";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ProductButton";
 import { WorkbookViewer } from "@/components/documents/WorkbookViewer";
 import { StructuredGrid } from "@/components/documents/StructuredGrid";
 import { LocalDocumentActions } from "@/components/documents/LocalDocumentActions";
@@ -22,7 +22,7 @@ export default async function LocalDocumentPage({params}:{params:Promise<{source
   const options=hasPermission(auth,"documents.update")?await client!.from("opportunities").select("id,title").eq("business_id",source.business_id).order("title").limit(100):{data:[]};
   const versions=await client!.from("local_document_versions").select("id,created_at,state").eq("source_id",sourceId).eq("business_id",source.business_id).order("created_at",{ascending:false}).limit(100);
   const receipts=await client!.from("data_import_batches").select("id,entity_type,sheet_index,status,created_rows,updated_rows,skipped_rows,rejected_rows,failed_rows,completed_at,profile_id,import_mapping").eq("business_id",source.business_id).eq("document_version_id",versionId).order("created_at",{ascending:false}).limit(30);
-  return <PageShell wide eyebrow="Document păstrat" title={version.original_filename} description={`${localDocumentState(version.state)} · ${version.format.toUpperCase()} · ${version.byte_size?Math.ceil(version.byte_size/1024)+" KB":"dimensiune neconfirmată"}`}
+  return <PageShell entity="documents" wide eyebrow="Document păstrat" title={version.original_filename} description={`${localDocumentState(version.state)} · ${version.format.toUpperCase()} · ${version.byte_size?Math.ceil(version.byte_size/1024)+" KB":"dimensiune neconfirmată"}`}
     breadcrumbs={[{label:"Documente",href:"/documents"},{label:"Document"}]} actions={ready?<Button href="#document-intelligence">Întreabă ReveNew</Button>:undefined}>
     <div className={styles.workspace}>
       {ready?<>

@@ -35,11 +35,13 @@ const operations = (state, id) => model.googleCapabilities(state).find((capabili
 
 test("Applications catalog has exactly one Google provider and no top-level Google services", () => {
   assert.deepEqual(plain(integrationCatalog.map((item) => item.id)).sort(),
-    ["google-workspace", "microsoft-365", "hubspot", "pipedrive", "slack", "salesforce", "docusign", "webhooks-api"].sort());
+    ["google-workspace", "microsoft-365", "outlook", "teams", "onedrive", "sharepoint", "hubspot", "pipedrive", "slack", "salesforce", "dynamics", "zoho", "zoom", "google-meet", "notion", "dropbox", "confluence", "smartbill", "docusign", "webhooks-api"].sort());
   const google = integrationCatalog.find((item) => item.id === "google-workspace");
   assert.equal(google.stage, "implemented");
-  assert.deepEqual(plain(google.capabilities), ["Gmail", "Calendar", "Drive", "Docs", "Sheets", "Meet"]);
+  assert.deepEqual(plain(google.capabilities), ["Gmail", "Calendar", "Drive"]);
   assert.equal(integrationCatalog.filter((item) => item.stage === "implemented").length, 1);
+  assert.ok(integrationCatalog.filter(item => item.id !== "google-workspace").every(item => item.stage === "planned"));
+  assert.equal(model.capabilityLabels.planned, "Evaluare înainte de implementare");
   assert.equal(google.logoUrl, "/brands/applications/google-symbol.svg");
 });
 
@@ -174,7 +176,7 @@ test("Application modal retains portal, top-layer focus isolation, scroll and re
     assert.ok(modal.includes(fragment), fragment);
   }
   assert.match(modal, /onManageGoogle/);
-  assert.match(modal, /Capabilități planificate/);
+  assert.match(modal, /Criterii de evaluare/);
   assert.match(modal, /Integrarea nu este activă/);
 });
 

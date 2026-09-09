@@ -33,3 +33,7 @@
 .drawer::backdrop { background: rgb(0 0 0 / .45); }
 @keyframes enter { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .modal[open] { animation: none; } }
+
+@media (max-width: 640px) { .dialog:has([name="primary-contact"]), .dialog:has([name="fullName"]) { width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; } }
+
+@media (max-width: 640px) { .modal :global(.rn-button) { min-height: 44px; } .dialog:has([placeholder="Nume, rol sau email"]) { width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; } }

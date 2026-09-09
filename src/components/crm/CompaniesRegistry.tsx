@@ -4,11 +4,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 import { ArrowUpRightIcon, ArchiveBoxIcon, BookmarkIcon, ChevronDownIcon, InformationCircleIcon, MagnifyingGlassIcon, PencilSquareIcon, PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ProductButton";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { SavedViewControls } from "@/components/filters/SavedViewControls";
+import { EmptyState } from "@/components/dashboard/EmptyState";
+import { EntityMark } from "@/components/ui/EntityMark";
 import { ErrorState } from "@/components/dashboard/ErrorState";
 import { companyDomain, companyInitials, filterCompanyRegistry, registryActivityTime, relationshipLabels, type CompanyRegistrySnapshot, type CompanyRegistryRow, type RegistryCoverage } from "@/lib/crm/company-registry";
 import type { CrmOrganization } from "@/lib/types";
@@ -114,7 +116,7 @@ export function CompaniesRegistry({ snapshot, query, relationship, sort, onQuery
     </div>
     <div className={styles.registryTools}>
     <SavedViewControls views={savedViews} currentQuery={currentQuery} targetPage="companies" summary={<>
-      <BookmarkIcon className={styles.viewIcon} aria-hidden="true" /><span>Vizualizări private</span>
+      <BookmarkIcon className={styles.viewIcon} aria-hidden="true" /><span>Vizualizări salvate</span>
       <span className={styles.viewCount} aria-label={`${savedViews.length} vizualizări salvate`}>({savedViews.length})</span>
       <ChevronDownIcon className={styles.viewChevron} aria-hidden="true" />
     </>} />
@@ -162,10 +164,6 @@ export function CompaniesRegistry({ snapshot, query, relationship, sort, onQuery
         <summary className="focus-ring"><InformationCircleIcon aria-hidden="true" />Despre atenție și activitate<ChevronDownIcon className={styles.viewChevron} aria-hidden="true" /></summary>
         <p>Oportunitățile afișate sunt active. Atenția indică follow-up-uri întârziate, responsabili neatribuiți și pași următori lipsă. Activitatea include evenimentele și actualizările oportunităților și acțiunilor asociate; actualizările profilului companiei sunt etichetate separat. Pentru semnale, aprobări și dovezi, deschide compania.</p>
       </details>
-    </> : <div className={styles.empty}>
-      <h2>{snapshot.rows.length === 0 ? coverage.organizations ? "Adaugă prima companie" : "Companiile nu sunt disponibile" : query.trim() ? "Nicio companie găsită" : "Nicio companie în această relație"}</h2>
-      <p>{snapshot.rows.length === 0 ? "Leagă persoanele și oportunitățile de o companie pentru a urmări relația comercială." : "Încearcă alt nume, alt oraș sau modifică relația selectată."}</p>
-      <Button variant="secondary" onClick={snapshot.rows.length ? clearFilters : onCreate}>{snapshot.rows.length ? "Resetează filtrele" : "Adaugă companie"}</Button>
-    </div>}
+    </> : <EmptyState calm icon={<EntityMark entity="companies" />} title={snapshot.rows.length === 0 ? coverage.organizations ? "Adaugă prima companie" : "Companiile nu sunt disponibile" : query.trim() ? "Nicio companie găsită" : "Nicio companie în această relație"} description={snapshot.rows.length === 0 ? "Leagă persoanele și oportunitățile de o companie pentru a urmări relația comercială." : "Încearcă alt nume, alt oraș sau modifică relația selectată."} action={<Button  onClick={snapshot.rows.length ? clearFilters : onCreate}>{snapshot.rows.length ? "Resetează filtrele" : "Adaugă companie"}</Button>} />}
   </section>;
 }

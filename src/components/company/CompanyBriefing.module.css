@@ -1,18 +1,18 @@
-.page { --company-content: var(--font-size-body); --company-support: var(--font-size-label); --company-meta: var(--font-size-metadata); --company-overline: var(--font-size-micro); --company-meta-color: rgb(var(--text-secondary)); line-height: 1.5; max-width: 1400px; min-width: 0; margin: 0 auto; padding: 20px var(--page-gutter) 48px; overflow-wrap: anywhere; }
+.page { --company-content: var(--font-size-body); --company-support: var(--font-size-label); --company-meta: var(--font-size-metadata); --company-overline: var(--font-size-micro); --company-meta-color: rgb(var(--text-secondary)); line-height: 1.5; max-width: var(--workspace-axis); min-width: 0; margin: 0 auto; padding: 20px var(--page-gutter) 48px; overflow-wrap: anywhere; }
 .page :global(.product-eyebrow) { font-size: var(--company-overline); line-height: 1.6; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--company-meta-color); }
 .issueRow details, .decisionBody details { border-color: transparent; background: transparent; }
 .issueRow details > summary, .decisionBody details > summary { min-height: 32px; padding: 6px 0; width: fit-content; font-size: var(--company-meta); font-weight: 500; gap: 16px; }
 .issueRow details[open], .decisionBody details[open] { border-color: rgb(var(--border)); padding: 0 10px; }
 .stack { display: grid; gap: 28px; margin-top: 22px; }
 .identity { display: flex; gap: 16px; align-items: center; padding: 16px 0 20px; }
-.monogram { flex: 0 0 52px; height: 52px; display: grid; place-items: center; border: 1px solid rgb(var(--border-strong)); border-radius: 12px; background: rgb(var(--surface-subtle)); color: rgb(var(--primary)); font-size: 18px; font-weight: 650; }
+.monogram { flex: 0 0 52px; height: 52px; display: grid; place-items: center; border: 1px solid rgb(var(--border-strong)); border-radius: 12px; background: rgb(var(--surface-subtle)); color: rgb(var(--entity-company)); font-size: 18px; font-weight: 650; }
 .identityText { flex: 1; min-width: 0; }
 .identityText h1 { margin: 3px 0 6px; font-size: clamp(24px, 2vw, 32px); line-height: 1.16; letter-spacing: -.035em; font-weight: 650; }
 .identityText > p:last-child { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: var(--company-support); color: var(--company-meta-color); }
 .identityText a { display: inline-flex; gap: 4px; align-items: center; }
-.identity > button { background: rgb(var(--surface)); color: rgb(var(--foreground)); border: 1px solid rgb(var(--border-strong)); box-shadow: none; }
-.identity > button:hover { background: rgb(var(--surface-subtle)); }
-.summary { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 24px; padding: 12px 0; border-block: 1px solid rgb(var(--border)); font-size: var(--company-content); }
+
+
+.summary { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 24px; padding: 14px 18px; border: 1px solid rgb(var(--border)); border-radius: 12px; background: rgb(var(--surface-subtle)); font-size: var(--company-content); }
 .summary strong { font-size: 16px; font-weight: 650; }
 .summary span, .summary > p:last-child { color: var(--company-meta-color); font-size: var(--company-support); }
 .muted { color: var(--company-meta-color); font-size: var(--company-meta); line-height: 1.6; }

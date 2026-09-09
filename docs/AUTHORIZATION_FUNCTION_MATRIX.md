@@ -32,6 +32,22 @@ This matrix covers browser-triggered mutations, provider-backed routes and sensi
 - Some legacy action helpers update by submitted object ids plus opportunity ids; future hardening should load the parent object first and explicitly compare `business_id` before update.
 - Provider-backed functions require both business permissions and active access/quota checks. Viewer roles do not include `opportunities.analyze` or `documents.generate`.
 
+## Public demo acquisition
+
+`submitDemoRequest` is a public Server Action, limited to validated contact requests with explicit contact consent and a blank honeypot. It uses the server-only service client solely for `capture_marketing_demo_request(uuid,jsonb)`. That invoker-rights RPC is executable only by `service_role`; anonymous and authenticated clients cannot insert directly. Matching request replay is idempotent; mismatched replay fails. Transactional limits are 3 submissions per normalized email/hour and 120 total/hour. No tenant CRM, email, workflow or model effect occurs. Success requires the exact persisted receipt. `verify-lead-capture.mjs --existing` checks PostgreSQL persistence, rate bounds and role denial/revocation in rollback transactions.
+
 ## Role Mutation Surface
 
 No website function, API route or Server Action assigns platform roles. Onboarding assigns deterministic business ownership only by setting `businesses.owner_profile_id` and owner membership for the creating profile.
+
+## Workflow runtime projections — Gate 2
+
+The 20260909090000 additive migration grants execution only to `service_role`. All three SQL functions are stable read projections with an empty search path, fully qualified tables and mandatory business predicates. They do not grant table access, change RLS, create approvals or execute actions. Browser roles `anon` and `authenticated` are denied execution.
+
+| Function | Data returned | Authority and isolation |
+| --- | --- | --- |
+| `workflow_has_pending_approval(uuid, uuid)` | Pending boolean only | Workflow runtime resolves the authorized tenant; opportunity and approval must belong to it |
+| `workflow_company_name(uuid, uuid)` | Company name only | CRM organization id and business id must both match |
+| `workflow_approval_event(uuid, uuid)` | Event identity, state and decision metadata | Canonical dispatcher verifies approved/executed state, decision actor/time and tenant-owned target; no payload or summary is returned |
+
+Local PostgreSQL verification: `node scripts/validation/verify-workflow-projections.mjs` checks service execution, actual client denial, tenant mismatch and decision metadata using a transaction rolled back after verification.

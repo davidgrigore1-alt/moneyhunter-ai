@@ -557,7 +557,6 @@
 
 /* Final E0 continuity and the compact evidence briefing. */
 .sideItems { position: relative; isolation: isolate; }
-.sideItems::before { content: ''; position: absolute; z-index: -1; inset: 0 0 auto; height: 33px; border-radius: 5px; background: #ecd39a12; box-shadow: inset 2px 0 #e8cd8f; transform: translateY(var(--selection-top)); transition: transform 380ms cubic-bezier(.2,.8,.2,1); }
 :global([data-enhanced=false]) .scene { transition: none; }
 :global([data-enhanced=false]) .typedQuestion i { visibility: hidden; }
 .personAvatar[data-variant="2"] { color: #d2cadd; background: #2b2731; }
@@ -655,3 +654,18 @@
 }
 @media(min-width:1700px) { .companiesScene { --register-inset:22px; } }
 .decisionBranches::after { top:calc(-1 * var(--branch-stem,22px)); height:var(--branch-stem,22px); transform:translateX(-.5px); }
+
+/* Illustrative navigation mirrors the real app; no navigation actions are implied. */
+.sidebar { padding-top: 12px; }
+.workspaceLabel { padding-bottom: 9px; }
+.search { margin-bottom: 6px; }
+.sideGroup { padding: 7px 6px 3px; font-size: 12px; color: #96969f; line-height: 16px; }
+.sideItem { min-height: 24px; height: 24px; padding: 2px 6px; gap: 7px; }
+.sideItem[data-selected=true] { background: #ffffff0e; color: #f2f1ed; }
+.sideItem[data-selected=true] svg { color: #b8bac2; }
+.navIcon { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 19px; width: 19px; height: 19px; }
+.sideItem[data-entity="companies"] svg,.sideItem[data-entity="contacts"] svg,.sideItem[data-entity="opportunities"] svg { color: white; padding: 3px; width: 19px; height: 19px; border-radius: 5px; }
+.sideItem[data-entity="companies"] svg { background: #167ba7; }
+.sideItem[data-entity="contacts"] svg { background: #8056c4; }
+.sideItem[data-entity="opportunities"] svg { background: #b87818; }
+.sidebarUser { padding-top: 10px; }

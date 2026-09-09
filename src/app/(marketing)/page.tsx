@@ -24,7 +24,7 @@ export default function LandingPage() {
         <p className={h.eyebrow}><span aria-hidden="true" />Inteligență operațională · ReveNew</p>
         <h1 id="hero-title">Vezi unde se rupe execuția.<br /><span>Știi ce urmează.</span></h1>
         <p className={h.heroLead}>Oferte, conversații și documente, legate într-un context clar.<br className={h.desktopBreak} /> Vezi ce cere atenție și pregătește următorul pas comercial.</p>
-        <div className={h.heroActions}><DemoRequestLink material="primary" /><LiquidLink href="#cum-functioneaza" variant="quiet">Explorează produsul</LiquidLink></div>
+        <div className={h.heroActions}><DemoRequestLink material="primary" /><LiquidLink href="#produs" variant="quiet">Explorează produsul</LiquidLink></div>
         <p className={h.heroNote}>Dovezi la vedere. Decizia la tine.</p>
       </div><ProductTheatre />
     </div></section><LandingChapters /></main><MarketingFooter />

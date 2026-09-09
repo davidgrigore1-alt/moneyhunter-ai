@@ -1,3 +1,4 @@
+import { evidenceHref } from "@/lib/evidence-reference";
 import Link from "next/link";
 import { ArrowRightIcon, ClockIcon } from "@heroicons/react/24/outline";
 import { ExplanationDisclosure } from "@/components/intelligence/ExplanationDisclosure";
@@ -19,7 +20,7 @@ function SnapshotItem({ label, children }: { label: string; children: React.Reac
   );
 }
 
-function TimelineRow({ event }: { event: OpportunityTimelineEvent }) {
+function TimelineRow({ event, opportunityId }: { event: OpportunityTimelineEvent; opportunityId?: string }) {
   const isDerived = event.nature === "derived";
   return (
     <li className="relative grid grid-cols-[1.25rem_minmax(0,1fr)] gap-3 pb-5 last:pb-0 sm:grid-cols-[1.5rem_minmax(0,1fr)] sm:gap-4">
@@ -44,7 +45,7 @@ function TimelineRow({ event }: { event: OpportunityTimelineEvent }) {
           <span>{isDerived ? "Bazat pe" : "Sursă"}: {event.source.label}</span>
           {event.actor ? <span>Înregistrat de: {event.actor}</span> : null}
           {event.source.href ? (
-            <Link href={event.source.href} className="focus-ring inline-flex min-h-8 items-center gap-1 rounded-button font-semibold text-[rgb(var(--primary))] hover:underline">
+            <Link href={opportunityId && event.source.href.startsWith("#") ? evidenceHref(`/opportunities/${opportunityId}${event.source.href}`) ?? event.source.href : event.source.href} className="focus-ring inline-flex min-h-8 items-center gap-1 rounded-button font-semibold text-[rgb(var(--primary))] hover:underline">
               {event.source.type === "commercial_signal" ? "Deschide semnalul" : event.source.type === "document" ? "Deschide documentul" : "Verifică dovada"}
               <ArrowRightIcon className="h-3.5 w-3.5" aria-hidden="true" />
             </Link>
@@ -56,7 +57,7 @@ function TimelineRow({ event }: { event: OpportunityTimelineEvent }) {
   );
 }
 
-export function OpportunityIntelligenceTimeline({ result, showCurrentState = true }: { result: OpportunityTimelineResult | null; showCurrentState?: boolean }) {
+export function OpportunityIntelligenceTimeline({ result, showCurrentState = true, opportunityId }: { result: OpportunityTimelineResult | null; showCurrentState?: boolean; opportunityId?: string }) {
   if (!result || result.state === "error") {
     return (
       <section id="opportunity-timeline" tabIndex={-1} className="scroll-mt-24 rounded-panel border border-[rgb(var(--danger-border))] bg-[rgb(var(--surface))] p-5 outline-none target:ring-2 target:ring-[rgb(var(--primary)/0.42)]" aria-labelledby="opportunity-timeline-title">
@@ -112,7 +113,7 @@ export function OpportunityIntelligenceTimeline({ result, showCurrentState = tru
               {Array.from(groups.entries()).map(([label, events]) => (
                 <section key={label} className="mb-6 last:mb-0" aria-labelledby={`timeline-group-${events[0].id.replaceAll(":", "-")}`}>
                   <h3 id={`timeline-group-${events[0].id.replaceAll(":", "-")}`} className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--text-muted))]">{label}</h3>
-                  <ol>{events.map((event) => <TimelineRow key={event.id} event={event} />)}</ol>
+                  <ol>{events.map((event) => <TimelineRow key={event.id} event={event} opportunityId={opportunityId} />)}</ol>
                 </section>
               ))}
             </div>

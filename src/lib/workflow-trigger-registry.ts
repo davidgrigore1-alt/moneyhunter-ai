@@ -30,7 +30,7 @@ export const workflowTriggerRegistry: Record<WorkflowTrigger, TriggerRegistratio
 
 export function workflowTriggerCapability(trigger: WorkflowTrigger) {
   const registration = workflowTriggerRegistry[trigger];
-  return { ...registration, label: registration.automatic ? "Trigger activ" : "Trigger disponibil ulterior" };
+  return { ...registration, label: registration.automatic ? "Eveniment disponibil" : "Declanșator în evaluare" };
 }
 export const workflowStageLabels: Record<string, string> = { new: "Nouă", reviewed: "Revizuită", action_generated: "Acțiune pregătită", contacted: "Contactat", follow_up_needed: "Follow-up necesar" };
 export const workflowEventOrigins: Record<WorkflowEventOrigin, string> = {

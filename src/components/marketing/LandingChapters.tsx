@@ -27,7 +27,7 @@ const faqs = [
 
 export function LandingChapters() {
   return <div className={`${s.chapters} ${r.page}`}>
-    <section id="produs" className={`${s.chapter} ${s.light}`} aria-labelledby="commercial-break-title"><div className={s.container}>
+    <section id="cum-functioneaza" className={`${s.chapter} ${s.light}`} aria-labelledby="commercial-break-title"><div className={s.container}>
       <div className={s.heading}><div><p className={s.overline}>01 / Unde se pierde continuitatea</p><h2 id="commercial-break-title">Oferta a plecat.<br />Următorul pas nu trebuie să dispară.</h2></div><p className={s.lead}>Un termen promis. O conversație rămasă deschisă. ReveNew aduce la vedere ce trebuie verificat, cine răspunde și ce urmează.</p></div>
       <p className={r.disclosure}>Scenariu demonstrativ · companii și valori de exemplu</p><CommercialThread />
     </div></section>
@@ -101,7 +101,7 @@ export function LandingChapters() {
       </ChapterMotion>
     </div></section>
 
-    <section className={s.closing} id="urmatorul-pas" aria-labelledby="closing-title"><ChapterMotion name="closing" duration={450} className={s.container}><div className={s.closingMark} aria-hidden="true"><MarketingBrand /></div><h2 id="closing-title">Mai puțin context pierdut.<br />Mai multă claritate.</h2><p className={s.lead}>Pornim de la un proces real al companiei tale.</p><div className={s.closingActions}><DemoRequestLink material="primary" /><LiquidLink href="#cum-functioneaza" variant="quiet">Explorează produsul</LiquidLink></div></ChapterMotion></section>
+    <section className={s.closing} id="urmatorul-pas" aria-labelledby="closing-title"><ChapterMotion name="closing" duration={450} className={s.container}><div className={s.closingMark} aria-hidden="true"><MarketingBrand /></div><h2 id="closing-title">Mai puțin context pierdut.<br />Mai multă claritate.</h2><p className={s.lead}>Pornim de la un proces real al companiei tale.</p><div className={s.closingActions}><DemoRequestLink material="primary" /><LiquidLink href="#produs" variant="quiet">Explorează produsul</LiquidLink></div></ChapterMotion></section>
   </div>;
 }
 

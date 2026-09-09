@@ -4,11 +4,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 import { ArchiveBoxIcon, BookmarkIcon, ChevronDownIcon, MagnifyingGlassIcon, PencilSquareIcon, PlusIcon, StarIcon } from "@heroicons/react/24/outline";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ProductButton";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { SavedViewControls } from "@/components/filters/SavedViewControls";
+import { EmptyState } from "@/components/dashboard/EmptyState";
+import { EntityMark } from "@/components/ui/EntityMark";
 import { ErrorState } from "@/components/dashboard/ErrorState";
 import { companyInitials } from "@/lib/crm/company-registry";
 import { contactFilters, contactRoleLabels, filterContactRegistry, type ContactRegistryRow, type ContactRegistrySnapshot } from "@/lib/crm/contact-registry";
@@ -80,7 +82,7 @@ export function ContactsRegistry({ snapshot, query, filter, sort, onQuery, onFil
       <Button className={shared.create} disabled={!snapshot.coverage.organizations} onClick={onCreate}><PlusIcon className="size-4" aria-hidden="true" />Adaugă contact</Button>
     </div>
     <div className={shared.registryTools}>
-      <SavedViewControls views={savedViews} currentQuery={currentQuery} targetPage="contacts" summary={<><BookmarkIcon className={shared.viewIcon} aria-hidden="true" /><span>Vizualizări private</span><span className={shared.viewCount}>({savedViews.length})</span><ChevronDownIcon className={shared.viewChevron} aria-hidden="true" /></>} />
+      <SavedViewControls views={savedViews} currentQuery={currentQuery} targetPage="contacts" summary={<><BookmarkIcon className={shared.viewIcon} aria-hidden="true" /><span>Vizualizări salvate</span><span className={shared.viewCount}>({savedViews.length})</span><ChevronDownIcon className={shared.viewChevron} aria-hidden="true" /></>} />
       <div className={shared.results}><span role="status"><strong>{rows.length}</strong> {rows.length === 1 ? "contact afișat" : "contacte afișate"}{!snapshot.coverage.contacts ? " · cohortă parțială" : ""}</span>
         {selectedIds.size ? <span className={shared.selectionSummary}>{selectedIds.size} {selectedIds.size === 1 ? "selectat" : "selectate"}{hiddenSelections ? ` · ${hiddenSelections} ascunse de filtre` : ""}<Button variant="ghost" size="small" onClick={() => onSelection(new Set())}>Șterge selecția</Button></span> : null}
         {filtered ? <Button variant="ghost" size="small" onClick={clear}>Resetează filtrele</Button> : null}
@@ -107,7 +109,7 @@ export function ContactsRegistry({ snapshot, query, filter, sort, onQuery, onFil
           </tr>)}</tbody>
         </table>
       </div>
-    </> : <div className={shared.empty}><h2>{snapshot.rows.length === 0 ? snapshot.coverage.contacts ? "Adaugă primul contact" : "Contactele nu sunt disponibile" : query.trim() ? "Niciun contact găsit" : "Niciun contact în această selecție"}</h2><p>{snapshot.rows.length === 0 ? "Leagă persoanele de companie și de oportunitățile la care participă." : "Încearcă alt nume, o companie sau schimbă filtrul relației."}</p><Button variant="secondary" disabled={!snapshot.rows.length && !snapshot.coverage.organizations} onClick={snapshot.rows.length ? clear : onCreate}>{snapshot.rows.length ? "Resetează filtrele" : "Adaugă contact"}</Button></div>}
+    </> : <EmptyState calm icon={<EntityMark entity="contacts" />} title={snapshot.rows.length === 0 ? snapshot.coverage.contacts ? "Adaugă primul contact" : "Contactele nu sunt disponibile" : query.trim() ? "Niciun contact găsit" : "Niciun contact în această selecție"} description={snapshot.rows.length === 0 ? "Leagă persoanele de companie și de oportunitățile la care participă." : "Încearcă alt nume, o companie sau schimbă filtrul relației."} action={<Button  disabled={!snapshot.rows.length && !snapshot.coverage.organizations} onClick={snapshot.rows.length ? clear : onCreate}>{snapshot.rows.length ? "Resetează filtrele" : "Adaugă contact"}</Button>} />}
     <details className={shared.contextNote}><summary className="focus-ring">Despre relații și context<ChevronDownIcon className={shared.viewChevron} aria-hidden="true" /></summary><p>Contactul principal este activ și desemnat explicit pentru companie. Mai mulți candidați cer clarificare. Oportunitățile apar numai prin asocieri explicite; istoricul închis rămâne separat. Prima oportunitate afișată este cea actualizată cel mai recent. Actualizarea înregistrării contactului nu reprezintă o interacțiune comercială. Contactele inactive rămân în istoric, fără reactivare din acest registru.</p></details>
   </section>;
 }

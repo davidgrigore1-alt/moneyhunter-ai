@@ -28,6 +28,7 @@ function loader(overrides = {}) {
         const base = path.resolve("src", id.slice(2));
         return load(base + (fs.existsSync(base + ".ts") ? ".ts" : ".tsx"));
       }
+      if (id.startsWith(".")) { const base = path.resolve(path.dirname(file), id); return load(base + (fs.existsSync(base + ".ts") ? ".ts" : ".tsx")); }
       return require(id);
     } }, { filename: file });
     return module.exports;
@@ -180,7 +181,7 @@ test("company load retry refreshes the current route instead of navigating to th
   assert.equal(error.props.actionHref, undefined);
 });
 
-test("Companies can present private views without changing the shared disclosure or its default consumers", () => {
+test("Saved views share the approved label, privacy explanation and closed disclosure", () => {
   const loadViews = loader({
     "next/navigation": { useRouter: () => ({}) },
     "@/lib/saved-views/actions": { createSavedView() {}, deleteSavedView() {} }
@@ -189,11 +190,13 @@ test("Companies can present private views without changing the shared disclosure
   const viewProps = { views: [{ id: "v1", name: "Prospecte", filter_state: { relationship: "prospect" } }], currentQuery: "relationship=prospect", targetPage: "companies" };
   const original = renderToStaticMarkup(React.createElement(SavedViewControls, viewProps));
   const custom = renderToStaticMarkup(React.createElement(SavedViewControls, { ...viewProps, summary: React.createElement("span", null, "Vizualizări private (1)") }));
-  assert.match(original, /Vizualizări private/);
-  assert.match(custom, /Vizualizări private \(1\)/);
+  assert.match(original, /Vizualizări salvate/);
+  assert.match(custom, /Vizualizări salvate/);
   assert.equal(custom.split("</summary>")[1], original.split("</summary>")[1]);
   for (const markup of [original, custom]) {
-    assert.match(markup, /Salvează filtrele curente/);
+    assert.match(markup, /Salvează filtrele și sortarea curentă/);
+    assert.match(markup, /nu sunt partajate cu echipa/);
+    assert.doesNotMatch(markup, /<details[^>]* open/);
     assert.match(markup, /disabled=""/);
     assert.match(markup, />Prospecte<\/button>/);
     assert.match(markup, /aria-label="Șterge vizualizarea Prospecte"/);

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "reviewedThrough": "20260905200500_phase4_prepared_owner_visibility.sql",
+  "reviewedThrough": "20260909103000_create_company_primary_contact.sql",
   "files": {
     "202606100001_initial_moneyhunter_schema.sql": "16395171050913d2dd0bfee661e8263707059d380a5d5b72742c25899bcc218a",
     "202606100002_phase4_rls_and_workflow.sql": "1703eb8f76fda27e22a0787234ecfabf9f1e0c2d2bc185ddbd068f93053b1ef1",
@@ -57,6 +57,10 @@
     "20260905154340_workbook_structured_import.sql": "0a3b475eeceb8d16a99990eb905593cc978ca959a617e3d44b6dd02a3be1ad51",
     "20260905165927_structured_import_review_integrity.sql": "3c998a7912c7f82e136c6cd866a14169cfca977ea9bb268c11298c1cdae4412e",
     "20260905173203_structured_signal_omission_receipt.sql": "70b92c62b9079393497830781a0e07e5689487824841994e8d39f9479d84d9a0",
-    "20260905200500_phase4_prepared_owner_visibility.sql": "16208f5c434bfa9774d4ad18409c79eedd14dec432d32ba017f1bd28bb49c2fa"
+    "20260905200500_phase4_prepared_owner_visibility.sql": "16208f5c434bfa9774d4ad18409c79eedd14dec432d32ba017f1bd28bb49c2fa",
+    "20260909090000_workflow_pending_approval_probe.sql": "9a6155fdc05a6480d246066839365803011e20b1d56d025deb989a7c2165cb07",
+    "20260909100000_company_primary_contact.sql": "de28bd48763924c4f28dc4f908bcb4fa5c29ea5033bd4133dcee4de86cbdffad",
+    "20260909103000_create_company_primary_contact.sql": "eb065d288d1a30bba8a1ecb00ce6dd756fa82384df6a3cb96c9e8dd5c96ddb5b",
+    "20260909011852_marketing_demo_requests.sql": "38dff53e40b0dac0dd1bdc3ecdde56040e6124cdaa64665ccd186c5738eeb77d"
   }
 }

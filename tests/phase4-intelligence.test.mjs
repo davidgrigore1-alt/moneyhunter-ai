@@ -38,6 +38,20 @@ test('P4-22 source role spoofing stays text and cannot enable preparation',async
 const ev={sourceId:'e1',label:'Orion',fact:'Orion are valoare declarată 100 RON.',sourceType:'Document',route:'/documents/x'};
 const output=(text='Orion are valoare declarată 100 RON.',ids=['e1'])=>({conclusion:text,claims:[{text,evidenceIds:ids,kind:'source_declaration'}],unknowns:[],followUps:[]});
 test('P4-27 valid supported model claims pass',()=>assert.equal(validation.validateIntelligenceSynthesis(output(),[ev]).ok,true));
+test('Gate 1 rejects English synthesis even when its named entity matches authorized evidence',()=>{
+  const raw=output('Orion needs a commercial owner.');
+  assert.equal(validation.validateIntelligenceSynthesis(raw,[ev]).reason,'romanian_output_required');
+});
+test('Gate 1 checks Romanian in every generated field and leaves source language untouched',()=>{
+  for(const field of ['conclusion','followUps','unknowns']){
+    const raw=output();
+    raw[field]=field==='conclusion'?'Review Orion before the deadline.':['Review Orion before the deadline.'];
+    assert.equal(validation.validateIntelligenceSynthesis(raw,[ev]).reason,'romanian_output_required');
+  }
+  const source={...ev,label:'North Industrial Systems',fact:'North Industrial Systems has a declared value of 100 RON.'};
+  assert.equal(validation.validateIntelligenceSynthesis(output('North Industrial Systems are valoare declarată 100 RON.'),[source]).ok,true);
+  assert.equal(source.fact,'North Industrial Systems has a declared value of 100 RON.');
+});
 test('P4-27 forged evidence ids are rejected',()=>assert.equal(validation.validateIntelligenceSynthesis(output(undefined,['forged']),[ev]).ok,false));
 test('P4-27 unsupported numbers are rejected per cited claim',()=>assert.equal(validation.validateIntelligenceSynthesis(output('Orion are valoare 999 RON.'),[ev]).ok,false));
 test('P4-27 unrelated facts cannot borrow a valid citation',()=>assert.equal(validation.validateIntelligenceSynthesis(output('Sateliții dansează printre galaxii.'),[ev]).ok,false));

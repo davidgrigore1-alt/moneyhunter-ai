@@ -1,8 +1,10 @@
 "use client";
 
+import { WorkflowSystems } from "@/components/workflows/WorkflowSystems";
+import { DecisionFlow } from "@/components/workflows/DecisionFlow";
 import { useState } from "react";
 import { ArrowRightIcon, CheckCircleIcon, ExclamationTriangleIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ProductButton";
 import {
   presentWorkflowAction,
   presentWorkflowConditionField,
@@ -116,7 +118,14 @@ export function WorkflowDraftPreview({
         <span className="status-pill status-pill-warning">Draft · inactiv</span>
       </header>
 
-      <div className="grid gap-0 px-4 py-2">
+      <div className="p-4"><DecisionFlow mode="definition" steps={[
+        { detail: presentWorkflowTrigger(preview.definition.trigger) }, { detail: "CRM autorizat la evaluare" },
+        { detail: preview.definition.conditions.map(condition => `${presentWorkflowConditionField(condition.field)} ${presentWorkflowOperator(condition.operator)} ${presentValue(condition.value)}`.trim()).join(" · ") || "Fără condiții suplimentare" },
+        { detail: preview.definition.actions.map(action => presentWorkflowAction(action.type)).join(" · ") },
+        { detail: "Confirmare separată; nimic executat" }
+      ]} /></div>
+      <WorkflowSystems definition={preview.definition} />
+      <details className="px-4 py-2"><summary className="focus-ring cursor-pointer py-2 text-sm">Condiții și pași în detaliu</summary><div className="grid gap-0">
         <div className="grid grid-cols-[5.5rem_minmax(0,1fr)] gap-3 border-b border-[rgb(var(--border))] py-3">
           <p className="micro-label pt-0.5">Când</p>
           <div>
@@ -162,11 +171,11 @@ export function WorkflowDraftPreview({
             ))}
           </ol>
         </div>
-      </div>
+      </div></details>
 
       {preview.unsupportedIntents.length ? (
         <div className="border-t border-[rgb(var(--warning-border))] bg-[rgb(var(--warning-background))] px-4 py-3">
-          <p className="text-xs font-semibold text-[rgb(var(--warning-text))]">Partea nesuportată nu va fi inclusă</p>
+          <p className="text-sm font-semibold text-[rgb(var(--warning-text))]">Limite și condiții de execuție</p>
           <ul className="mt-1 grid gap-1 text-xs leading-5 text-[rgb(var(--text-muted))]">
             {preview.unsupportedIntents.map((item) => <li key={item}>— {item}</li>)}
           </ul>
@@ -176,7 +185,7 @@ export function WorkflowDraftPreview({
       <div className="flex items-start gap-2 border-t border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-4 py-3">
         <ShieldCheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-[rgb(var(--primary))]" aria-hidden="true" />
         <p className="text-xs leading-5 text-[rgb(var(--text-muted))]">
-          Creezi doar definiția inactivă. Ask ReveNew nu o activează, nu o rulează și nu trimite emailuri.
+          Salvezi doar definiția inactivă. Activarea se face separat; salvarea nu rulează workflow-ul și nu trimite emailuri.
         </p>
       </div>
 

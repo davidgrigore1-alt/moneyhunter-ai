@@ -1,5 +1,12 @@
 "use client";
 
+import { reviseWorkflowDraft } from "@/lib/workflow-revision";
+import { Button } from "@/components/ui/ProductButton";
+import { WorkflowSystems } from "./WorkflowSystems";
+import { DecisionFlow } from "./DecisionFlow";
+import styles from "./WorkflowBuilder.module.css";
+import { BoltIcon, AdjustmentsHorizontalIcon, ShieldCheckIcon, ClipboardDocumentCheckIcon } from "@heroicons/react/24/outline";
+import controls from "@/components/ui/PremiumControls.module.css";
 import { Select } from "@/components/ui/Select";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -65,27 +72,8 @@ function catalogGroups<T extends string>(items: Array<{ value: T; label: string;
   }));
 }
 
-function nodeClass(
-  selected: boolean,
-  role: "trigger" | "condition" | "guard" | "action",
-) {
-  const roleClass =
-    role === "trigger"
-      ? "border-l-[3px] border-l-[rgb(var(--interaction))]"
-      : role === "condition"
-        ? "border-l-[3px] border-l-[rgb(var(--border-strong))]"
-        : role === "guard"
-          ? "border-l-[3px] border-l-[rgb(var(--intelligence))]"
-          : "border-l-[3px] border-l-[rgb(var(--primary))]";
-
-  return (
-    "focus-ring w-full rounded-[10px] border px-4 py-3 text-left " +
-    "transition-[border-color,background-color,box-shadow] duration-fast " +
-    roleClass +
-    (selected
-      ? " border-[rgb(var(--primary))] bg-[rgb(var(--intelligence-tint))] ring-1 ring-[rgb(var(--primary)/0.22)] shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
-      : " border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] shadow-[0_1px_2px_rgba(0,0,0,0.035)] hover:border-[rgb(var(--border-strong))]")
-  );
+function nodeClass(selected: boolean, _role: "trigger" | "condition" | "guard" | "action") {
+  return `focus-ring ${styles.node} ${selected ? styles.selected : ""}`;
 }
 
 function FlowConnector() {
@@ -100,6 +88,8 @@ export function WorkflowBuilder({ workflow, opportunities, preflight }: { workfl
   const [trigger, setTrigger] = useState<WorkflowTrigger>(workflow.trigger);
   const [conditions, setConditions] = useState<EditableCondition[]>(() => workflow.conditions.map((item, index) => ({ ...item, key: index })));
   const [actions, setActions] = useState<EditableAction[]>(() => workflow.actions.map((item, index) => ({ ...item, key: index })));
+  const [revision, setRevision] = useState("");
+  const [revisionMessage, setRevisionMessage] = useState("");
   const [selected, setSelected] = useState("workflow");
   const initial = useRef(JSON.stringify({
     name: workflow.name,
@@ -190,7 +180,20 @@ export function WorkflowBuilder({ workflow, opportunities, preflight }: { workfl
     if (dirty && !window.confirm("Ai modificări nesalvate. Revii la lista de workflow-uri?")) event.preventDefault();
   }
 
-  return <div className="min-w-0">
+  return <div className={styles.builder}>
+    <details className="border-b border-[rgb(var(--border))] p-4"><summary className="focus-ring cursor-pointer text-sm font-medium">Parcursul workflow-ului · cinci etape</summary><div className="mt-4"><DecisionFlow mode="definition" label="De la semnal la revizuire" steps={[
+      { detail: workflowTriggerCatalog.find(item => item.value === trigger)?.label ?? "Declanșator de ales", onSelect: () => setSelected("trigger"), action: "Editează semnalul" },
+      { detail: "Oportunitatea și înregistrările autorizate sunt revalidate la evaluare.", onSelect: () => setSelected("guard") },
+      { detail: conditions.length ? `${conditions.length} ${conditions.length === 1 ? "condiție configurată" : "condiții configurate"}; rezultat numai după evaluare.` : "Fără condiții suplimentare; verificările de siguranță rămân obligatorii.", onSelect: () => conditions.length ? setSelected("condition:" + conditions[0].key) : addCondition(), action: "Editează condițiile" },
+      { detail: actions.map(action => workflowActionCatalog.find(item => item.value === action.type)?.label ?? "Acțiune de verificat").join(" · ") || "Niciun pas configurat", onSelect: () => actions.length ? setSelected("action:" + actions[0].key) : addAction(), action: "Editează pașii" },
+      { detail: "Planurile protejate necesită confirmare. Notificările interne pot fi create de runtime.", href: "#activation-review", action: "Revizuiește activarea" }
+    ]} /></div></details>
+    <details className="border-t border-[rgb(var(--border))] px-4 py-3"><summary className="focus-ring cursor-pointer text-sm font-medium">Revizuiește cu asistentul</summary>
+      <p className="mt-2 text-sm text-[rgb(var(--text-muted))]">Modificări ghidate: verificarea responsabilului sau păstrarea doar a draftului email. Salvarea rămâne explicită.</p>
+      <div className="mt-3 flex flex-wrap gap-2"><input aria-label="Modificare workflow" value={revision} onChange={event => setRevision(event.target.value)} maxLength={1000} placeholder="Adaugă verificarea că responsabilul există" className="focus-ring min-h-11 min-w-0 flex-1 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 text-sm" /><Button variant="secondary" disabled={!editable || !revision.trim()} onClick={() => { const result = reviseWorkflowDraft({...workflow, ...payload}, revision); if (!result.ok) { setRevisionMessage(result.error); return; } setConditions(result.conditions.map(item => ({...item, key:keyRef.current++}))); setActions(result.actions.map(item => ({...item, key:keyRef.current++}))); setSelected("workflow"); setRevisionMessage("Modificarea este vizibilă în editor. Verifică și salvează definiția."); }}>Propune modificarea</Button></div>
+      {revisionMessage ? <p role="status" className="mt-3 text-sm">{revisionMessage}</p> : null}
+    </details>
+    <WorkflowSystems definition={{ trigger, actions }} />
     <form action={saveWorkflowDefinition}>
       <input type="hidden" name="workflowId" value={workflow.id} />
       <input type="hidden" name="name" value={name} />
@@ -204,22 +207,18 @@ export function WorkflowBuilder({ workflow, opportunities, preflight }: { workfl
         <button type="button" onClick={() => setSelected("workflow")} className="focus-ring min-w-0 truncate text-sm font-semibold hover:text-[rgb(var(--primary))]">{name || "Workflow fără nume"}</button>
         <div className="flex items-center gap-3">
           <span className={dirty ? "text-xs font-medium text-[rgb(var(--warning-text))]" : "text-xs text-[rgb(var(--text-subtle))]"}>{dirty ? "Modificări nesalvate" : "Salvat"}</span>
-          <button disabled={!editable || !valid || !dirty} className="focus-ring h-8 rounded-[8px] bg-[rgb(var(--primary))] px-3 text-xs font-semibold text-[rgb(var(--primary-foreground))] transition-colors duration-fast hover:bg-[rgb(var(--primary-hover))] disabled:cursor-not-allowed disabled:opacity-45">{editable ? "Salvează" : "Pune în pauză pentru editare"}</button>
+          <button disabled={!editable || !valid || !dirty} className={`${controls.primary} focus-ring h-8 rounded-[8px] bg-[rgb(var(--primary))] px-3 text-xs font-semibold text-[rgb(var(--primary-foreground))] transition-colors duration-fast hover:bg-[rgb(var(--primary-hover))] disabled:cursor-not-allowed disabled:opacity-45`}>{editable ? "Salvează" : "Pune în pauză pentru editare"}</button>
         </div>
       </div>
 
       <div className="grid xl:grid-cols-[minmax(0,1fr)_21rem]">
         <section
           aria-label="Canvas workflow"
-          className="relative overflow-auto border-b border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-4 py-6 sm:px-5 xl:max-h-[min(43rem,calc(100dvh-12rem))] xl:border-b-0 xl:border-r"
+          className={`${styles.canvas} relative overflow-auto border-b border-[rgb(var(--border))] px-4 py-6 sm:px-6 xl:max-h-[min(43rem,calc(100dvh-12rem))] xl:border-b-0`}
         >
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 opacity-[0.16] [background-image:radial-gradient(rgb(var(--border-strong))_0.7px,transparent_0.7px)] [background-size:18px_18px]"
-          />
           <div className="relative mx-auto w-full max-w-[46rem]">
-            <button type="button" onClick={() => setSelected("trigger")} className={nodeClass(selected === "trigger", "trigger")}>
-              <span className="micro-label">Când · Declanșator</span>
+            <button type="button" onClick={() => setSelected("trigger")} aria-pressed={selected === "trigger"} className={nodeClass(selected === "trigger", "trigger")}>
+              <span className="micro-label"><BoltIcon aria-hidden="true" />Când · Declanșator</span>
               <span className="mt-1 block text-sm font-semibold">{workflowTriggerCatalog.find((item) => item.value === trigger)?.label}</span>
               <span className="mt-1 block text-xs leading-5 text-[rgb(var(--text-muted))]">{capability.label}</span>
             </button>
@@ -227,41 +226,41 @@ export function WorkflowBuilder({ workflow, opportunities, preflight }: { workfl
             <FlowConnector />
 
             {conditions.length ? <div className="grid gap-3 md:grid-cols-2">
-              {conditions.map((condition) => <button key={condition.key} type="button" onClick={() => setSelected("condition:" + condition.key)} className={nodeClass(selected === "condition:" + condition.key, "condition")}>
-                <span className="micro-label">Dacă · Condiție</span>
+              {conditions.map((condition) => <button key={condition.key} type="button" onClick={() => setSelected("condition:" + condition.key)} aria-pressed={selected === "condition:" + condition.key} className={nodeClass(selected === "condition:" + condition.key, "condition")}>
+                <span className="micro-label"><AdjustmentsHorizontalIcon aria-hidden="true" />Dacă · Condiție</span>
                 <span className="mt-1 block text-sm font-semibold">{workflowConditionCatalog.find((item) => item.value === condition.field)?.label}</span>
-                <span className="mt-1 block truncate text-xs text-[rgb(var(--text-muted))]">{workflowOperatorCatalog.find((item) => item.value === condition.operator)?.label} {condition.value == null ? "" : String(condition.value)}</span>
+                <span className="mt-1 block truncate text-xs text-[rgb(var(--text-muted))]">{workflowOperatorCatalog.find((item) => item.value === condition.operator)?.label} {condition.value == null ? "" : stateOptions[condition.field]?.find(option => option.value === String(condition.value))?.label ?? String(condition.value)}</span>
               </button>)}
             </div> : <button type="button" onClick={() => setSelected("guard")} className="focus-ring w-full rounded-[10px] border border-dashed border-[rgb(var(--border-strong))] px-4 py-3 text-left text-xs text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-hover))]">Dacă · Fără condiții suplimentare</button>}
             <button type="button" onClick={addCondition} disabled={!editable || conditions.length >= 8} className="focus-ring mx-auto mt-3 flex h-8 items-center rounded-[8px] px-3 text-xs font-semibold text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-elevated))] hover:text-[rgb(var(--foreground))] disabled:opacity-40">+ Adaugă condiție</button>
 
             <FlowConnector />
 
-            <button type="button" onClick={() => setSelected("guard")} className={nodeClass(selected === "guard", "guard")}>
-              <span className="micro-label">ReveNew verifică · Gard comercial</span>
+            <button type="button" onClick={() => setSelected("guard")} aria-pressed={selected === "guard"} className={nodeClass(selected === "guard", "guard")}>
+              <span className="micro-label"><ShieldCheckIcon aria-hidden="true" />Context și control</span>
               <span className="mt-1 block text-sm font-semibold">{workflowGuardCopy.title}</span>
-              <span className="mt-1 block text-xs leading-5 text-[rgb(var(--text-muted))]">Revalidare, ownership și control uman înainte de orice mutație protejată.</span>
+              <span className="mt-1 block text-xs leading-5 text-[rgb(var(--text-muted))]">Revalidare, responsabilitate și control uman înainte de orice mutație protejată.</span>
             </button>
 
             <FlowConnector />
 
             <div className="grid gap-3 md:grid-cols-2">
-              {actions.map((action, index) => <button key={action.key} type="button" onClick={() => setSelected("action:" + action.key)} className={nodeClass(selected === "action:" + action.key, "action")}>
-                <span className="micro-label">Atunci · Acțiunea {String(index + 1).padStart(2, "0")}</span>
+              {actions.map((action, index) => <button key={action.key} type="button" onClick={() => setSelected("action:" + action.key)} aria-pressed={selected === "action:" + action.key} className={nodeClass(selected === "action:" + action.key, "action")}>
+                <span className="micro-label"><ClipboardDocumentCheckIcon aria-hidden="true" />Atunci · Acțiunea {String(index + 1).padStart(2, "0")}</span>
                 <span className="mt-1 block text-sm font-semibold">{workflowActionCatalog.find((item) => item.value === action.type)?.label}</span>
                 <span className="mt-1 block text-xs leading-5 text-[rgb(var(--text-muted))]">{action.requiresHumanApproval ? "Necesită revizuire umană" : "Acțiune internă permisă"}</span>
               </button>)}
             </div>
             <button type="button" onClick={() => addAction()} disabled={!editable || actions.length >= 6} className="focus-ring mx-auto mt-3 flex h-8 items-center rounded-[8px] px-3 text-xs font-semibold text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-elevated))] hover:text-[rgb(var(--foreground))] disabled:opacity-40">+ Adaugă acțiune</button>
 
-            <div className="mx-auto mt-6 flex w-fit items-center gap-2 rounded-[8px] border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-3 py-2 text-[0.6875rem] text-[rgb(var(--text-muted))]">
+            <div className="mx-auto mt-6 flex w-fit items-center gap-2 rounded-[8px] border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-3 py-2 text-xs text-[rgb(var(--text-muted))]">
               <span className="h-1.5 w-1.5 rounded-full bg-[rgb(var(--text-subtle))]" />
               Execuție controlată · salvare explicită · fără acțiuni externe automate
             </div>
           </div>
         </section>
 
-        <aside aria-label="Inspector workflow" className="bg-[rgb(var(--surface-elevated))] px-4 py-5 xl:max-h-[min(43rem,calc(100dvh-12rem))] xl:overflow-y-auto">
+        <aside aria-label="Inspector workflow" className={`${styles.inspector} bg-[rgb(var(--surface-elevated))] px-5 py-5 xl:max-h-[min(43rem,calc(100dvh-12rem))] xl:overflow-y-auto`}>
           <div className="flex items-center justify-between gap-3 border-b border-[rgb(var(--border))] pb-3">
             <div><p className="micro-label">Inspector</p><h2 className="mt-1 text-sm font-semibold">Configurare bloc</h2></div>
             <span className="status-pill status-pill-neutral">{state.label}</span>
@@ -303,7 +302,7 @@ export function WorkflowBuilder({ workflow, opportunities, preflight }: { workfl
               <button type="button" disabled={!editable || actions.findIndex((item) => item.key === selectedAction.key) === actions.length - 1} onClick={() => moveAction(actions.findIndex((item) => item.key === selectedAction.key), 1)} className="focus-ring h-8 px-2 text-xs disabled:opacity-30" aria-label="Mută acțiunea în jos">Mută jos</button>
               <button type="button" disabled={!editable || actions.length === 1} onClick={() => { setActions((current) => current.filter((item) => item.key !== selectedAction.key)); setSelected("workflow"); }} className="focus-ring ml-auto h-8 px-2 text-xs text-[rgb(var(--danger-text))] disabled:opacity-30">Elimină</button>
             </div>
-            <p className="text-[0.6875rem] leading-5 text-[rgb(var(--text-muted))]">{selectedAction.type === "create_notification" ? "Acțiune internă ReveNew." : "Lucru pregătit · necesită revizuire umană."}{selectedAction.type === "prepare_email" ? " Niciun email nu va fi trimis automat." : ""}</p>
+            <p className="text-xs leading-5 text-[rgb(var(--text-muted))]">{selectedAction.type === "create_notification" ? "Acțiune internă ReveNew." : "Lucru pregătit · necesită revizuire umană."}{selectedAction.type === "prepare_email" ? " Niciun email nu va fi trimis automat." : ""}</p>
           </div> : null}
         </aside>
       </div>
@@ -330,19 +329,19 @@ export function WorkflowBuilder({ workflow, opportunities, preflight }: { workfl
           <input type="hidden" name="workflowId" value={workflow.id} />
           <input type="hidden" name="status" value={workflow.status === "active" ? "paused" : "active"} />
           <button disabled={dirty || !valid || (workflow.status !== "active" && (!capability.automatic || !preflight.canActivate))} className="focus-ring h-9 w-full rounded-[8px] border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface))] px-3 text-xs font-semibold hover:bg-[rgb(var(--surface-elevated))] disabled:cursor-not-allowed disabled:opacity-45">{workflow.status === "active" ? "Pune workflow-ul în pauză" : "Activează explicit"}</button>
-          {dirty ? <p className="mt-2 text-[0.6875rem] text-[rgb(var(--warning-text))]">Salvează modificările înainte de activare.</p> : null}
-          {!capability.automatic && workflow.status !== "active" ? <p className="mt-2 text-[0.6875rem] leading-5 text-[rgb(var(--warning-text))]">Activarea automată nu este disponibilă pentru acest trigger. Poți salva și testa draftul.</p> : null}
+          {dirty ? <p className="mt-2 text-xs text-[rgb(var(--warning-text))]">Salvează modificările înainte de activare.</p> : null}
+          {!capability.automatic && workflow.status !== "active" ? <p className="mt-2 text-xs leading-5 text-[rgb(var(--warning-text))]">Activarea automată nu este disponibilă pentru acest trigger. Poți salva și testa draftul.</p> : null}
         </form> : null}
       </section>
 
       <section className="px-4 py-5 lg:border-r lg:border-[rgb(var(--border))]">
-        <p className="micro-label">Test fără mutații</p>
+        <p className="micro-label">Test fără executare</p>
         <h2 className="mt-1 text-sm font-semibold">Verifică un caz real în siguranță</h2>
-        <p className="mt-2 text-xs leading-5 text-[rgb(var(--text-muted))]">Condițiile și gardurile sunt evaluate, dar nu se creează taskuri, notificări sau emailuri.</p>
+        <p className="mt-2 text-xs leading-5 text-[rgb(var(--text-muted))]">Condițiile și verificările de siguranță sunt evaluate, dar nu se creează taskuri, notificări sau emailuri.</p>
         {opportunities.length ? <form action={runWorkflowTest} className="mt-4 grid gap-2">
           <input type="hidden" name="workflowId" value={workflow.id} />
           <Select name="targetId" aria-label="Oportunitate pentru test" className="focus-ring h-9 rounded-[8px] border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-2 text-xs">{opportunities.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}</Select>
-          <button disabled={dirty} className="focus-ring h-9 rounded-[8px] bg-[rgb(var(--primary))] px-3 text-xs font-semibold text-[rgb(var(--primary-foreground))] disabled:opacity-45">Testează fără mutații</button>
+          <button disabled={dirty} className="focus-ring h-9 rounded-[8px] bg-[rgb(var(--primary))] px-3 text-xs font-semibold text-[rgb(var(--primary-foreground))] disabled:opacity-45">Testează fără executare</button>
         </form> : <p className="mt-4 text-xs text-[rgb(var(--text-muted))]">Nu există oportunități eligibile pentru test.</p>}
       </section>
 

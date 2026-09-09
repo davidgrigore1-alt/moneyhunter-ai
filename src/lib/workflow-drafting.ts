@@ -1,3 +1,4 @@
+import { workflowTriggerRegistry } from "./workflow-trigger-registry";
 import {
   safeWorkflowActions,
   workflowConditions,
@@ -59,6 +60,7 @@ function extractAmount(question: string) {
 
 function hasMissingNextAction(value: string) {
   return includesAny(value, [
+    "fara urmator pas", "nu are urmator pas", "nu are urmatorul pas", "nu mai are urmatorul pas", "fara urmatorul pas", "fara pas urmator",
     "fara next action",
     "fara urmatoarea actiune",
     "fara actiune urmatoare",
@@ -70,17 +72,24 @@ function hasMissingNextAction(value: string) {
   ]);
 }
 
+function hasMissingOwner(value: string) {
+  return /fara (?:un )?(?:owner|responsabil)|owner lipsa|responsabil(?:ul)? lipseste|nu are (?:un )?responsabil|neasignat/.test(value);
+}
+
 function titleForRequest(value: string) {
   if (includesAny(value, ["raspunde", "reply received", "email primit"])) return "Răspuns nou de la client";
   if (includesAny(value, ["intalnire", "meeting"])) return "Pregătire înainte de întâlnire";
-  if (includesAny(value, ["fara owner", "owner lipsa", "neasignat"])) return "Revizuire oportunități fără responsabil";
+  if (hasMissingOwner(value)) return "Revizuire oportunități fără responsabil";
   if (includesAny(value, ["restant", "overdue", "follow-up"])) return "Follow-up comercial restant";
   if (includesAny(value, ["next action", "actiune urmatoare"])) return "Acțiune următoare lipsă";
-  return "Workflow comercial pregătit din Ask ReveNew";
+  return "Workflow comercial propus";
 }
 
 function collectUnsupportedIntents(value: string) {
   const items: string[] = [];
+  if (/\d+\s*(?:zile|ore)|de\s+cinci\s+zile/.test(value)) items.push("Pragul de vechime în zile sau ore nu este o condiție disponibilă. Necesită evaluare înainte de implementare.");
+  if (/manager|director|aprobare.*responsabil/.test(value)) items.push("Rutarea aprobării către un manager sau responsabil specific nu este configurabilă aici. Revizuirea internă nu echivalează cu o cerere de aprobare.");
+  if (/gmail|calendar|drive|dovezi recente/.test(value)) items.push("Colectarea automată de dovezi din aplicații externe nu este disponibilă în runtime-ul acestui workflow.");
   if (includesAny(value, ["slack", "teams", "microsoft 365", "outlook"])) {
     items.push("Notificările externe către Slack, Teams, Microsoft 365 sau Outlook nu sunt disponibile în acest workflow.");
   }
@@ -88,7 +97,8 @@ function collectUnsupportedIntents(value: string) {
   if (includesAny(value, ["webhook", "ruleaza cod", "executa cod", "script", "sql"])) {
     items.push("Execuția de cod, SQL, scripturi sau webhook-uri nu este permisă.");
   }
-  if (includesAny(value, ["trimite automat", "send automatically", "auto-send", "fara aprobare", "without approval"])) {
+  const actionRequest = value.replace(/nu executa nicio actiune externa fara aprobare umana/g, "");
+  if (includesAny(actionRequest, ["trimite automat", "send automatically", "auto-send", "fara aprobare", "without approval"])) {
     items.push("Trimiterea automată nu este permisă. ReveNew poate doar pregăti emailul pentru revizuire umană.");
   }
   return items;
@@ -106,11 +116,12 @@ export function isWorkflowDraftRequest(question: string) {
 }
 
 function buildTrigger(value: string): WorkflowTrigger | null {
+  if (includesAny(value, ["se creeaza o oportunitate", "crearea unei oportunitati", "oportunitate creata"])) return "opportunity_created";
   if (hasMissingNextAction(value)) return "scheduled_review";
   if (includesAny(value, ["raspunde", "reply received", "email primit"])) return "reply_received";
   if (includesAny(value, ["intalnire apropiata", "intalnire viitoare", "meeting upcoming"])) return "meeting_upcoming";
   if (includesAny(value, ["next action", "actiune urmatoare", "follow-up restant", "restant", "overdue"])) return "next_action_overdue";
-  if (includesAny(value, ["oportunitate creata", "opportunity created"])) return "opportunity_created";
+  if (includesAny(value, ["oportunitate creata", "opportunity created", "se creeaza o oportunitate", "crearea unei oportunitati"])) return "opportunity_created";
   if (includesAny(value, ["schimba etapa", "stage changed", "etapa se schimba"])) return "stage_changed";
   if (includesAny(value, ["aprobare finalizata", "approval completed"])) return "approval_completed";
   if (includesAny(value, ["revizuire programata", "scheduled review"])) return "scheduled_review";
@@ -125,7 +136,8 @@ function buildConditions(value: string, amount: ReturnType<typeof extractAmount>
     conditions.push({ field: "estimated_value", operator: "greater_than", value: amount.value });
     conditions.push({ field: "currency", operator: "equals", value: amount.currency });
   }
-  if (includesAny(value, ["fara owner", "owner lipsa", "neasignat"])) conditions.push({ field: "owner", operator: "is_empty", value: null });
+  if (hasMissingOwner(value)) conditions.push({ field: "owner", operator: "is_empty", value: null });
+  else if (/are (?:un )?responsabil|responsabil exista|responsabilul exista/.test(value)) conditions.push({ field: "owner", operator: "is_not_empty", value: null });
   if (hasMissingNextAction(value)) {
     conditions.push({ field: "execution_state", operator: "equals", value: "next_action_missing" });
   }
@@ -135,14 +147,14 @@ function buildConditions(value: string, amount: ReturnType<typeof extractAmount>
 
 function buildActions(value: string) {
   const actions: Array<{ type: SafeWorkflowAction; description: string; configuration?: Record<string, string | number | boolean | null> }> = [];
-  if (includesAny(value, ["pregateste un email", "pregateste email", "draft email", "trimite email", "trimite automat email", "email de follow-up"])) {
+  if (includesAny(value, ["pregateste un follow-up", "pregateste follow-up", "pregateste un email", "pregateste email", "draft email", "trimite email", "trimite automat email", "email de follow-up"])) {
     actions.push({ type: "prepare_email", description: "Pregătește un email pentru revizuire umană." });
   }
   if (includesAny(value, ["creeaza un task", "creeaza task", "sarcina", "task de review"])) {
     actions.push({ type: "create_internal_task", description: "Pregătește un task comercial intern." });
   }
   if (includesAny(value, ["anunta owner", "notifica owner", "notificare"])) {
-    actions.push({ type: "create_notification", description: "Informează responsabilul în interiorul ReveNew.", configuration: { audience: "opportunity_owner" } });
+    actions.push({ type: "create_notification", description: "Informează responsabilul în interiorul ReveNew.", configuration: {} });
   }
   if (includesAny(value, ["review", "revizuire", "atribuie", "fara owner"])) {
     actions.push({ type: "assign_review", description: "Atribuie o revizuire comercială internă." });
@@ -169,7 +181,7 @@ function canonicalDefinition(
   const draft = createWorkflowDraft({
     id: "00000000-0000-5000-8000-000000000000",
     name: title,
-    description: "Workflow pregătit prin Ask ReveNew. Necesită verificare și activare explicită în builder.",
+    description: "Workflow pregătit prin interpretare ghidată. Necesită verificare și activare explicită în editor.",
     trigger,
     conditions,
     actions,
@@ -208,12 +220,16 @@ export function interpretCommercialWorkflowRequest(question: string): WorkflowDr
     return { ...base, state: unsupported.length ? "unsupported" : "clarification", summary: "Nu am identificat un declanșator comercial suportat.", definition: null, clarification: "Când trebuie să pornească workflow-ul: la follow-up restant, răspuns primit, întâlnire apropiată sau lipsa acțiunii următoare?" };
   }
 
+  if (!workflowTriggerRegistry[trigger].automatic) unsupported.push(workflowTriggerRegistry[trigger].explanation + " Activarea nu este disponibilă.");
   const actions = buildActions(value);
+  if (hasMissingOwner(value) && actions.some(action => action.type === "create_internal_task")) {
+    unsupported.push("Dacă evaluarea indică «Responsabil lipsă», sarcina internă obișnuită este omisă. Revizuirea pentru clarificarea responsabilității poate fi pregătită, iar notificarea internă poate fi creată după activare.");
+  }
   const definition = canonicalDefinition(trigger, buildConditions(value, amount), actions, title);
   const safeguards = [
     "Workflow-ul este creat doar ca Draft.",
     "Activarea rămâne o acțiune separată și explicită în builder.",
-    "Nicio acțiune externă nu este executată din Ask ReveNew.",
+    "Pregătirea draftului nu execută nicio acțiune externă.",
   ];
   if (actions.some((action) => action.type === "prepare_email")) {
     safeguards.push("Emailul este doar pregătit; trimiterea necesită revizuire și confirmare umană.");
@@ -224,10 +240,11 @@ export function interpretCommercialWorkflowRequest(question: string): WorkflowDr
     state: unsupported.length ? "partial" : "ready",
     summary: unsupported.length
       ? "Am pregătit partea suportată și am păstrat explicit limitările cererii."
-      : "Cererea a fost tradusă într-o definiție comercială verificată.",
+      : "Regula a fost structurată într-un draft. Verifică semnalul, condițiile și pașii înainte de salvare.",
     definition,
     clarification: null,
     assumptions: [
+      ...(hasMissingOwner(value) ? ["Atribuie o revizuire pregătește o propunere; nu numește automat un responsabil pentru oportunitate. Fără responsabil, notificarea internă ajunge la autorul workflow-ului."] : []),
       ...(amount.value && amount.currency ? ["Pragul este " + amount.value.toLocaleString("ro-RO") + " " + amount.currency + "."] : []),
       ...(includesAny(value, ["oportunitatile active", "oportunitati active"]) ? ["Oportunitățile închise sunt excluse de gardul comercial canonic."] : []),
     ],

@@ -10,13 +10,17 @@ const req={question:'Care este valoarea contractului?',context:{route:'/ai',page
 const response={conclusion:'Contractul are valoare declarată 17 RON.',claims:[{text:'Contractul are valoare declarată 17 RON.',evidenceIds:['E1'],kind:'source_declaration'}],unknowns:[],followUps:[]};
 function harness(options={}) {
  const events=[],turns=[],retrievals=[];let calls=0,authorityChecks=0;
- const canonical={answer:{answer:'Date canonice',summaryType:'commercial',findings:[],evidence:[],checkedSources:[],missingInformation:[],caveats:[],preparedAction:null,followUps:[],mode:'deterministic_fallback'},diagnostics:{toolNames:[]}};
+ const canonical={answer:{answer:'Date canonice',summaryType:'commercial',findings:[],evidence:[],checkedSources:[],missingInformation:[],caveats:[],preparedAction:null,followUps:[],mode:'deterministic_fallback',...options.canonical},diagnostics:{toolNames:[]}};
  const provider={kind:'ollama',model:()=> 'synthetic-provider',available:()=>options.available!==false,createTurn:async input=>{
    turns.push(input);events.push('model');calls++;
    if(options.turn)return options.turn(input,calls);
    return {model:'synthetic-provider',outputText:JSON.stringify(calls===1&&options.forged?{...response,claims:[{...response.claims[0],evidenceIds:['forged']}]}:response),usage:{inputTokens:10,outputTokens:5,totalTokens:15}};
  }};
  const engine=loadTS('src/lib/ai/operational-intelligence.ts',{
+  '@/lib/recovery':{getRecoverySummary:async()=>({})},
+  '@/lib/commercial-interventions-server':{getCommercialInterventionBrief:async()=>({items:[]})},
+  './product-help':loadTS('src/lib/ai/product-help.ts',{'@/lib/contextual-help':loadTS('src/lib/contextual-help.ts')}),
+  '@/lib/workflow-drafting':loadTS('src/lib/workflow-drafting.ts',{'@/lib/workflow-foundation':loadTS('src/lib/workflow-foundation.ts'),'./workflow-trigger-registry':loadTS('src/lib/workflow-trigger-registry.ts')}),
   './copilot-orchestrator':{runCopilot:async request=>{events.push('canonical');retrievals.push(request);assert.equal(request.history.length,0);return canonical;}},
   './provider':{getCopilotProvider:()=>provider},'./preparation-intent':preparation,
   './intelligence-documents':{retrieveIntelligenceDocuments:async request=>{events.push('documents');retrievals.push(request);assert.equal(preparation.hasDirectPreparationIntent(),false);return {evidence:options.empty?[]:[ev],checks:[],limits:[],calculations:[]};}},
@@ -33,6 +37,26 @@ function harness(options={}) {
  return {run:(request=req,signal)=>engine.runOperationalIntelligence(request,signal,provider),turns,events,retrievals};
 }
 test('P4 real shared orchestrator checks authority before retrieval and model exposure',async()=>{const h=harness();const r=await h.run();assert.equal(h.events[0],'authority');assert.equal(r.answer.mode,'ai');assert.equal(r.answer.findings[0].sourceIds[0],'stable-source');assert.equal(h.turns[0].tools.length,0);});
+
+test('Gate 1 synthesized brief retains only cases backed by current authorized evidence',async()=>{
+ const supported={id:'current',owner:null,estimatedExposure:17,currency:'RON',recommendation:'Confirmă responsabilul.'};
+ const h=harness({canonical:{evidence:[{...ev,sourceId:'intervention:current'}],presentation:{kind:'interventions',interventions:[supported,{id:'unavailable',owner:'Must not appear'}]}}});
+ const r=await h.run({...req,context:{route:'/ai',pageType:'ai'}});
+ assert.equal(r.answer.mode,'ai');
+ assert.deepEqual(JSON.parse(JSON.stringify(r.answer.presentation.interventions)),[supported]);
+ assert.equal(r.answer.preparedAction,null);
+ assert.equal(h.turns[0].tools.length,0);
+});
+
+test('Gate 1 repeated English output uses bounded repair then the server fallback',async()=>{
+ const h=harness({turn:async()=>({model:'synthetic-provider',outputText:JSON.stringify({...response,conclusion:'Review the contract before the deadline.'}),usage:{inputTokens:1,outputTokens:1,totalTokens:2}})});
+ const r=await h.run();
+ assert.equal(h.turns.length,2);
+ assert.equal(r.answer.mode,'deterministic_fallback');
+ assert.doesNotMatch(r.answer.answer,/Review the contract/);
+ assert.equal(r.answer.evidence[0].sourceId,'stable-source');
+ assert.equal(r.answer.preparedAction,null);
+});
 test('P4 revoked authority stops before any source loader or model',async()=>{const h=harness({revokedBefore:true});await assert.rejects(h.run(),/authority/);assert.deepEqual(h.events,['authority']);});
 test('P4 membership revoked during synthesis prevents answer reuse',async()=>{const h=harness({revokedAfter:true});await assert.rejects(h.run(),/authority/);assert.equal(h.turns.length,1);});
 test('P4 deleted source is rejected before model and again before response',async()=>{const h=harness({deleted:true});await assert.rejects(h.run(),/source_changed/);assert.equal(h.turns.length,0);});

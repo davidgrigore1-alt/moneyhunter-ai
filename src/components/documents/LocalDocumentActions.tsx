@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ProductButton";
 import { LocalDocumentUpload } from "./LocalDocumentUpload";
 import styles from "./Documents.module.css";
 export function LocalDocumentActions({sourceId,versionId,state,opportunityId,opportunities}:{sourceId:string;versionId:string;state:string;opportunityId:string|null;opportunities:{id:string;title:string}[]}) {

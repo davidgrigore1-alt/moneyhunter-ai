@@ -1,0 +1,61 @@
+/* Gate 1: scoped to authenticated shell and access/setup surfaces. Landing is frozen. */
+.foundation {
+  --font-size-micro: 12px;
+  --font-size-metadata: 12px;
+  --entity-company: 128 182 211;
+  --entity-contact: 174 150 216;
+  --entity-opportunity: 213 190 126;
+  --entity-document: 137 171 146;
+  --entity-meeting: 139 176 214;
+  --entity-sequence: 212 157 135;
+  --decision-accent: 213 190 126;
+  --decision-radius: 10px;
+  --control-height: 44px;
+  --control-radius: 8px;
+}
+.shell :global(.authenticated-sidebar) { border-right-color: rgb(var(--border)); }
+.shell :global(.authenticated-sidebar nav a) { border-radius: 6px; }
+/* Gate 3: neutral navigation; the three record families carry the only tiles. */
+.shell :global(nav a[data-entity][aria-current="page"]) { border-color: transparent; background: rgb(var(--foreground) / .065); color: rgb(var(--foreground)); }
+.shell :global(nav a[data-entity][aria-current="page"]::before) { display: none; }
+.shell :global(nav a[data-entity] svg) { color: rgb(var(--text-secondary)); stroke-width: 1.6; }
+.shell :global(nav a[data-entity="companies"] svg), .shell :global(nav a[data-entity="contacts"] svg), .shell :global(nav a[data-entity="opportunities"] svg) { color: #fff; padding: 3px; width: 19px; height: 19px; border-radius: 5px; }
+.shell :global(nav a[data-entity="companies"] svg) { background: #167ba7; }
+.shell :global(nav a[data-entity="contacts"] svg) { background: #8056c4; }
+.shell :global(nav a[data-entity="opportunities"] svg) { background: #b87818; }
+/* Operational text only. Marketing never receives this scope. */
+.shell :global(.text-micro), .shell :global(.text-metadata), .shell :global(.micro-label), .shell :global(.product-eyebrow) { font-size: 12px; line-height: 1.5; }
+.shell :global(.text-xs) { font-size: 13px; line-height: 1.5; }
+.shell :global([class*="text-[0.6875rem]"]), .shell :global([class*="text-[0.625rem]"]), .shell :global([class*="text-[10px]"]), .shell :global([class*="text-[11px]"]) { font-size: 12px; line-height: 1.5; }
+.shell :global(.control-center-case-selected) {
+  border-left-color: rgb(var(--decision-accent));
+  background: rgb(var(--decision-accent) / .065);
+}
+.shell :global(.control-center-workbench) { border-radius: var(--decision-radius); }
+.shell :global(.control-center-case-facts dd) {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+}
+.auth input:not([type="checkbox"]), .auth select,
+.auth button[type="submit"] { min-height: var(--control-height); border-radius: var(--control-radius); }
+.auth input[type="checkbox"] { min-height: auto; }
+.auth :global(.shadow-sm) { box-shadow: none; }
+.auth > aside { background: rgb(var(--surface-subtle)); }
+@media (min-width: 1024px) {
+  .shell :global(.control-center-case-list),
+  .shell :global(#execution-case-detail) { max-height: min(680px, 64vh); }
+}
+@media (max-height: 740px) and (min-width: 1024px) {
+  .shell :global(.authenticated-sidebar > div:first-child) { padding-top: 10px; padding-bottom: 8px; }
+  .shell :global(.authenticated-sidebar > div:first-child > p) { margin-top: 6px; }
+  .auth > aside { padding: 28px; }
+  .auth > aside > div:first-child > p:first-of-type { margin-top: 42px; }
+  .auth > section { padding-block: 28px; }
+}
+
+.onboarding input:not([type="checkbox"]), .onboarding select, .onboarding button { border-radius: 8px; }
+.onboarding :global(.shadow-sm) { box-shadow: none; }
+
+@media (max-width: 640px) { .shell :global(button), .shell :global(summary), .shell :global([role="combobox"]) { min-height: 44px; } }

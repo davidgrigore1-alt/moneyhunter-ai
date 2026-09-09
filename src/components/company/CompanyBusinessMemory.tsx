@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowRightIcon } from "@heroicons/react/24/outline";
 import { ExplanationDisclosure } from "@/components/intelligence/ExplanationDisclosure";
@@ -28,7 +29,7 @@ export function CompanyIssueRow({ item, memory }: { item: CompanyAttentionItem; 
   </article>;
 }
 
-export function CompanyBusinessMemory({ memory, executiveDecision, recoverableValueByCurrency, attention }: { memory: BusinessMemory; executiveDecision: ExecutiveDecisionSnapshot; recoverableValueByCurrency: Record<string, number>; attention: CompanyAttentionItem[] }) {
+export function CompanyBusinessMemory({ memory, executiveDecision, recoverableValueByCurrency, attention, primaryContactAction }: { primaryContactAction?: ReactNode; memory: BusinessMemory; executiveDecision: ExecutiveDecisionSnapshot; recoverableValueByCurrency: Record<string, number>; attention: CompanyAttentionItem[] }) {
   const primary = attention[0];
   const remaining = attention.slice(1);
   const why = primary ? memoryFor(primary, memory).whyItMatters ?? executiveDecision.whyItMatters : null;
@@ -38,7 +39,7 @@ export function CompanyBusinessMemory({ memory, executiveDecision, recoverableVa
       <div><StatusPill tone={primary.severity === "critical" ? "danger" : "warning"}>{primary.severity === "critical" ? "Prioritate critică" : "Necesită atenție"}</StatusPill><h3>{primary.title}</h3><p>{primary.description}</p><p className={styles.why}><strong>De ce contează:</strong> {why}</p>
         <CompanyEvidenceLine label={primary.evidence.label} timestamp={primary.evidence.sourceTimestamp} href={primary.evidence.href} /><ExplanationDisclosure explanation={explanationForCompanyMemory(memoryFor(primary, memory))} className="mt-2" />
       </div>
-      <div className={styles.decisionAction}><p className="product-eyebrow">Următorul pas</p><Link href={companySourceHref(primary.href)!} className="focus-ring">{primary.actionLabel}<ArrowRightIcon className="h-4 w-4 shrink-0" aria-hidden="true" /></Link><small>Acțiunea rămâne sub controlul echipei.</small></div>
+      <div className={styles.decisionAction}><p className="product-eyebrow">Următorul pas</p>{primary.code === "missing_primary_contact" && primaryContactAction ? primaryContactAction : <Link href={companySourceHref(primary.href)!} className="focus-ring">{primary.actionLabel}<ArrowRightIcon className="h-4 w-4 shrink-0" aria-hidden="true" /></Link>}<small>Acțiunea rămâne sub controlul echipei.</small></div>
     </div> : <div className={styles.quiet}><h3>Nicio intervenție identificată în datele disponibile</h3><p>Continuă din oportunitățile active sau verifică istoricul relației. Lipsa unui semnal nu confirmă un rezultat comercial.</p></div>}
     {Object.keys(recoverableValueByCurrency).length ? <p className={styles.valueNote}>Valoare recuperabilă estimată · {Object.entries(recoverableValueByCurrency).map(([currency, value]) => formatCurrency(value, currency)).join(" · ")} <span>Separată de venitul confirmat.</span></p> : null}
     {remaining.length ? <details className={styles.otherIssues}><summary className="focus-ring">Alte situații de revizuit · {remaining.length}</summary>{remaining.map(item => <CompanyIssueRow key={item.id} item={item} memory={memory} />)}</details> : null}

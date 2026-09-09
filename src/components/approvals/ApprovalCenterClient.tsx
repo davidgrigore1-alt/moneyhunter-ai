@@ -1,5 +1,6 @@
 "use client";
 
+import { DecisionFlow } from "@/components/workflows/DecisionFlow";
 import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -18,7 +19,7 @@ import {
 import type { CommercialSignal } from "@/lib/types";
 import { formatCurrency, formatDate, formatDateTimeWithSeconds } from "@/lib/utils";
 import { AlertBanner } from "@/components/ui/AlertBanner";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ProductButton";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { StatusPill } from "@/components/ui/StatusPill";
@@ -313,8 +314,15 @@ export function ApprovalCenterClient({
                 </div>
               </header>
 
+              <div className="p-4"><DecisionFlow steps={[
+                {detail:selectedSignal.title,href:`/inbox?signal=${selectedSignal.id}`,action:"Verifică semnalul"},
+                {detail:selectedSignal.sourceLabel ?? selectedSignal.source},
+                {detail:selectedSignal.missingInformation.length ? `${selectedSignal.missingInformation.length} informații de confirmat.` : "Datele și permisiunile sunt reverificate înainte de aplicare."},
+                {detail:selectedSignal.recommendedAction || "Propunere de revizuit în formularul deciziei."},
+                {detail:approvalCenterStateLabels[selectedState],href:"#approval-audit-trail",action:"Vezi auditul"}
+              ]} /></div>
               <div className="grid items-start xl:grid-cols-[minmax(0,1fr)_18rem]">
-                <main className="grid min-w-0 gap-4 p-4 xl:border-r xl:border-[rgb(var(--border))]">
+                <div className="grid min-w-0 gap-4 p-4 xl:border-r xl:border-[rgb(var(--border))]">
                   <dl className="grid overflow-hidden rounded-lg border border-[rgb(var(--border))] sm:grid-cols-3">
                     <div className="px-3 py-2.5 sm:border-r sm:border-[rgb(var(--border))]"><dt className="text-[0.625rem] font-semibold uppercase tracking-[0.09em] text-[rgb(var(--text-faint))]">Semnal</dt><dd className="mt-1 text-xs font-semibold leading-5">{selectedSignal.sourceLabel ?? selectedSignal.source}</dd></div>
                     {selectedSignal.signalTypeLabel || selectedSignal.detectedCommercialIntent ? <div className="border-t border-[rgb(var(--border))] px-3 py-2.5 sm:border-r sm:border-t-0"><dt className="text-[0.625rem] font-semibold uppercase tracking-[0.09em] text-[rgb(var(--text-faint))]">Intenție detectată</dt><dd className="mt-1 text-xs font-semibold leading-5">{selectedSignal.signalTypeLabel ?? selectedSignal.detectedCommercialIntent}</dd></div> : null}
@@ -344,7 +352,7 @@ export function ApprovalCenterClient({
                     <div className="flex items-center justify-between gap-3"><h3 id="approval-audit-title" className="text-sm font-semibold">Istoric de audit</h3><span className="text-xs tabular-nums text-[rgb(var(--text-faint))]">{(selectedSignal.events ?? []).length}</span></div>
                     {(selectedSignal.events ?? []).length > 0 ? <ol className="mt-3 grid gap-3">{(selectedSignal.events ?? []).slice(0, 4).map((event) => <li key={event.id} className="border-l-2 border-[rgb(var(--border-strong))] pl-3"><p className="text-sm font-medium leading-5">{event.description}</p><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">{formatDateTimeWithSeconds(event.createdAt)}</p></li>)}</ol> : <p className="mt-2 text-sm text-[rgb(var(--text-muted))]">Nu există evenimente disponibile pentru această decizie.</p>}
                   </section>
-                </main>
+                </div>
 
                 <aside className="grid gap-4 bg-[rgb(var(--surface-elevated))] p-4 xl:sticky xl:top-0" aria-label="Decizia umană">
                   {selectedState === "pending" ? (

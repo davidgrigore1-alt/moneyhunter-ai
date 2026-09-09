@@ -1,3 +1,5 @@
+import { PrimaryContactPicker } from "@/components/company/PrimaryContactPicker";
+import surface from "@/components/ui/ProductSurface.module.css";
 import { notFound } from "next/navigation";
 import { CompanyBusinessMemory } from "@/components/company/CompanyBusinessMemory";
 import { CompanyActiveWork, CompanyIdentity, CompanyOpportunityList, CompanyPeople, CompanyRecentContext } from "@/components/company/CompanyBriefing";
@@ -36,17 +38,17 @@ export default async function CrmOrganizationDetailPage(props: { params: Promise
     activeTab === "execution" ? getExternalContextForCompany(organization.id) : null,
     activeTab === "notes" ? getWorkspaceNotes("company", organization.id) : []
   ]);
-  return <div className={styles.page}>
+  return <div className={`${surface.page} ${styles.page}`}>
     <CompanyIdentity snapshot={snapshot} />
     <div className={styles.stack}>
       {activeTab === "overview" ? <>
-        <CompanyBusinessMemory memory={snapshot.memory} executiveDecision={snapshot.executiveDecision} recoverableValueByCurrency={snapshot.commercial.recoverableValueByCurrency} attention={model.issues} />
+        <CompanyBusinessMemory primaryContactAction={<PrimaryContactPicker companyId={organization.id} contacts={snapshot.contacts} />} memory={snapshot.memory} executiveDecision={snapshot.executiveDecision} recoverableValueByCurrency={snapshot.commercial.recoverableValueByCurrency} attention={model.issues} />
         <CompanyActiveWork snapshot={snapshot} />
       </> : null}
       <RecordTabs tabs={companyTabs} activeTab={activeTab} label="Secțiunile companiei" />
       {activeTab === "overview" ? <CompanyRecentContext snapshot={snapshot} /> : null}
       {activeTab === "execution" ? <CompanyExecutionWorkspace snapshot={snapshot} emails={privateExternalContext?.emails ?? []} events={privateExternalContext?.events ?? []} hasConnection={Boolean(privateExternalContext?.connection)} /> : null}
-      {activeTab === "contacts" ? <CompanyPeople snapshot={snapshot} /> : null}
+      {activeTab === "contacts" ? <><PrimaryContactPicker companyId={organization.id} contacts={snapshot.contacts} /><CompanyPeople snapshot={snapshot} /></> : null}
       {activeTab === "opportunities" ? <section aria-labelledby="company-opportunities-title"><header className={styles.sectionHeader}><div><h2 id="company-opportunities-title">Oportunități asociate</h2><p className={styles.muted}>Valori estimate în moneda originală. Înregistrările închise rămân în istoric.</p></div></header>{snapshot.opportunities.length ? <CompanyOpportunityList opportunities={snapshot.opportunities} /> : <p className={styles.quiet}>Nicio oportunitate asociată în datele încărcate.</p>}</section> : null}
       {activeTab === "notes" ? <RecordNotes targetType="company" targetId={organization.id} notes={workspaceNotes} /> : null}
       {activeTab === "ask" ? <CompanyContextualAsk organizationId={organization.id} companyName={organization.name} suggestions={suggestedCompanyQuestions(snapshot)} /> : null}

@@ -44,7 +44,7 @@ export function ShellNavigation({
               className={cn(
                 "px-2 font-medium text-[rgb(var(--text-faint))]",
                 variant === "sidebar"
-                  ? "text-micro leading-4"
+                  ? "text-xs leading-5"
                   : "text-metadata"
               )}
             >
@@ -60,13 +60,14 @@ export function ShellNavigation({
                 <Link
                   key={item.href}
                   href={item.href}
+                  data-entity={item.href.slice(1)}
                   onClick={onNavigate}
                   aria-current={active ? "page" : undefined}
                   className={cn(
                     "focus-ring group relative flex items-center rounded-control border border-transparent font-medium transition-[background-color,border-color,color] duration-fast ease-standard",
                     variant === "sidebar"
                       ? "min-h-8 gap-2 px-2 text-label"
-                      : "min-h-9 gap-3 px-3 text-sm",
+                      : "min-h-11 gap-3 px-3 text-sm",
                     active
                       ? "border-[rgb(var(--selection-border))] bg-[rgb(var(--selection-tint))] text-[rgb(var(--foreground))] before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-full before:bg-[rgb(var(--selection))] dark:border-[rgb(var(--border)/0.72)] dark:bg-[rgb(var(--surface-selected)/0.82)]"
                       : "text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-subtle))] hover:text-[rgb(var(--foreground))]"

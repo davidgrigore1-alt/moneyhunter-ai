@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRef, useState, type ReactNode } from "react";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ProductButton";
 import { StructuredGrid } from "./StructuredGrid";
 import { parseDocumentCsv, mapDocumentCsv, DOCUMENT_CSV_LIMITS, type DocumentCsv } from "@/lib/documents/csv";
 import { commercialImportFields, type CommercialImportFieldKey } from "@/lib/commercial-ingestion-fields";

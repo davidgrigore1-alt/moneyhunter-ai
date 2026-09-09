@@ -36,6 +36,8 @@ export function evidenceHref(href?: string): string | undefined {
   // behind explicit tabs; preserve the target instead of opening a hidden section.
   const section = href.match(/^(\/opportunities\/[^/?#]+)#([^?#]+)$/);
   const tabs: Record<string, { tab: string; anchor: string }> = {
+    "opportunity-source-context": { tab: "workflow", anchor: "opportunity-source-context" },
+    "opportunity-timeline": { tab: "context", anchor: "opportunity-timeline" },
     "workflow-actions-list": { tab: "workflow", anchor: "workflow-actions-list" },
     "workflow-actions": { tab: "workflow", anchor: "workflow-actions-list" },
     "opportunity-documents": { tab: "workflow", anchor: "opportunity-documents" },

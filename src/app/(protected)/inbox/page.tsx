@@ -39,7 +39,7 @@ export default async function CommercialInboxPage(
   ]);
 
   return (
-    <PageShell
+    <PageShell entity="opportunities"
       eyebrow="Semnale și conversații"
       title="Inbox Comercial"
       description="Prioritizează ce s-a schimbat, verifică sursa și aplică numai următorul pas comercial aprobat"

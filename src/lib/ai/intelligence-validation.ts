@@ -10,6 +10,17 @@ export const intelligenceAnswerSchema = {
 };
 function record(value:unknown):Record<string,unknown>|null {return value&&typeof value==="object"&&!Array.isArray(value)?value as Record<string,unknown>:null;}
 function plain(value:unknown,max:number) {return typeof value==="string"&&value.length<=max&&!/<\/?[a-z]|https?:\/\/|!\[|javascript:/i.test(value)?value.trim():null;}
+/** Conservative English-prose guard, not a translation or semantic validator.
+ * Source names and quoted evidence remain untouched; rejected synthesis uses
+ * the existing bounded repair attempt, then the Romanian server projection.
+ */
+export function hasEnglishIntelligenceProse(value: string) {
+  const text = normalizeIntelligenceText(value).replace(/[„“”"«»][^„“”"«»]*[„“”"«»]/g, " ");
+  if (/\b(?:prioritize|requires?|needs?|should|must|awaiting|overdue|re-established|recommended|missing|confirmed|verify|review|assign)\b/i.test(text)) return true;
+  const words = text.match(/\b(?:the|with|without|and|from|has|have|is|are|this|these|for|their|because|before|after)\b/g) ?? [];
+  const romanian = /\b(?:este|sunt|are|au|pentru|fara|din|cu|si|in|trebuie|verifica|confirma|responsabilul|urmatorul)\b/.test(text);
+  return words.length >= 2 && !romanian;
+}
 function unsupportedProse(text:string) {
   const normalized=normalizeIntelligenceText(text);
   if(/nu a raspuns|nu au raspuns|n-a raspuns|niciun raspuns (?:primit|de la)/.test(normalized))return true;
@@ -54,6 +65,8 @@ export function validateIntelligenceSynthesis(raw:unknown,evidence:CopilotEviden
   const value=record(raw),conclusion=plain(value?.conclusion,320);
   if(!value||!conclusion||Object.keys(value).sort().join(",")!=="claims,conclusion,followUps,unknowns"||!Array.isArray(value.claims)||!value.claims.length||value.claims.length>3||![value.unknowns,value.followUps].every(items=>Array.isArray(items)&&items.length<=2&&items.every(item=>plain(item,120)!==null)))return {ok:false,reason:"invalid_schema"};
   const byId=new Map(evidence.map(e=>[e.sourceId,e]));
+  const generated = [conclusion, ...value.claims.map(item => record(item)?.text), ...value.unknowns as unknown[], ...value.followUps as unknown[]];
+  if (generated.some(text => typeof text === "string" && hasEnglishIntelligenceProse(text))) return {ok:false,reason:"romanian_output_required"};
   const findings:CopilotAnswer["findings"]=[];
   for(const item of value.claims) {
     const claim=record(item),text=plain(claim?.text,240),ids=claim?.evidenceIds;

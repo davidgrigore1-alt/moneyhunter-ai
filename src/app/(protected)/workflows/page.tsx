@@ -1,8 +1,11 @@
+import { EmptyState } from "@/components/dashboard/EmptyState";
+import { EntityMark } from "@/components/ui/EntityMark";
+import { DecisionFlow } from "@/components/workflows/DecisionFlow";
 import patterns from "@/components/ui/OperationalPatterns.module.css";
 import { PageShell } from "@/components/dashboard/PageShell";
 import { RecordSummaryBar } from "@/components/records/RecordSummaryBar";
 import { WorkflowPlaybooks } from "@/components/workflows/WorkflowPlaybooks";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ProductButton";
 import { changeWorkflowStatus } from "@/lib/workflow-actions";
 import { getCommercialWorkflowWorkspace } from "@/lib/workflow-runtime";
 import { formatProductDateTime, presentWorkflowRunState, presentWorkflowState } from "@/lib/ui/presentation";
@@ -29,6 +32,7 @@ export default async function WorkflowsPage() {
   for (const run of workspace.runs) if (!lastRunByWorkflow.has(run.workflow_id)) lastRunByWorkflow.set(run.workflow_id, run);
 
   return <PageShell
+    entity="workflows"
     wide
     eyebrow="Execuție comercială"
     title="Workflow-uri"
@@ -71,9 +75,12 @@ export default async function WorkflowsPage() {
             </article>;
           })}
         </div>
-      </div> : <div className="px-4 py-10 text-center"><h3 className="text-sm font-semibold">Niciun workflow comercial</h3><p className="mx-auto mt-2 max-w-lg text-xs leading-5 text-[rgb(var(--text-muted))]">Creează un draft pentru a defini când verifică ReveNew situația și ce lucru sigur poate pregăti.</p><Button href="/workflows/new" className="mt-4">Creează primul workflow</Button></div>}
+      </div> : <EmptyState calm icon={<EntityMark entity="workflows" />} title="Primul tău workflow" description="Descrie o regulă comercială și verifică draftul înainte de activare." action={<Button href="/workflows/new">Creează un workflow</Button>} />}
     </section>
 
+    <DecisionFlow mode="definition" label="Cum continuă un caz" steps={[
+      {detail:"Un eveniment comercial susținut de runtime."}, {detail:"Date autorizate și context verificabil."}, {detail:"Condiții configurate și verificări de siguranță."}, {detail:"Propuneri sau notificări interne, conform definiției."}, {detail:"Acțiunile protejate așteaptă confirmarea persoanei autorizate."}
+    ]} />
     <WorkflowPlaybooks />
     <section aria-labelledby="workflow-history-title" className="mt-8">
       <div className="flex items-end justify-between gap-4 border-b border-[rgb(var(--border))] pb-3"><div><h2 id="workflow-history-title" className="text-sm font-semibold">Istoric de evaluare</h2><p className="mt-1 text-xs text-[rgb(var(--text-muted))]">Fără mutații în test · ultimele evaluări reale și controlate.</p></div><span className="text-xs tabular-nums text-[rgb(var(--text-muted))]">{workspace.runs.length}</span></div>

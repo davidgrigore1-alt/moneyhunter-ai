@@ -6,6 +6,7 @@ import { hasPermission } from "@/lib/authz/has-permission";
 const adminLinks = [
   ["Prezentare generală", "/admin"],
   ["Firme", "/admin/businesses"],
+  ["Solicitări demo", "/admin/leads"],
   ["Utilizare", "/admin/usage"],
   ["Costuri", "/admin/costs"],
   ["Audit", "/admin/audit"],

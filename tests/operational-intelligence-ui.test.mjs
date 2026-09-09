@@ -65,7 +65,7 @@ test("a cancelled response cannot replace a newer answer or stop its loading sta
   const scope = {
     loading: false, abortRef: { current: null }, conversation: [], context: {}, selection: undefined,
     AbortController, Date,
-    setQuestion() {}, setError() {}, setPrepareReview() {}, setSelection() {},
+    setComposerExpanded() {}, setQuestion() {}, setError() {}, setPrepareReview() {}, setSelection() {},
     setLoading(value) { scope.loading = value; },
     setConversation(update) { scope.conversation = update(scope.conversation); },
     fetch: async () => ({ ok: true, json: () => new Promise(resolve => deferred.push(resolve)) })

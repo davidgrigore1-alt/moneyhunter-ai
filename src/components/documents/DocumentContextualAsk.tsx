@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ProductButton";
 import { CopilotConversation } from "@/components/intelligence/CopilotConversation";
 import styles from "./Documents.module.css";
 

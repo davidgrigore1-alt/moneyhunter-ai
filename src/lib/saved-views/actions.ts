@@ -49,11 +49,11 @@ export async function createSavedView(formData: FormData) {
   if (!authorization.profileId || !current || !supabase) return { ok: false, error: "Vizualizarea nu poate fi salvată momentan." };
   const filterState = parseFilterState(String(formData.get("query") ?? ""));
   const sortState = filterState.sort ? { sort: filterState.sort } : {};
-  const { error } = await supabase.from("saved_views").insert({ business_id: current.business.id, profile_id: authorization.profileId, name, target_page: targetPage, filter_state: filterState, sort_state: sortState });
-  if (error) return { ok: false, error: error.code === "23505" ? "Există deja o vizualizare cu acest nume." : "Vizualizarea nu a putut fi salvată." };
+  const { data, error } = await supabase.from("saved_views").insert({ business_id: current.business.id, profile_id: authorization.profileId, name, target_page: targetPage, filter_state: filterState, sort_state: sortState }).select("id,name,filter_state").single();
+  if (error || !data) return { ok: false, error: error?.code === "23505" ? "Există deja o vizualizare cu acest nume." : "Vizualizarea nu a putut fi salvată." };
   void recordProductEvent("saved_view_created", { businessId: current.business.id, metadata: { target_page: targetPage } });
   revalidatePath(`/${targetPage}`);
-  return { ok: true };
+  return { ok: true, view: data };
 }
 
 export async function deleteSavedView(id: string) {
@@ -69,4 +69,16 @@ export async function deleteSavedView(id: string) {
   if (error || !data || !targetPages.has(data.target_page)) return { ok: false };
   revalidatePath("/" + data.target_page);
   return { ok: true };
+}
+
+export async function renameSavedView(id: string, name: string) {
+  await requirePermission("workspace.read");
+  name = name.trim();
+  if (!/^[0-9a-f-]{36}$/i.test(id) || !name || name.length > 80) return { ok: false, error: "Completează un nume valid." };
+  const [authorization, current, supabase] = await Promise.all([getAuthorizationContext(), getCurrentBusinessForUser({ redirectIfMissing: true }), Promise.resolve(createSupabaseServerClient())]);
+  if (!authorization.profileId || !current || !supabase) return { ok: false, error: "Vizualizarea nu este disponibilă." };
+  const { data, error } = await supabase.from("saved_views").update({ name }).eq("id", id).eq("business_id", current.business.id).eq("profile_id", authorization.profileId).select("id,name,filter_state,target_page").single();
+  if (error || !data) return { ok: false, error: "Numele nu a putut fi salvat. Verifică dacă este deja folosit." };
+  revalidatePath("/" + data.target_page);
+  return { ok: true, view: data };
 }

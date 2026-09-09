@@ -149,6 +149,8 @@ export type CompanyIntelligenceSnapshot = {
     isPrimary: boolean;
     opportunityRoles: string[];
     opportunityCount: number;
+    organizationId?: string | null;
+    email?: string | null;
     evidence: CompanyEvidence[];
   }>;
   opportunities: Array<{
@@ -483,7 +485,7 @@ export function buildCompanyIntelligenceSnapshot(input: CompanyIntelligenceInput
 
   const contactRelationships = input.contacts.map((contact) => {
     const associations = input.opportunities.flatMap((opportunity) => (opportunity.contacts ?? []).filter((association) => association.contactId === contact.id));
-    return { id: contact.id, fullName: contact.fullName, jobTitle: contact.jobTitle ?? null, decisionRole: contact.decisionRole ?? null, isPrimary: contact.id === primaryContact?.id, opportunityRoles: Array.from(new Set(associations.map((association) => association.role).filter((role): role is string => Boolean(role)))), opportunityCount: new Set(associations.map((association) => association.opportunityId)).size, evidence: [evidence("contact", contact.id, contact.updatedAt ?? contact.createdAt, `Contactul „${contact.fullName}”`, `/crm/contacts/${contact.id}`), ...associations.map((association) => evidence("opportunity_contact", association.id, association.updatedAt ?? association.createdAt, `Relația cu oportunitatea ${association.opportunityId}`, `/opportunities/${association.opportunityId}`))] };
+    return { id: contact.id, organizationId: contact.organizationId, email: contact.email, fullName: contact.fullName, jobTitle: contact.jobTitle ?? null, decisionRole: contact.decisionRole ?? null, isPrimary: contact.id === primaryContact?.id, opportunityRoles: Array.from(new Set(associations.map((association) => association.role).filter((role): role is string => Boolean(role)))), opportunityCount: new Set(associations.map((association) => association.opportunityId)).size, evidence: [evidence("contact", contact.id, contact.updatedAt ?? contact.createdAt, `Contactul „${contact.fullName}”`, `/crm/contacts/${contact.id}`), ...associations.map((association) => evidence("opportunity_contact", association.id, association.updatedAt ?? association.createdAt, `Relația cu oportunitatea ${association.opportunityId}`, `/opportunities/${association.opportunityId}`))] };
   });
   const documents = input.opportunities.flatMap((opportunity) => opportunity.documents.map((document) => {
     const occurredAt = validTimestamp(document.sentAt) ?? validTimestamp(document.readyAt) ?? validTimestamp(document.editedAt) ?? validTimestamp(document.createdAt);

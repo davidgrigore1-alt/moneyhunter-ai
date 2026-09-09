@@ -1,3 +1,6 @@
+import { DecisionFlow } from "@/components/workflows/DecisionFlow";
+import { EvidenceList } from "@/components/evidence/EvidenceList";
+import { metadataEvidence } from "@/lib/evidence-reference";
 import Link from "next/link";
 import {
   CheckCircleIcon,
@@ -7,7 +10,7 @@ import {
   ShieldCheckIcon,
   UserCircleIcon
 } from "@heroicons/react/24/outline";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ProductButton";
 import type { PreparedWorkItem } from "@/lib/prepared-work";
 import { formatProductCurrency, formatProductDate, formatProductDateTime } from "@/lib/ui/presentation";
 
@@ -56,7 +59,7 @@ export function ActionPreview({ item, compact = false }: { item: PreparedWorkIte
   const hasEstimatedValue = item.estimatedValueLow !== undefined || item.estimatedValueHigh !== undefined;
   const value = item.estimatedValueHigh ?? item.estimatedValueLow;
   return (
-    <article aria-labelledby={"prepared-work-" + item.id} className="overflow-hidden rounded-panel border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-elevated))] xl:flex xl:max-h-[calc(100dvh-17rem)] xl:flex-col">
+    <article aria-labelledby={"prepared-work-" + item.id} className="overflow-hidden rounded-panel border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-elevated))] xl:flex  xl:flex-col">
       <header className="flex shrink-0 flex-wrap items-start justify-between gap-4 border-b border-[rgb(var(--border))] px-5 py-3.5">
         <div className="flex min-w-0 gap-3">
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] text-[rgb(var(--primary))]"><DocumentTextIcon className="h-4 w-4" aria-hidden="true" /></span>
@@ -69,6 +72,13 @@ export function ActionPreview({ item, compact = false }: { item: PreparedWorkIte
         <span className={item.status === "approved" ? "status-pill status-pill-success" : "status-pill status-pill-warning"}><CheckCircleIcon className="h-3.5 w-3.5" aria-hidden="true" />{statusLabels[item.status]}</span>
       </header>
 
+      <div className="shrink-0 p-4"><DecisionFlow steps={[
+        {detail:item.reason || "Motivul comercial nu este confirmat în înregistrarea salvată."},
+        {detail:`${item.evidence.length} dovezi asociate direct.`,href:`#prepared-evidence-${item.id}`,action:"Verifică dovezile"},
+        {detail:item.owner ? `Responsabil: ${item.owner.label}. Datele se verifică înainte de aplicare.` : "Responsabil neatribuit; necesită clarificare."},
+        {detail:`${item.title} · ${statusLabels[item.status]}`},
+        {detail:item.approver || "Decizia aparține unui utilizator autorizat.",href:item.reviewHref,action:item.reviewLabel}
+      ]} /></div>
       <div className="grid min-h-0 gap-0 lg:grid-cols-[minmax(0,1.45fr)_minmax(16rem,.55fr)] xl:overflow-y-auto xl:overscroll-contain">
         <div className="min-w-0 p-5">
           <section aria-labelledby={"prepared-proposal-" + item.id}>
@@ -83,7 +93,7 @@ export function ActionPreview({ item, compact = false }: { item: PreparedWorkIte
 
           <section className="mt-5 border-t border-[rgb(var(--border))] pt-4" aria-labelledby={"prepared-evidence-" + item.id}>
             <h3 id={"prepared-evidence-" + item.id} className="text-sm font-semibold">Susținut de</h3>
-            {item.evidence.length ? <ul className="mt-3 grid gap-3">{item.evidence.map((source) => <li key={source.id} className="rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-3 text-xs leading-5"><p className="font-semibold">{source.href ? <Link href={source.href} className="focus-ring rounded-sm hover:underline">{source.label}</Link> : source.label}</p>{source.description ? <p className="mt-1 text-[rgb(var(--text-muted))]">{source.description}</p> : null}{source.occurredAt ? <p className="mt-1 text-[rgb(var(--text-faint))]">{formatProductDateTime(source.occurredAt)}</p> : null}</li>)}</ul> : <p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">Nu există dovezi persistente asociate direct acestui document.</p>}
+            {item.evidence.length ? <EvidenceList items={item.evidence.map(source => metadataEvidence({sourceType:"event",sourceId:source.id,title:source.label,occurredAt:source.occurredAt ?? null,supportingFact:source.description ?? undefined,entityHref:source.href}))} /> : <p className="mt-2 text-xs leading-5 text-[rgb(var(--text-muted))]">Nu există dovezi persistente asociate direct acestui document.</p>}
             <p className="mt-3 text-xs leading-5 text-[rgb(var(--text-muted))]"><strong className="text-[rgb(var(--foreground))]">Proveniență:</strong> {item.provenance.label}{item.provenance.createdAt ? ` · ${formatProductDateTime(item.provenance.createdAt)}` : ""}. Documentul este rezultatul pregătit, nu dovada motivului comercial.</p>
           </section>
         </div>

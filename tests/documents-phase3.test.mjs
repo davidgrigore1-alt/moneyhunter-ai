@@ -56,3 +56,12 @@ test('Company evidence reaches supported document detail and retains context for
   assert.equal(commercialDocumentHref({id:'doc',type:'follow_up_email',status:'draft'},'opp'),'/opportunities/opp?tab=workflow#opportunity-documents');
   assert.equal(commercialDocumentHref({id:'doc',type:'offer',status:'archived'},'opp'),'/opportunities/opp?tab=workflow#opportunity-documents');
 });
+
+test('internal document status distinguishes prepared, approved, manual sent and unknown',()=>{
+  const label=module.exports.internalDocumentStatus;
+  assert.equal(label('ready_to_send'),'Pregătit pentru revizuire');
+  assert.equal(label('approved'),'Aprobat intern');
+  assert.equal(label('sent'),'Marcat ca trimis');
+  assert.equal(label(undefined),'Stare neconfirmată');
+  assert.equal(label('toString'),'Stare neconfirmată');
+});

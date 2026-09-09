@@ -82,7 +82,7 @@ test("filters persist through URLs and debug diagnostics are dynamic development
   const filters = read("src/components/filters/OpportunityFilters.tsx");
   const opportunities = read("src/app/(protected)/opportunities/page.tsx");
   const debug = read("src/app/debug/supabase/page.tsx");
-  assert.match(filters, /form method="get"/);
+  assert.match(filters, /<form\b[^>]*\bmethod="get"/);
   assert.match(filters, /href="\/opportunities"/);
   assert.match(opportunities, /searchParams/);
   assert.match(opportunities, /pageSize = 25/);

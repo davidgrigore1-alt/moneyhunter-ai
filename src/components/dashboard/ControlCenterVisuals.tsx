@@ -17,6 +17,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import styles from "./ControlCenter.module.css";
 import { ReportingCurrencyControl } from "@/components/ui/ReportingCurrencyControl";
 import {
   buildReportingControlCenter,
@@ -87,7 +88,7 @@ const compositionLabel = (
 
 const bucketColors = [
   "rgb(var(--danger-text) / .78)",
-  "rgb(var(--gold-500) / .92)",
+  "rgb(var(--primary) / .88)",
   "rgb(var(--text-muted) / .76)",
   "rgb(var(--text-faint) / .72)",
 ];
@@ -100,14 +101,6 @@ const tooltipPanel =
 
 const chartInteractionClass =
   "cursor-default select-none [&_.recharts-wrapper]:select-none [&_.recharts-surface]:select-none [&_.recharts-surface]:outline-none [&_svg]:select-none [&_svg]:outline-none";
-
-type AxisTickProps = {
-  x?: string | number;
-  y?: string | number;
-  payload?: {
-    value?: string | number;
-  };
-};
 
 export function ControlCenterVisuals({
   cases,
@@ -191,51 +184,11 @@ export function ControlCenterVisuals({
 
   const hasBarData = barData.some((entry) => entry.value > 0);
 
-  const renderBucketTick = ({
-    x = 0,
-    y = 0,
-    payload,
-  }: AxisTickProps) => {
-    const row = barData.find(
-      (entry) => entry.label === String(payload?.value ?? ""),
-    );
-
-    if (!row) {
-      return null;
-    }
-
-    const numericX = Number(x) || 0;
-    const numericY = Number(y) || 0;
-
-    return (
-      <g transform={`translate(${numericX},${numericY})`}>
-        <text
-          x={0}
-          y={13}
-          textAnchor="middle"
-          fontSize={11}
-          fill="rgb(var(--text-secondary))"
-        >
-          {row.label}
-        </text>
-
-        <text
-          x={0}
-          y={31}
-          textAnchor="middle"
-          fontSize={10}
-          fill="rgb(var(--text-muted))"
-        >
-          {caseCountLabel(row.count)}
-        </text>
-      </g>
-    );
-  };
 
   return (
     <section
       aria-label="Privire comercială de ansamblu"
-      className="mt-4"
+      className={`mt-4 ${styles.charts}`}
     >
       <div className="mb-3.5 flex flex-wrap items-center justify-between gap-x-5 gap-y-2">
         <ReportingCurrencyControl
@@ -251,7 +204,7 @@ export function ControlCenterVisuals({
         </p>
       </div>
 
-      <div className="grid items-stretch gap-3.5 lg:grid-cols-[minmax(0,1.85fr)_minmax(320px,1fr)]">
+      <div className={styles.chartGrid}>
         <figure className={card}>
           <figcaption className="flex min-h-[72px] flex-wrap content-start items-start justify-between gap-x-5 gap-y-2">
             <div className="min-w-0 flex-1">
@@ -288,7 +241,7 @@ export function ControlCenterVisuals({
                     {excluded ? <p>{excluded}</p> : null}
 
                     <p>
-                      Curba conectează vizual termene discrete și nu reprezintă
+                      Treptele cumulează valorile la termene discrete și nu reprezintă
                       istoricul expunerii sau o prognoză de încasare.
                     </p>
 
@@ -321,7 +274,7 @@ export function ControlCenterVisuals({
           <div
             className={`control-center-chart-plot relative h-[268px] w-full rounded-[14px] bg-[rgb(var(--surface-raised))] ring-1 ring-inset ring-[rgb(var(--border)/0.55)] ${chartInteractionClass}`}
             role="img"
-            aria-label={`Expunere estimată în ${currency}, cumulată după termenele comerciale actuale. Curba conectează vizual termene discrete și nu reprezintă istoric de venit.`}
+            aria-label={`Expunere estimată în ${currency}, cumulată după termenele comerciale actuale. Treptele cumulează valorile la termene discrete și nu reprezintă istoric de venit.`}
           >
             {monetary && chartData.length ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -344,17 +297,17 @@ export function ControlCenterVisuals({
                     >
                       <stop
                         offset="0%"
-                        stopColor="rgb(var(--gold-500))"
+                        stopColor="rgb(var(--primary))"
                         stopOpacity={0.16}
                       />
                       <stop
                         offset="55%"
-                        stopColor="rgb(var(--gold-500))"
+                        stopColor="rgb(var(--primary))"
                         stopOpacity={0.07}
                       />
                       <stop
                         offset="100%"
-                        stopColor="rgb(var(--gold-500))"
+                        stopColor="rgb(var(--primary))"
                         stopOpacity={0.015}
                       />
                     </linearGradient>
@@ -363,7 +316,7 @@ export function ControlCenterVisuals({
                   <CartesianGrid
                     vertical={false}
                     stroke="rgb(var(--border))"
-                    strokeOpacity={0.56}
+                    strokeOpacity={0.4}
                   />
 
                   <XAxis
@@ -377,7 +330,7 @@ export function ControlCenterVisuals({
                     tickMargin={12}
                     tick={{
                       fill: "rgb(var(--text-muted))",
-                      fontSize: 11,
+                      fontSize: 12,
                     }}
                     tickFormatter={(value) =>
                       dateLabel(
@@ -400,7 +353,7 @@ export function ControlCenterVisuals({
                     ]}
                     tick={{
                       fill: "rgb(var(--text-muted))",
-                      fontSize: 11,
+                      fontSize: 12,
                     }}
                     tickFormatter={(value) =>
                       compact(Number(value))
@@ -429,7 +382,7 @@ export function ControlCenterVisuals({
                         value: "ASTĂZI",
                         position: "insideTop",
                         fill: "rgb(var(--text-secondary))",
-                        fontSize: 10,
+                        fontSize: 12,
                         fontWeight: 600,
                       }}
                     />
@@ -498,7 +451,7 @@ export function ControlCenterVisuals({
                   />
 
                   <Area
-                    type="monotoneX"
+                    type="stepAfter"
                     dataKey="cumulative"
                     stroke="none"
                     fill={`url(#${gradientId})`}
@@ -508,22 +461,22 @@ export function ControlCenterVisuals({
                   />
 
                   <Line
-                    type="monotoneX"
+                    type="stepAfter"
                     dataKey="cumulative"
-                    stroke="rgb(var(--gold-500))"
+                    stroke="rgb(var(--primary))"
                     strokeWidth={2.25}
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     dot={{
                       r: 3.25,
-                      fill: "rgb(var(--gold-500))",
+                      fill: "rgb(var(--primary))",
                       stroke: "rgb(var(--surface))",
                       strokeWidth: 2,
                     }}
                     activeDot={{
                       r: 5,
                       fill: "rgb(var(--surface))",
-                      stroke: "rgb(var(--gold-500))",
+                      stroke: "rgb(var(--primary))",
                       strokeWidth: 2.25,
                     }}
                     isAnimationActive={!reduceMotion}
@@ -636,48 +589,19 @@ export function ControlCenterVisuals({
             {hasBarData ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
+                  layout="vertical"
                   data={barData}
                   margin={{
-                    top: 26,
-                    right: 8,
-                    bottom: 30,
+                    top: 10,
+                    right: 24,
+                    bottom: 8,
                     left: 0,
                   }}
                   barCategoryGap="28%"
                 >
-                  <CartesianGrid
-                    vertical={false}
-                    stroke="rgb(var(--border))"
-                    strokeOpacity={0.56}
-                  />
-
-                  <XAxis
-                    dataKey="label"
-                    axisLine={false}
-                    tickLine={false}
-                    interval={0}
-                    height={52}
-                    tick={renderBucketTick}
-                  />
-
-                  <YAxis
-                    width={44}
-                    axisLine={false}
-                    tickLine={false}
-                    tickMargin={7}
-                    domain={[
-                      0,
-                      (dataMax: number) =>
-                        Math.max(1, dataMax * 1.16),
-                    ]}
-                    tick={{
-                      fill: "rgb(var(--text-muted))",
-                      fontSize: 11,
-                    }}
-                    tickFormatter={(value) =>
-                      compact(Number(value))
-                    }
-                  />
+                  <CartesianGrid horizontal={false} stroke="rgb(var(--border))" strokeOpacity={0.56} />
+                  <XAxis type="number" axisLine={false} tickLine={false} domain={[0, (maximum: number) => Math.max(1, maximum * 1.25)]} tick={{ fill: "rgb(var(--text-muted))", fontSize: 12 }} tickFormatter={(value) => compact(Number(value))} />
+                  <YAxis type="category" dataKey="label" width={92} axisLine={false} tickLine={false} tick={{ fill: "rgb(var(--text-secondary))", fontSize: 12 }} />
 
                   <Tooltip
                     isAnimationActive={!reduceMotion}
@@ -743,8 +667,8 @@ export function ControlCenterVisuals({
 
                   <Bar
                     dataKey="value"
-                    radius={[6, 6, 2, 2]}
-                    maxBarSize={46}
+                    radius={[0, 5, 5, 0]}
+                    maxBarSize={25}
                     isAnimationActive={!reduceMotion}
                     animationDuration={180}
                     animationEasing="ease-out"
@@ -758,7 +682,7 @@ export function ControlCenterVisuals({
 
                     <LabelList
                       dataKey="value"
-                      position="top"
+                      position="right"
                       formatter={(value: unknown) =>
                         compact(Number(value))
                       }

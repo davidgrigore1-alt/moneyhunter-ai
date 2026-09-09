@@ -2,11 +2,12 @@
 
 import { Select } from "@/components/ui/Select";
 import { useMemo, useState, useTransition } from "react";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ProductButton";
 import { StatusNotice } from "@/components/ui/StatusNotice";
 import { assignEnterpriseWork, createWorkspaceInvitation, decideGovernedApproval, revokeWorkspaceInvitation, updateGovernancePolicies, updateWorkspaceMember } from "@/lib/enterprise-governance";
 import { enterpriseRoleLabels } from "@/lib/enterprise-governance-core";
 
+const auditCategories: Record<string, string> = { membership: "Membri", invitation: "Invitații", assignment: "Responsabilitate", governance: "Politici", approval: "Aprobări", outreach: "Comunicare", outcome: "Rezultate", security: "Securitate" };
 const field = "min-h-10 w-full rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--background))] px-3 py-2 text-sm";
 
 export function EnterpriseGovernancePanel({ snapshot }: { snapshot: any }) {
@@ -81,7 +82,7 @@ export function EnterpriseGovernancePanel({ snapshot }: { snapshot: any }) {
     </section>
 
     <section id="audit" className="scroll-mt-36 grid gap-4 rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-5 shadow-card">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><h2 className="text-xl font-semibold">Jurnal de audit</h2><p className="mt-1 text-sm text-[rgb(var(--muted-foreground))]">Evenimente append-only, tenant-scoped și fără conținut sensibil.</p></div><label className="grid gap-1 text-sm">Categorie<Select className={field} value={auditFilter} onChange={(event)=>setAuditFilter(event.target.value)}><option value="all">Toate</option>{["membership","invitation","assignment","governance","approval","outreach","outcome","security"].map(value=><option key={value} value={value}>{value}</option>)}</Select></label></div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><h2 className="text-xl font-semibold">Jurnal de audit</h2><p className="mt-1 text-sm text-[rgb(var(--muted-foreground))]">Evenimente înregistrate în spațiul firmei și rezultatele lor, fără conținutul sensibil al surselor.</p></div><label className="grid gap-1 text-sm">Categorie<Select className={field} value={auditFilter} onChange={(event)=>setAuditFilter(event.target.value)}><option value="all">Toate</option>{["membership","invitation","assignment","governance","approval","outreach","outcome","security"].map(value=><option key={value} value={value}>{auditCategories[value] ?? value}</option>)}</Select></label></div>
       <div className="overflow-x-auto"><table className="min-w-full text-left text-sm"><thead><tr className="border-b border-[rgb(var(--border))]"><th className="p-2">Data</th><th className="p-2">Acțiune</th><th className="p-2">Rezultat</th><th className="p-2">Descriere</th></tr></thead><tbody>{visibleAudit.map((event:any)=><tr key={event.id} className="border-b border-[rgb(var(--border))]"><td className="p-2 whitespace-nowrap">{new Intl.DateTimeFormat("ro-RO",{dateStyle:"short",timeStyle:"short"}).format(new Date(event.occurred_at))}</td><td className="p-2">{event.action}</td><td className="p-2">{event.result}</td><td className="p-2">{event.description}</td></tr>)}</tbody></table>{!visibleAudit.length?<p className="p-3 text-sm text-[rgb(var(--muted-foreground))]">Nu există evenimente pentru filtrul selectat.</p>:null}</div>
     </section>
   </div>;

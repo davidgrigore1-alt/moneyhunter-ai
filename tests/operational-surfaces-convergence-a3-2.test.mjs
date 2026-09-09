@@ -42,9 +42,10 @@ test("Prepared decision UX is URL-selected, evidence-only and has no execution a
   assert.match(page, /xl:max-h-\[calc\(100dvh-17rem\)\]/);
   assert.doesNotMatch(page, /xl:h-\[min\(|xl:min-h-\[/);
   assert.match(page, /xl:grid-cols-\[minmax\(17rem,21rem\)_minmax\(0,1fr\)\]/);
-  assert.match(page, /active \? "border-\[rgb\(var\(--interaction\)\)\] bg-\[rgb\(var\(--interaction\)\/0\.08\)\]" : "border-transparent"/);
-  assert.match(preview, /xl:max-h-\[calc\(100dvh-17rem\)\] xl:flex-col/);
-  assert.match(preview, /min-h-0 gap-0[\s\S]*?xl:overflow-y-auto xl:overscroll-contain/);
+  assert.match(page, /active \? "border-\[rgb\(var\(--primary\)\)\] bg-\[rgb\(var\(--primary\)\/0\.08\)\]" : "border-transparent"/);
+  assert.doesNotMatch(preview, /xl:max-h-/);
+  assert.match(preview, /<DecisionFlow/);
+  assert.match(preview, /min-h-0 gap-0/);
   assert.doesNotMatch(preview, /xl:h-full|xl:flex-1/);
   for (const label of ["Ce a pregătit ReveNew", "De ce există", "Susținut de", "Context autorizat", "Neexecutat · necesită acțiune umană"]) assert.ok(preview.includes(label));
   assert.match(preview, /Nu există un motiv persistent asociat direct/);

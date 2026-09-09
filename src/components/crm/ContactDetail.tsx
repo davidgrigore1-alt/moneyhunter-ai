@@ -1,3 +1,6 @@
+import { EntityMark } from "@/components/ui/EntityMark";
+import controls from "@/components/ui/PremiumControls.module.css";
+import surface from "@/components/ui/ProductSurface.module.css";
 import Link from "next/link";
 import { ArrowUpRightIcon, EnvelopeIcon, PhoneIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
 import { Breadcrumbs } from "@/components/dashboard/Breadcrumbs";
@@ -35,11 +38,11 @@ export function ContactDetail({ contact, primary, opportunities, notes }: {
   const active = opportunities.filter(isOpenOpportunity);
   const closed = opportunities.filter(opportunity => !isOpenOpportunity(opportunity));
   const primaryLabel = primary === "confirmed" ? "Contact principal" : primary === "ambiguous" ? "Principal de clarificat" : primary === "unknown" ? "Principal neconfirmat" : null;
-  return <div className={styles.page}>
+  return <div className={`${surface.page} ${styles.page}`}>
     <Breadcrumbs items={[{ label: "Contacte", href: "/contacts" }, { label: contact.fullName }]} />
     <header className={styles.identity}>
       <span className={styles.avatar} aria-hidden="true">{companyInitials(contact.fullName)}</span>
-      <div className={styles.identityText}><p className={styles.eyebrow}>Relație comercială</p><h1>{contact.fullName}</h1>
+      <div className={styles.identityText}><p className={`${styles.eyebrow} flex items-center gap-2`}><EntityMark entity="contacts" />Relație comercială</p><h1>{contact.fullName}</h1>
         <p className={styles.company}>{contact.jobTitle || "Funcție necompletată"}<span aria-hidden="true">·</span>{contact.organization ? <Link className="focus-ring" href={`/crm/organizations/${contact.organization.id}`}>{contact.organization.name}<ArrowUpRightIcon aria-hidden="true" /></Link> : <span>{contact.organizationId ? "Companie indisponibilă" : "Fără companie asociată"}</span>}</p>
         <p className={styles.relationship}>{primaryLabel ? <span>{primaryLabel}</span> : null}<span>{contactRoleLabels[contact.decisionRole ?? ""] || "Rol neconfirmat"}</span></p>
       </div>
@@ -57,7 +60,7 @@ export function ContactDetail({ contact, primary, opportunities, notes }: {
       </dl><p className={styles.source}>Date introduse explicit în spațiul de lucru.</p></section>
     </div>
     <div className={styles.notes}><RecordNotes targetType="contact" targetId={contact.id} notes={notes} /></div>
-    <details className={styles.history}><summary className="focus-ring">Istoric comercial <span>{closed.length} {closed.length === 1 ? "oportunitate închisă" : "oportunități închise"}</span></summary>
+    <details className={styles.history}><summary className={`focus-ring ${controls.disclosure}`}>Istoric comercial <span>{closed.length} {closed.length === 1 ? "oportunitate închisă" : "oportunități închise"}</span></summary>
       {closed.length ? <OpportunityRows opportunities={closed} /> : <p className={styles.empty}>Nicio oportunitate închisă asociată în datele încărcate.</p>}
     </details>
     <p className={styles.trust}><ShieldCheckIcon aria-hidden="true" /><span>Datele de contact și notele nu autorizează execuție externă. Orice acțiune rămâne pregătită și supusă controlului uman.</span></p>

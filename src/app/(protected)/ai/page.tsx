@@ -1,3 +1,7 @@
+import { ExecutionDiscoveries } from "@/components/intelligence/ExecutionDiscoveries";
+import { getCommercialInterventionBrief, type InterventionBrief } from "@/lib/commercial-interventions-server";
+import { getCompanyRegistryForCurrentBusiness } from "@/lib/crm/company-registry-data";
+import type { CompanyRegistrySnapshot } from "@/lib/crm/company-registry";
 import {
   ArrowRightIcon,
   CheckCircleIcon,
@@ -231,10 +235,17 @@ export default async function AiControlCenterPage(
   const requestedTab = searchParams?.tab;
   const activeTab: IntelligenceTab = intelligenceTabs.some((tab) => tab.id === requestedTab) ? requestedTab as IntelligenceTab : "ask";
   let intelligence = unavailableOperationalIntelligence();
+  let executionBrief: InterventionBrief | null = null;
+  let companies: CompanyRegistrySnapshot | undefined;
   let discoveries: CommercialOpportunityDiscoveryResult | undefined;
 
   if (activeTab === "recommendations" || activeTab === "discoveries") try {
     const summary = await getRecoverySummary();
+    if (activeTab === "discoveries") {
+      executionBrief = await getCommercialInterventionBrief(summary);
+      const registry = await getCompanyRegistryForCurrentBusiness();
+      if (registry.ready) companies = registry.registry;
+    }
     const queue = buildWorkspaceDecisionQueue(
       { opportunities: summary.opportunities, signals: summary.signals },
       { limit: 3 }
@@ -270,7 +281,7 @@ export default async function AiControlCenterPage(
       </nav>
 
       {activeTab === "ask" ? <AskReveNew initialQuestion={searchParams?.question?.slice(0, 3000) ?? ""} selectedRecordId={searchParams?.meeting} /> : null}
-      {activeTab === "discoveries" ? <CommercialDiscoveries result={discoveries} error={!discoveries} /> : null}
+      {activeTab === "discoveries" ? <><ExecutionDiscoveries brief={executionBrief} companies={companies} /><details><summary className="focus-ring cursor-pointer py-3 text-sm font-medium">Semnale pentru oportunități noi</summary><CommercialDiscoveries result={discoveries} error={!discoveries} /></details></> : null}
 
       {activeTab === "recommendations" ? <><section data-guide-anchor="ai-recommendation" className="relative border-y border-[rgb(var(--border-strong)/0.72)] py-5 sm:py-6" aria-labelledby="operational-intelligence-summary">
         <div className="relative grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(18rem,0.65fr)]">

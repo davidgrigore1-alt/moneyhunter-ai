@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ProductButton";
 import { commercialImportFields, type CommercialImportFieldKey } from "@/lib/commercial-ingestion-fields";
 import { sourceReviewGroups, type SourceMapping } from "@/lib/documents/source-review";
 import type { DocumentCsv } from "@/lib/documents/csv";

@@ -1,6 +1,11 @@
 import type { SourceState } from "../google-workspace/drive-types";
 
 export const internalCommercialTypes = ["offer_draft", "offer", "procurement_checklist", "checklist", "grant_summary"] as const;
+/** Internal state never stands in for a provider delivery receipt. */
+export function internalDocumentStatus(status?: string): string {
+  const labels: Record<string, string> = { placeholder: "În pregătire", draft: "În lucru", edited: "Editat", copied: "Copiat", ready_to_send: "Pregătit pentru revizuire", approved: "Aprobat intern", sent: "Marcat ca trimis", archived: "Arhivat" };
+  return status && Object.hasOwn(labels, status) ? labels[status] : "Stare neconfirmată";
+}
 /** Route only types supported by the protected detail loader; other work keeps its existing context. */
 export function commercialDocumentHref(document:{id:string;type?:string;status:string},opportunityId:string) {
   return document.status!=="archived"&&(internalCommercialTypes as readonly string[]).includes(document.type??"")

@@ -5,6 +5,8 @@ This matrix reflects the current `src/app` tree. Protected workspace routes are 
 | Route | Class | Auth | Current Business | Entitlement | Permission | Unauthorized Behavior | Indexing |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `/` | Public marketing | No | No | No | None | Public | Indexed |
+| `/solicita-demo` | Public contact intake | No | No | No | Validated server action; service-only insert RPC | Invalid/unavailable capture fails without success | Noindex |
+| `/admin/leads` | Platform acquisition review | Yes | Yes (inherited shell) | Yes (inherited shell) | `platform.admin.access`; platform-admin RLS | Forbidden before query | Noindex |
 | `/ghid` | Public guide | No | No | No | None | Public | Indexed |
 | `/ghid/cum-functioneaza` | Public guide | No | No | No | None | Public | Indexed |
 | `/ghid/documente-follow-up` | Public guide | No | No | No | None | Public | Indexed |

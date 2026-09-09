@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils";
 type LogoAsset = { src: string; wide?: boolean; width?: number; artwork?: { width: number; height: number; objectPosition: string } };
 const assets: Record<string, LogoAsset> = {
   "google-workspace": { src: "/brands/applications/google-symbol.svg" },
+  // The approved raster has wide transparent margins; size its artwork optically.
+  xlsx: { src: "/marketing/excel-source.png", artwork: { width: 50, height: 100 / 3, objectPosition: "50% 50%" } },
   gmail: { src: "/brands/google/gmail.svg" },
   "google-calendar": { src: "/brands/google/calendar.svg" },
   "microsoft-365": { src: "/brands/applications/microsoft-365.svg" },
@@ -19,21 +21,21 @@ const assets: Record<string, LogoAsset> = {
 };
 const workspaceWordmark: LogoAsset = { src: "/brands/applications/google-workspace.svg", wide: true, width: 128 };
 // Neutral capability symbols, not approximations of unavailable brand artwork.
-const plannedSymbols = { "google-docs": DocumentTextIcon, "google-sheets": TableCellsIcon, "google-meet": VideoCameraIcon };
+const plannedSymbols = { csv: TableCellsIcon, "google-docs": DocumentTextIcon, "google-sheets": TableCellsIcon, "google-meet": VideoCameraIcon };
 
 /** Local source artwork; optical sizing never changes its aspect ratio or colors. */
 export function ApplicationLogo({ item, size = "default", variant = "symbol", className }: {
-  item: { id: string; name: string };
+  item: { id: string; name: string; logoUrl?: string | null; logoMode?: "mark" | "wordmark" };
   size?: "compact" | "default" | "large";
   variant?: "symbol" | "provider";
   className?: string;
 }) {
-  const asset = item.id === "google-workspace" && variant === "provider" ? workspaceWordmark : Object.hasOwn(assets, item.id) ? assets[item.id] : undefined;
+  const asset = item.id === "google-workspace" && variant === "provider" ? workspaceWordmark : Object.hasOwn(assets, item.id) ? assets[item.id] : item.logoUrl ? { src: item.logoUrl, wide: item.logoMode === "wordmark" } as LogoAsset : undefined;
   const Placeholder = Object.hasOwn(plannedSymbols, item.id) ? plannedSymbols[item.id as keyof typeof plannedSymbols] : CodeBracketSquareIcon;
   const pixels = size === "compact" ? 32 : 40;
   const width = asset?.width ?? (asset?.wide ? 68 : pixels);
   return (
-    <span className={cn("inline-grid shrink-0 place-items-center overflow-hidden rounded-[10px] border border-black/5 bg-white", className)} style={{ width, height: pixels }}>
+    <span className={cn("inline-grid shrink-0 place-items-center overflow-hidden rounded-[10px] border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]", className)} style={{ width, height: pixels }}>
       {asset ? <Image src={asset.src} alt={item.name} width={asset.artwork?.width ?? width} height={asset.artwork?.height ?? pixels} unoptimized
         style={asset.artwork ? { width: asset.artwork.width, height: asset.artwork.height, objectPosition: asset.artwork.objectPosition } : undefined}
         className={cn("object-contain", !asset.artwork && "h-full w-full", !asset.artwork && (asset.wide ? "p-1.5" : "p-2"))} />

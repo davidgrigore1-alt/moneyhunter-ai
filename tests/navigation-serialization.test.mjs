@@ -95,7 +95,7 @@ test("recovery queue is a unique permission-aware primary navigation route", () 
 
   assert.equal(recoveryItems.length, 1);
   assert.ok(primaryRecovery);
-  assert.equal(primaryRecovery.name, "Recuperare venituri");
+  assert.equal(primaryRecovery.name, "Recuperare comercială");
   assert.equal(primaryRecovery.permission, "opportunities.read");
   assert.equal(isNavItemActive("/recoverable", "/recoverable"), true);
 });

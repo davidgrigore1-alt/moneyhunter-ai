@@ -1,4 +1,5 @@
 import "server-only";
+import { applicationDateKey } from "@/lib/opportunity-domain";
 import { dispatchApprovalCompletedEvent } from "@/lib/workflow-events";
 import { createHash, randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
@@ -62,7 +63,7 @@ export async function getEnterpriseWorkspaceSnapshot() {
   const current = await getCurrentBusinessForUser({ redirectIfMissing: true });
   const supabase = await createSupabaseServerClient();
   if (!current || !supabase) return null;
-  const dataClient = createSupabaseAdminClient() ?? supabase;
+  const dataClient = supabase;
   const businessId = current.business.id;
   const [members, invitations, policy, approvals, auditEvents, opportunities, actions] = await Promise.all([
     authorization.permissions.includes("workspace.members.read") ? dataClient.from("business_members").select("id,profile_id,role,status,created_at,deactivated_at,profile:profiles!business_members_profile_id_fkey(full_name,email)").eq("business_id", businessId).order("created_at") : Promise.resolve({ data: [], error: null }),
@@ -73,6 +74,7 @@ export async function getEnterpriseWorkspaceSnapshot() {
     dataClient.from("opportunities").select("id,title,owner_profile_id,lifecycle_status,actual_outcome_amount,currency").eq("business_id", businessId),
     dataClient.from("opportunity_actions").select("id,title,assigned_to_profile_id,status,priority,due_at").eq("business_id", businessId)
   ]);
+  if ([members, invitations, policy, approvals, auditEvents, opportunities, actions].some((result) => result.error)) throw new Error("governance_snapshot_unavailable");
   const memberRows: any[] = [...(members.data ?? [])];
   if (authorization.permissions.includes("workspace.members.read") && current.business.owner_profile_id && !memberRows.some((item) => item.profile_id === current.business.owner_profile_id)) {
     memberRows.unshift({ id: `owner-${current.business.owner_profile_id}`, profile_id: current.business.owner_profile_id, role: "owner", status: "active", created_at: null, deactivated_at: null, profile: { full_name: current.profileId === current.business.owner_profile_id ? current.profileName : "Proprietar workspace", email: current.profileId === current.business.owner_profile_id ? current.authUserEmail : null } });
@@ -93,8 +95,8 @@ export async function getEnterpriseWorkspaceSnapshot() {
       myWork: actionRows.filter((item) => item.assigned_to_profile_id === authorization.profileId && item.status === "pending").length,
       team: actionRows.filter((item) => item.status === "pending").length,
       unassigned: opportunityRows.filter((item) => !item.owner_profile_id && item.lifecycle_status === "open").length,
-      overdue: actionRows.filter((item) => item.status === "pending" && item.due_at && item.due_at.slice(0,10) < new Date().toISOString().slice(0,10)).length,
-      dueToday: actionRows.filter((item) => item.status === "pending" && item.due_at?.slice(0,10) === new Date().toISOString().slice(0,10)).length,
+      overdue: actionRows.filter((item) => item.status === "pending" && item.due_at && applicationDateKey(new Date(item.due_at)) < applicationDateKey()).length,
+      dueToday: actionRows.filter((item) => item.status === "pending" && item.due_at && applicationDateKey(new Date(item.due_at)) === applicationDateKey()).length,
       highPriority: actionRows.filter((item) => item.status === "pending" && item.priority === "high").length,
       awaitingApproval: (approvals.data ?? []).filter((item) => item.status === "pending").length
     },

@@ -1,6 +1,5 @@
 "use client";
 
-import type { ReactNode } from "react";
 import { useState } from "react";
 import Link from "next/link";
 import {
@@ -9,6 +8,7 @@ import {
 } from "@heroicons/react/24/outline";
 
 import type { ReportingFxRate } from "@/lib/reporting-currency";
+import { ExecutiveSnapshot } from "./ExecutiveSnapshot";
 import { ControlCenterVisuals } from "@/components/dashboard/ControlCenterVisuals";
 import { CaseReadiness } from "@/components/ui/CaseReadiness";
 import { Button } from "@/components/ui/Button";
@@ -28,6 +28,8 @@ import {
 } from "@/lib/ui/presentation";
 
 import { cn } from "@/lib/utils";
+import styles from "./ControlCenter.module.css";
+import controls from "@/components/ui/PremiumControls.module.css";
 
 const filters = [
   { id: "all", label: "Toate" },
@@ -50,45 +52,6 @@ function matches(item: ExecutionCase, filter: Filter) {
     (filter === "attention" && item.severity !== "informative") ||
     (filter === "overdue" && item.overdue) ||
     (filter === "unassigned" && !item.owner.id)
-  );
-}
-
-function Metric({
-  value,
-  label,
-  tone = "neutral",
-}: {
-  value: ReactNode;
-  label: string;
-  tone?: "neutral" | "attention" | "primary";
-}) {
-  return (
-    <div
-      className={cn(
-        "control-center-metric flex min-w-0 items-baseline gap-2 rounded-[0.68rem] border px-3 py-2",
-        "bg-[rgb(var(--surface-raised))]",
-        tone === "attention"
-          ? "border-[rgb(var(--warning-text)/0.28)]"
-          : tone === "primary"
-            ? "border-[rgb(var(--interaction)/0.28)]"
-            : "border-[rgb(var(--border-subtle))]",
-      )}
-    >
-      <strong
-        className={cn(
-          "shrink-0 text-sm font-semibold tabular-nums",
-          tone === "attention"
-            ? "text-[rgb(var(--warning-text))]"
-            : "text-[rgb(var(--foreground))]",
-        )}
-      >
-        {value}
-      </strong>
-
-      <span className="truncate text-metadata text-[rgb(var(--text-muted))]">
-        {label}
-      </span>
-    </div>
   );
 }
 
@@ -332,7 +295,7 @@ function CaseDetail({
         </dl>
 
         <div className="mt-4 flex flex-wrap items-center gap-3">
-          <Button
+          <Button className={controls.primary}
             href={item.intervention.href}
             size="small"
           >
@@ -453,7 +416,7 @@ export function ExecutionControlCenter({
   return (
     <section
       aria-labelledby="execution-center-title"
-      className="control-center-primary pt-5"
+      className={cn("control-center-primary pt-5", styles.root)}
     >
       {/* ─────────────────────────────────────────────
           EXECUTIVE HEADER
@@ -497,36 +460,7 @@ export function ExecutionControlCenter({
           EXECUTIVE METRICS
       ───────────────────────────────────────────── */}
 
-      <div className="control-center-truth-strip mt-4 flex flex-wrap gap-2 border-y border-[rgb(var(--border-subtle))] py-3">
-        <Metric
-          value={model.cases.length}
-          label={
-            model.cases.length === 1
-              ? "situație de revizuit"
-              : "situații de revizuit"
-          }
-          tone="primary"
-        />
-
-        <Metric
-          value={model.overdueCount}
-          label="cu termen depășit"
-          tone={model.overdueCount ? "attention" : "neutral"}
-        />
-
-        {Object.entries(model.exposure).map(
-          ([currency, amount]) => (
-            <Metric
-              key={currency}
-              value={formatProductCurrency(
-                amount,
-                currency,
-              )}
-              label="expunere estimată"
-            />
-          ),
-        )}
-      </div>
+      <ExecutiveSnapshot model={model} />
 
       {model.sourceState === "fallback" ? (
         <p
@@ -538,60 +472,6 @@ export function ExecutionControlCenter({
           momentan.
         </p>
       ) : null}
-
-      {/* ─────────────────────────────────────────────
-          OPERATIONAL ANALYTICS — NOW ABOVE THE QUEUE
-      ───────────────────────────────────────────── */}
-
-      <section
-        className="control-center-analysis mt-5 border-b border-[rgb(var(--border-subtle))] pb-5"
-        aria-labelledby="control-center-exposure-title"
-      >
-        <div className="mb-4 flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <span
-                aria-hidden="true"
-                className="h-1.5 w-1.5 rounded-full bg-[rgb(var(--primary))]"
-              />
-
-              <p className="text-metadata font-semibold uppercase tracking-[0.12em] text-[rgb(var(--text-muted))]">
-                Analiză operațională
-              </p>
-            </div>
-
-            <h2
-              id="control-center-exposure-title"
-              className="mt-2 text-base font-semibold tracking-[-0.018em]"
-            >
-              Unde este concentrată atenția comercială
-            </h2>
-
-            <p className="mt-1 max-w-3xl text-xs leading-5 text-[rgb(var(--text-muted))]">
-              Expunerea estimată este derivată din cazurile
-              deschise și termenele lor comerciale. Valorile
-              rămân distincte de venitul confirmat și nu
-              reprezintă o prognoză.
-            </p>
-          </div>
-
-          <div className="shrink-0 text-right">
-            <p className="text-metadata uppercase tracking-[0.08em] text-[rgb(var(--text-muted))]">
-              Stare analizată
-            </p>
-
-            <p className="mt-1 text-xs font-medium text-[rgb(var(--text-secondary))]">
-              {formatProductDate(asOf)}
-            </p>
-          </div>
-        </div>
-
-        <ControlCenterVisuals
-          cases={model.cases}
-          fx={fx}
-          asOf={asOf}
-        />
-      </section>
 
       {/* ─────────────────────────────────────────────
           EXECUTION QUEUE HEADER + FILTERS
@@ -621,7 +501,7 @@ export function ExecutionControlCenter({
           </div>
 
           <div className="min-w-0">
-            <SegmentedFilter
+            <SegmentedFilter className={controls.segments}
               label="Filtrează situațiile"
               options={filterOptions}
               value={filter}
@@ -813,6 +693,57 @@ export function ExecutionControlCenter({
           </div>
         )}
       </section>
+
+      <details
+        className={styles.analysis}
+
+      >
+        <summary className={`focus-ring text-sm font-semibold ${controls.disclosure}`}><span>Analiză operațională · expunere și termene<small>Valori estimate, termene și distribuția cazurilor</small></span></summary>
+        <div className="mb-4 flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span
+                aria-hidden="true"
+                className="h-1.5 w-1.5 rounded-full bg-[rgb(var(--primary))]"
+              />
+
+              <p className="text-metadata font-semibold uppercase tracking-[0.12em] text-[rgb(var(--text-muted))]">
+                Analiză operațională
+              </p>
+            </div>
+
+            <h2
+              id="control-center-exposure-title"
+              className="mt-2 text-base font-semibold tracking-[-0.018em]"
+            >
+              Unde este concentrată atenția comercială
+            </h2>
+
+            <p className="mt-1 max-w-3xl text-xs leading-5 text-[rgb(var(--text-muted))]">
+              Expunerea estimată este derivată din cazurile
+              deschise și termenele lor comerciale. Valorile
+              rămân distincte de venitul confirmat și nu
+              reprezintă o prognoză.
+            </p>
+          </div>
+
+          <div className="shrink-0 text-right">
+            <p className="text-metadata uppercase tracking-[0.08em] text-[rgb(var(--text-muted))]">
+              Stare analizată
+            </p>
+
+            <p className="mt-1 text-xs font-medium text-[rgb(var(--text-secondary))]">
+              {formatProductDate(asOf)}
+            </p>
+          </div>
+        </div>
+
+        <ControlCenterVisuals
+          cases={model.cases}
+          fx={fx}
+          asOf={asOf}
+        />
+      </details>
 
       {model.waitingCount > 0 ? (
         <div className="mt-3 flex items-start gap-2 border-l-2 border-[rgb(var(--border-strong))] pl-3">

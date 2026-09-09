@@ -1,4 +1,4 @@
-.workspace { --doc-line: rgb(var(--border)); display:grid; gap:24px; min-width:0; color:rgb(var(--foreground)); font-size:15px; line-height:1.6; }
+.workspace { --doc-line: rgb(var(--border)); display:grid; gap:24px; min-width:0; color:rgb(var(--foreground)); font-size:14px; line-height:1.6; }
 .workspace > * { min-width:0; }
 .workspace h2 { font-size:18px; line-height:1.4; font-weight:600; }
 .workspace h3 { font-size:15px; font-weight:600; }
@@ -7,16 +7,16 @@
 .search { display:flex; align-items:center; width:min(100%,440px); border:1px solid var(--doc-line); border-radius:8px; background:rgb(var(--surface)); }
 .search input { min-width:0; flex:1; padding:9px 12px; font-size:14px; background:transparent; }
 .search button { padding:10px; }
-.tabs { display:flex; flex-wrap:wrap; gap:24px; border-bottom:1px solid var(--doc-line); }
-.tabs a { padding:0 0 12px; font-size:14px; color:rgb(var(--text-muted)); border-bottom:2px solid transparent; }
-.tabs a[aria-current=page] { color:rgb(var(--foreground)); border-color:rgb(var(--interaction)); }
+.tabs { width:fit-content; }
+.tabs a { display:flex; align-items:center; padding:7px 12px; font-size:13px; color:rgb(var(--text-muted)); }
+
 .meta { color:rgb(var(--text-muted)); font-size:13px; line-height:1.6; }
 .eyebrow { color:rgb(var(--text-muted)); font-size:12px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; }
 .status { display:inline-flex; align-items:center; gap:7px; font-size:13px; font-weight:500; }
 .status::before { content:""; width:5px; height:5px; border-radius:50%; background:rgb(var(--text-muted)); flex-shrink:0; }
-.registry { width:100%; border-collapse:collapse; table-layout:fixed; font-size:14px; }
+.registry { border:1px solid var(--doc-line); width:100%; border-collapse:collapse; table-layout:fixed; font-size:14px; }
 .registry th { font-size:12px; font-weight:500; color:rgb(var(--text-muted)); text-align:left; padding:12px; border-block:1px solid var(--doc-line); }
-.registry td { padding:20px 12px; border-bottom:1px solid var(--doc-line); vertical-align:top; overflow-wrap:anywhere; }
+.registry td { padding:16px 12px; border-bottom:1px solid var(--doc-line); vertical-align:top; overflow-wrap:anywhere; }
 .registry tbody tr:hover { background:rgb(var(--surface-subtle)); }
 .identity { display:flex; align-items:flex-start; gap:12px; }
 .identity a { font-size:15px; font-weight:600; line-height:1.5; }

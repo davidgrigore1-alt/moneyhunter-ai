@@ -1,3 +1,4 @@
+import { WorkflowAssistant } from "@/components/workflows/WorkflowAssistant";
 import { PageShell } from "@/components/dashboard/PageShell";
 import { WorkflowPlaybooks } from "@/components/workflows/WorkflowPlaybooks";
 import { createWorkflowAndOpen } from "@/lib/workflow-actions";
@@ -5,10 +6,12 @@ import { createWorkflowAndOpen } from "@/lib/workflow-actions";
 export const dynamic = "force-dynamic";
 export default async function NewWorkflowPage(props: { searchParams?: Promise<{ error?: string }> }) {
   const searchParams = await props.searchParams;
-  return <PageShell wide eyebrow="Execuție comercială" title="Creează un workflow"
-    description="Alege un playbook verificabil. Configurația rămâne inactivă până la revizuire și activare explicită."
+  return <PageShell entity="workflows" wide eyebrow="Execuție comercială" title="Creează un workflow"
+    description="Descrie regula, verifică pașii și testează înainte de activare."
     breadcrumbs={[{ label: "Workflow-uri", href: "/workflows" }, { label: "Workflow nou" }]}>
     {searchParams?.error ? <p role="alert" className="text-sm text-[rgb(var(--danger-text))]">Draftul nu a putut fi creat. Verifică accesul și încearcă din nou.</p> : null}
+    <WorkflowAssistant />
+    <details className="mt-8 border-t border-[rgb(var(--border))] pt-4"><summary className="focus-ring cursor-pointer py-2 text-sm font-medium">Alege un playbook sau începe manual</summary>
     <WorkflowPlaybooks />
     <section className="mt-8 border-t border-[rgb(var(--border))] pt-5" aria-labelledby="manual-workflow-title">
       <h2 id="manual-workflow-title" className="text-sm font-semibold">Începe manual</h2>
@@ -18,5 +21,6 @@ export default async function NewWorkflowPage(props: { searchParams?: Promise<{ 
         <button className="focus-ring h-9 rounded-[8px] bg-[rgb(var(--primary))] px-4 text-xs font-semibold text-[rgb(var(--primary-foreground))]">Creează draft</button>
       </form>
     </section>
+    </details>
   </PageShell>;
 }

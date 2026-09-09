@@ -15,7 +15,7 @@ function load(relativePath) {
   const module = {exports:{}};
   vm.runInNewContext(compiled,{module,exports:module.exports,require(id) {
     if(id.endsWith('.css')) return {__esModule:true,default:new Proxy({}, {get:(_,name)=>String(name)})};
-    if(id.startsWith('@/')) return load('src/'+id.slice(2)+'.ts');
+    if(id.startsWith('@/')) { const base='src/'+id.slice(2); return load(['.ts','.tsx'].map(ext=>base+ext).find(file=>fs.existsSync(file))); }
     if(id.startsWith('./')) {
       const base=path.resolve(path.dirname(filename),id);
       const resolved=['.tsx','.ts'].map(ext=>base+ext).find(file=>fs.existsSync(file));
@@ -156,7 +156,7 @@ test('landing has no provider or private-data boundary and all primary CTAs shar
     assert.doesNotMatch(source,/fetch\(|localStorage|sessionStorage|supabase|openai|\/api\//i,file);
   }
   const page=fs.readFileSync('src/app/(marketing)/solicita-demo/page.tsx','utf8');
-  assert.match(page,/<DemoRequestForm\s*\/>/);
+  assert.match(page,/<DemoRequestForm submitRequest=\{submitDemoRequest\}\s*\/>/);
   assert.equal(load('src/lib/marketing/conversion.ts').demoRequestHref,'/solicita-demo');
   for(const file of ['src/app/(marketing)/page.tsx',root+'MarketingNav.tsx',root+'LandingChapters.tsx']) assert.match(fs.readFileSync(file,'utf8'),/<DemoRequestLink/);
 });
@@ -168,7 +168,7 @@ test('lower chapters render meaningful final states before client enhancement',(
   assert.equal((html.match(/data-phase="6" data-playing="false"/g)||[]).length,11);
   assert.doesNotMatch(html,/data-chapter-motion="fit"/);
   assert.equal((html.match(/<details\b/g)||[]).length,10);
-  for(const id of ['produs','dovezi','executie','integrari','masurare','securitate','intrebari','urmatorul-pas','workbook-range']) assert.ok(html.includes(`id="${id}"`),id);
+  for(const id of ['cum-functioneaza','dovezi','executie','integrari','masurare','securitate','intrebari','urmatorul-pas','workbook-range']) assert.ok(html.includes(`id="${id}"`),id);
   assert.match(html,/href="#workbook-range"/);
   assert.match(html,/Nu o încasare verificată/);
   assert.match(html,/Facturarea și încasarea rămân separat/);
@@ -243,4 +243,24 @@ test('executive diagnostic starts with guidance and waits for an explicit submis
  assert.match(html,/<button[^>]*type="submit"/);
  assert.equal((html.match(/<fieldset/g)||[]).length,3);
  assert.equal((html.match(/type="radio"/g)||[]).length,8);
+});
+
+
+test('product and process anchors are distinct and theatre navigation mirrors the app',()=>{
+  const {ProductTheatre}=load('src/components/marketing/ProductTheatre.tsx');
+  const {LandingChapters}=load('src/components/marketing/LandingChapters.tsx');
+  const theatre=renderToStaticMarkup(React.createElement(ProductTheatre));
+  const story=renderToStaticMarkup(React.createElement(LandingChapters));
+  assert.match(theatre,/<figure[^>]+id="produs"/);assert.doesNotMatch(theatre,/id="cum-functioneaza"/);
+  assert.match(story,/<section[^>]+id="cum-functioneaza"/);assert.doesNotMatch(story,/id="produs"/);
+  const {marketingSections}=load('src/lib/marketing/navigation.ts');
+  assert.deepEqual(Array.from(marketingSections,x=>x.label),['Produs','Cum funcționează','Integrări','Securitate','Întrebări']);
+  const aside=theatre.match(/<aside[^>]*aria-label="Navigare ilustrativă, fără acțiuni"[^>]*>([\s\S]*?)<\/aside>/)[1];
+  const {primaryNavigation,groupNavigationItems}=load('src/lib/navigation.ts');
+  let last=-1;
+  for(const item of groupNavigationItems(primaryNavigation).flatMap(g=>g.items)){const index=aside.indexOf('>'+item.name+'<');assert.ok(index>last,item.name);last=index;}
+  assert.match(aside,/>Rapoarte</);
+  assert.doesNotMatch(aside,/>Setări<|>Ajutor<|>Rapoarte detaliate</);
+  const nav=fs.readFileSync('src/components/marketing/MarketingNav.tsx','utf8');
+  assert.doesNotMatch(nav,/Explorează produsul/);
 });

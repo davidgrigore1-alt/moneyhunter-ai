@@ -11,7 +11,7 @@ export default async function CompaniesPage(
 ) {
   const searchParams = await props.searchParams;
   const [crm, savedViews] = await Promise.all([getCompanyRegistryForCurrentBusiness(), getSavedViews("companies")]);
-  return <PageShell wide eyebrow="Relații comerciale" title="Companii" description="Portofoliul comercial: relația curentă, oamenii implicați și oportunitățile care cer atenție.">
+  return <PageShell entity="companies" wide eyebrow="Relații comerciale" title="Companii" description="Portofoliul comercial: relația curentă, oamenii implicați și oportunitățile care cer atenție.">
     <div className="grid gap-4">
     <div id="companies-register" className="scroll-mt-24" data-guide-anchor="companies-register">
       {crm.ready ? <CrmWorkspaceClient organizations={crm.organizations} contacts={crm.contacts} view="companies" companyRegistry={crm.registry} savedViews={savedViews} initialQuery={searchParams?.q} initialRelationship={searchParams?.relationship} initialSort={searchParams?.sort} initialCreate={searchParams?.create === "1"} /> : <CompaniesRegistryError message={crm.error} />}

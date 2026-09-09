@@ -1,5 +1,7 @@
 
 import Link from "next/link";
+import styles from "@/components/reports/Reports.module.css";
+import controls from "@/components/ui/PremiumControls.module.css";
 import type { ReactNode } from "react";
 import { DemoNotice } from "@/components/dashboard/DemoNotice";
 import { EmptyState } from "@/components/dashboard/EmptyState";
@@ -7,12 +9,13 @@ import { PageShell } from "@/components/dashboard/PageShell";
 import { ScoreBadge } from "@/components/dashboard/ScoreBadge";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { RecordSummaryBar } from "@/components/records/RecordSummaryBar";
+import { StageDistribution } from "@/components/reports/StageDistribution";
 import { ReportActions } from "@/components/reports/ReportActions";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ProductButton";
 import { getCommercialInboxSummary } from "@/lib/commercial-inbox";
 import { getCommercialIngestionSummary } from "@/lib/commercial-ingestion";
 import { weeklyReport } from "@/lib/mock-data";
-import { isOpenOpportunity } from "@/lib/opportunity-domain";
+import { applicationDateKey, isOpenOpportunity } from "@/lib/opportunity-domain";
 import { getCurrentBusinessOrDemo, getOpportunitiesForCurrentBusiness } from "@/lib/supabase/data";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
@@ -160,11 +163,11 @@ async function loadWorkflowData(opportunities: Opportunity[]) {
   ]);
 
   if (actionError) {
-    throw new Error(`Report actions load error: ${actionError.message}`);
+    throw new Error("report_actions_unavailable");
   }
 
   if (documentError) {
-    throw new Error(`Report documents load error: ${documentError.message}`);
+    throw new Error("report_documents_unavailable");
   }
 
   let eventRows: Array<{
@@ -186,7 +189,7 @@ async function loadWorkflowData(opportunities: Opportunity[]) {
       .limit(20);
 
     if (error) {
-      throw new Error(`Report events load error: ${error.message}`);
+      throw new Error("report_events_unavailable");
     }
     eventRows = data ?? [];
   }
@@ -259,7 +262,7 @@ function MetricRows({ items }: { items: ReportMetric[] }) {
 
 function ReportBlock({ title, description, children, action }: { title: string; description?: string; children: ReactNode; action?: ReactNode }) {
   return (
-    <section className="border-y border-[rgb(var(--border-strong)/0.72)] bg-[rgb(var(--surface))] px-1 py-5 sm:px-2 sm:py-6">
+    <section className={styles.block}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div><h2 className="text-lg font-semibold text-[rgb(var(--foreground))]">{title}</h2>{description ? <p className="mt-1 text-sm leading-6 text-[rgb(var(--text-muted))]">{description}</p> : null}</div>
         {action ? <div className="shrink-0">{action}</div> : null}
@@ -280,17 +283,17 @@ export default async function ReportsPage({ searchParams }: { searchParams?: Pro
     loadWorkflowData(opportunities), getCommercialInboxSummary(), getCommercialIngestionSummary(), getFollowUpWorkspaceSummary(), getCommercialResponseSummary()
   ]);
   const reportGeneratedAt = new Date().toISOString();
-  const today = new Date().toISOString().slice(0, 10);
-  const nextWeek = addDays(7).slice(0, 10);
+  const today = applicationDateKey();
+  const nextWeek = applicationDateKey(new Date(addDays(7)));
   const opportunityById = new Map(opportunities.map((opportunity) => [opportunity.id, opportunity]));
 
   const ronOpportunities = opportunities.filter((item) => (item.currency ?? "RON") === "RON");
   const activeOpportunities = opportunities.filter(isOpenOpportunity);
   const pipelineValue = activeOpportunities.filter((item) => (item.currency ?? "RON") === "RON").reduce((sum, item) => sum + item.estimatedValueHigh, 0);
   const lostValue = ronOpportunities.filter((item) => item.status === "lost").reduce((sum, item) => sum + item.estimatedValueHigh, 0);
-  const deadlinesThisWeek = opportunities.filter((item) => item.deadline && item.deadline.slice(0, 10) >= today && item.deadline.slice(0, 10) <= nextWeek);
-  const urgentActions = dedupeActions(workflow.actions.filter((action) => action.status === "pending" && action.dueAt && action.dueAt.slice(0, 10) <= nextWeek));
-  const overdueActions = urgentActions.filter((action) => action.dueAt && action.dueAt.slice(0, 10) < today);
+  const deadlinesThisWeek = opportunities.filter((item) => item.deadline && applicationDateKey(new Date(item.deadline)) >= today && applicationDateKey(new Date(item.deadline)) <= nextWeek);
+  const urgentActions = dedupeActions(workflow.actions.filter((action) => action.status === "pending" && action.dueAt && applicationDateKey(new Date(action.dueAt)) <= nextWeek));
+  const overdueActions = urgentActions.filter((action) => action.dueAt && applicationDateKey(new Date(action.dueAt)) < today);
   const completedActions = workflow.actions.filter((action) => action.status === "done");
   const topOpportunities = [...opportunities]
     .sort((a, b) => b.fitScore + b.moneyScore + b.urgencyScore - (a.fitScore + a.moneyScore + a.urgencyScore))
@@ -312,11 +315,11 @@ export default async function ReportsPage({ searchParams }: { searchParams?: Pro
 
   const recentActivity = workflow.events.slice(0, 8);
   const reportDistribution = [
-    { label: "Lead", statuses: ["new", "reviewed", "action_generated"] },
-    { label: "Calificat", statuses: ["contacted"] },
-    { label: "Propunere", statuses: ["follow_up_needed"] },
+    { label: "În evaluare / pregătire", statuses: ["new", "reviewed", "action_generated"] },
+    { label: "Contactat", statuses: ["contacted"] },
+    { label: "Revenire necesară", statuses: ["follow_up_needed"] },
     { label: "Câștigat", statuses: ["won"] },
-    { label: "Pierdut", statuses: ["lost", "ignored"] }
+    { label: "Pierdut / ignorat", statuses: ["lost", "ignored"] }
   ].map((stage) => {
     const stageOpportunities = opportunities.filter((opportunity) => stage.statuses.includes(opportunity.status));
     const ronValue = stageOpportunities
@@ -327,7 +330,7 @@ export default async function ReportsPage({ searchParams }: { searchParams?: Pro
   const managementAgenda = [
     { label: "Acțiuni restante", value: overdueActions.length, href: "/today", tone: overdueActions.length ? "danger" as const : "neutral" as const },
     { label: "Valoare mare fără acțiune", value: highValueWithoutAction.length, href: "/opportunities", tone: highValueWithoutAction.length ? "warning" as const : "neutral" as const },
-    { label: "Deadline-uri apropiate", value: closeDeadlines.length, href: "/opportunities", tone: closeDeadlines.length ? "warning" as const : "neutral" as const },
+    { label: "Termene apropiate", value: closeDeadlines.length, href: "/opportunities", tone: closeDeadlines.length ? "warning" as const : "neutral" as const },
     { label: "Documente de revizuit", value: followUpSummary.awaitingReview, href: "/outreach", tone: followUpSummary.awaitingReview ? "warning" as const : "neutral" as const }
   ];
   const reportText = [
@@ -340,6 +343,7 @@ export default async function ReportsPage({ searchParams }: { searchParams?: Pro
     "",
     "Indicatori cheie",
     `Valoare estimată în pipeline (RON): ${formatCurrency(pipelineValue, "RON")}`,
+    `Venit recuperat confirmat (RON): ${formatCurrency(responseLoop.confirmedRevenueRon, "RON")}`,
     `Oportunități active: ${activeOpportunities.length}`,
     `Acțiuni urgente: ${urgentActions.length}`,
     `Documente pregătite: ${readyDocuments.length}`,
@@ -366,33 +370,34 @@ export default async function ReportsPage({ searchParams }: { searchParams?: Pro
 
   return (
     <PageShell
+      entity="reports"
       wide
       eyebrow="Rapoarte"
       title="Raport comercial ReveNew"
       description="Imagine executivă asupra potențialului estimat, rezultatelor confirmate și următoarelor decizii comerciale."
-      actions={<div className="flex flex-wrap gap-2"><Button href="/reports/revenue-recovery-audit">Deschide auditul de recuperare</Button><Button href="/reports/enterprise-pilot-pack" variant="secondary">Pregătește propunerea pilot</Button></div>}
+      actions={<div className="flex flex-wrap gap-2 print:hidden"><Button className={controls.primary} href="/reports/revenue-recovery-audit">Deschide auditul de recuperare</Button><Button className={controls.secondary} href="/reports/enterprise-pilot-pack" variant="secondary">Pregătește propunerea pilot</Button></div>}
     >
-      <div className="grid gap-5 print:block print:space-y-5">
+      <div className={styles.report}>
         {!isSupabaseConfigured ? <DemoNotice /> : null}
-        <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs font-medium text-[rgb(var(--text-muted))]">
+        <div className={styles.metadata}>
           <p>Raport generat la: {formatDateTimeWithSeconds(reportGeneratedAt)}</p>
           <p>Spațiu de lucru: {business?.name ?? "Nedenumit"}</p>
         </div>
         {isSupabaseConfigured && opportunities.length === 0 ? <EmptyState title="Raportul așteaptă primele date" description="Importă sau adaugă semnale în Inbox Comercial, apoi aprobă oportunitățile relevante. Indicatorii nu sunt estimați fără date reale." /> : null}
 
-        <nav aria-label="Vizualizări raport" className="flex gap-1 overflow-x-auto border-b border-[rgb(var(--border))]">
+        <nav aria-label="Vizualizări raport" className={styles.tabs}>
           {([['overview', 'Rezumat'], ['operations', 'Execuție'], ['export', 'Export']] as const).map(([tab, label]) => (
-            <Link key={tab} href={`/reports?tab=${tab}`} aria-current={activeTab === tab ? "page" : undefined} className={`focus-ring min-h-10 whitespace-nowrap border-b-2 px-3 py-2 text-sm font-semibold ${activeTab === tab ? "border-[rgb(var(--primary))] text-[rgb(var(--foreground))]" : "border-transparent text-[rgb(var(--text-muted))] hover:text-[rgb(var(--foreground))]"}`}>{label}</Link>
+            <Link key={tab} href={`/reports?tab=${tab}`} aria-current={activeTab === tab ? "page" : undefined} className="focus-ring text-[rgb(var(--text-secondary))]">{label}</Link>
           ))}
         </nav>
 
         {activeTab === "overview" ? (
           <>
-            <section data-guide-anchor="reports-audit-summary" aria-labelledby="executive-summary-title" className="rounded-panel border border-[rgb(var(--border-strong)/0.78)] bg-[rgb(var(--surface-elevated))] p-5 sm:p-6">
-              <p className="text-label text-[rgb(var(--primary))]">Rezumat executiv</p>
+            <section data-guide-anchor="reports-audit-summary" aria-labelledby="executive-summary-title" className={styles.hero}>
+              <div className={styles.heroHeading}><p className="text-label text-[rgb(var(--primary))]">Rezumat executiv</p>
               <h2 id="executive-summary-title" className="mt-1 text-xl font-semibold tracking-tight text-[rgb(var(--foreground))]">Ce necesită o decizie acum</h2>
               <p className="mt-3 max-w-4xl text-sm leading-6 text-[rgb(var(--text-muted))]">{executiveSummary}</p>
-              <div className="mt-5">
+              </div><div className={styles.kpis}>
                 <RecordSummaryBar label="Adevărul executiv al raportului" items={[
                   { label: "Valoare estimată în pipeline · RON", value: formatCurrency(pipelineValue, "RON"), detail: "Nu este venit confirmat." },
                   { label: "Oportunități active", value: String(activeOpportunities.length), detail: "Cazuri deschise." },
@@ -403,11 +408,11 @@ export default async function ReportsPage({ searchParams }: { searchParams?: Pro
             </section>
 
             <div className="grid gap-7 lg:grid-cols-2">
-              <section aria-labelledby="distribution-title" className="border-y border-[rgb(var(--border-strong)/0.72)] bg-[rgb(var(--surface))] px-1 py-5 sm:px-2"><h2 id="distribution-title" className="text-base font-semibold">Distribuția pipeline-ului</h2><p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Număr și valoare estimată în RON, fără a combina monede.</p><div className="mt-3 overflow-x-auto"><table className="w-full min-w-[28rem] text-left text-sm"><caption className="sr-only">Distribuția oportunităților și a valorii estimate pe etape</caption><thead className="border-y border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] text-xs text-[rgb(var(--text-secondary))]"><tr><th scope="col" className="py-2 pr-3 font-medium">Etapă</th><th scope="col" className="px-3 py-2 text-right font-medium">Oportunități</th><th scope="col" className="py-2 pl-3 text-right font-medium">Valoare estimată</th></tr></thead><tbody className="divide-y divide-[rgb(var(--border))]">{reportDistribution.map((stage) => <tr key={stage.label} className="transition-colors hover:bg-[rgb(var(--surface-subtle))]"><th scope="row" className="py-2.5 pr-3 font-medium">{stage.label}</th><td className="px-3 py-2.5 text-right tabular-nums text-[rgb(var(--text-muted))]">{stage.count}</td><td className="py-2.5 pl-3 text-right font-semibold tabular-nums">{stage.value}</td></tr>)}</tbody></table></div></section>
-              <section aria-labelledby="agenda-title" className="rounded-panel border border-[rgb(var(--border-strong)/0.72)] bg-[rgb(var(--surface))] p-5"><h2 id="agenda-title" className="text-base font-semibold">Agenda managerială</h2><p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Excepții curente derivate din acțiuni și oportunități.</p><div className="mt-3 divide-y divide-[rgb(var(--border))] border-y border-[rgb(var(--border))]">{managementAgenda.map((item) => <Link key={item.label} href={item.href} className="focus-ring -mx-2 flex min-h-11 items-center justify-between gap-4 px-3 py-2.5 text-sm transition-colors hover:bg-[rgb(var(--surface-subtle))] hover:text-[rgb(var(--foreground))]"><span className="font-medium">{item.label}</span><span className={`status-pill ${item.tone === "danger" ? "status-pill-danger" : item.tone === "warning" ? "status-pill-warning" : "status-pill-neutral"}`}>{item.value}</span></Link>)}</div></section>
+              <section aria-labelledby="distribution-title" className={`${styles.block} ${styles.distribution}`}><h2 id="distribution-title" className="text-base font-semibold">Distribuția pipeline-ului</h2><p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Număr de oportunități în toate monedele; valorile estimate sunt numai în RON. Barele compară numărul de cazuri în stările înregistrate.</p><StageDistribution stages={reportDistribution} total={opportunities.length} /></section>
+              <section aria-labelledby="agenda-title" className={`${styles.block} ${styles.agenda}`}><h2 id="agenda-title" className="text-base font-semibold">Agenda managerială</h2><p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Excepții curente derivate din acțiuni și oportunități.</p><div className="mt-3 divide-y divide-[rgb(var(--border))] border-y border-[rgb(var(--border))]">{managementAgenda.map((item) => <Link key={item.label} href={item.href} className="focus-ring -mx-2 flex min-h-11 items-center justify-between gap-4 px-3 py-2.5 text-sm transition-colors hover:bg-[rgb(var(--surface-subtle))] hover:text-[rgb(var(--foreground))]"><span className="font-medium">{item.label}</span><span className={`status-pill ${item.tone === "danger" ? "status-pill-danger" : item.tone === "warning" ? "status-pill-warning" : "status-pill-neutral"}`}>{item.value}</span></Link>)}</div></section>
             </div>
 
-            <ReportBlock title="Trei valori, trei decizii diferite" description="Interpretarea rămâne disponibilă după imaginea operațională, fără a amâna datele utile." action={<Link href="/reports/revenue-recovery-audit" className="focus-ring rounded-sm text-sm font-semibold text-[rgb(var(--primary))] hover:underline">Verifică valoarea expusă în audit →</Link>}>
+            <ReportBlock title="Trei valori, trei decizii diferite" description="Estimarea, expunerea și rezultatul confirmat răspund unor întrebări diferite." action={<Link href="/reports/revenue-recovery-audit" className="focus-ring rounded-sm text-sm font-semibold text-[rgb(var(--primary))] hover:underline">Verifică valoarea expusă în audit →</Link>}>
               <dl className="grid gap-4 md:grid-cols-3">
                 <div><dt className="text-sm font-semibold">Valoare estimată în pipeline</dt><dd className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Toate oportunitățile active în RON; monedele diferite nu sunt cumulate.</dd></div>
                 <div><dt className="text-sm font-semibold">Valoare estimată expusă</dt><dd className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Numai cazurile cu blocaje din audit, fiecare numărat o singură dată.</dd></div>

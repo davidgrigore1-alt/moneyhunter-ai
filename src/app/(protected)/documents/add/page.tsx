@@ -8,7 +8,7 @@ import styles from "@/components/documents/Documents.module.css";
 export const dynamic = "force-dynamic";
 export default async function AddDocumentPage() {
   const authorization = await requirePermission("documents.read");
-  return <PageShell wide eyebrow="Documente" title="Adaugă document" description="Alege sursa documentului. Păstrarea și analiza sunt independente de importul datelor."
+  return <PageShell entity="documents" wide eyebrow="Documente" title="Adaugă document" description="Alege sursa documentului. Păstrarea și analiza sunt independente de importul datelor."
     breadcrumbs={[{ label: "Documente", href: "/documents" }, { label: "Adaugă document" }]}>
     <div className={`${styles.workspace} ${styles.sourceSelection}`}>
       {hasPermission(authorization,"documents.update")?<LocalDocumentUpload/>:<p>Rolul curent permite citirea documentelor, dar nu adăugarea lor.</p>}

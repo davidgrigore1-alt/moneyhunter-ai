@@ -3,6 +3,7 @@
 | Object | Purpose | RLS / Privilege Posture | Notes |
 | --- | --- | --- | --- |
 | `profiles` | Auth-user profile data | Existing RLS retained; rollout revokes authenticated updates to `role`, `user_id`, `id` | `profiles.role` is deprecated and not an authorization source |
+| `marketing_demo_requests` | Public demo contact requests, separate from tenant CRM | RLS: active platform admin SELECT only; anonymous no access; authenticated no writes; service SELECT/INSERT only | Consent timestamp and notice version retained; bounded service-only intake RPC; internal review is read-only |
 | `businesses` | Client business workspace | Existing RLS retained | Ownership uses `owner_profile_id`; `owner_id` must not exist |
 | `business_members` | Business-scoped memberships | Existing RLS retained; rollout validates `owner/admin/member/viewer` constraint | Business role source of truth |
 | `platform_user_roles` | Global platform role rows | RLS enabled; authenticated select only own rows; anon no access; authenticated no writes | Canonical unique `(profile_id, role)` |

@@ -1,6 +1,6 @@
 import { ApprovalCenterClient } from "@/components/approvals/ApprovalCenterClient";
 import { PageShell } from "@/components/dashboard/PageShell";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ProductButton";
 import { getCommercialSignalsForCurrentBusiness } from "@/lib/commercial-inbox";
 import { getAssignableProfilesForCurrentBusiness, getCrmWorkspaceForCurrentBusiness } from "@/lib/revenue-workspace";
 import { getOpportunitiesForCurrentBusiness } from "@/lib/supabase/data";
@@ -21,6 +21,8 @@ export default async function ApprovalsPage(props: { searchParams?: Promise<{ si
 
   return (
     <PageShell
+      wide
+      entity="approvals"
       eyebrow="Control uman"
       title="Aprobări"
       description="Revizuiește schimbările propuse înainte ca ReveNew să le aplice în spațiul de lucru. Sistemul propune, omul aprobă, fiecare decizie rămâne auditabilă."

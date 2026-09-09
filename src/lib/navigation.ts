@@ -1,6 +1,7 @@
 import type { Permission } from "@/lib/authz/permissions";
 
 export type NavigationIconName =
+  | "calendar" | "workflow" | "pipeline" | "deal" | "prepared"
   | "banknotes"
   | "building-office"
   | "chart-bar"
@@ -36,18 +37,18 @@ export type NavigationGroup = {
 export const primaryNavigation = [
   { name: "Control Center", shortName: "Acasă", href: "/dashboard", icon: "home", permission: "dashboard.read" },
   { name: "Inbox Comercial", shortName: "Inbox", href: "/inbox", icon: "inbox-stack", description: "Revizuiește semnalele înainte de a le transforma în oportunități.", permission: "signals.read" },
-  { name: "Întâlniri", href: "/meetings", icon: "clipboard-check", description: "Pregătește conversațiile comerciale din Calendar și context autorizat.", permission: "workspace.read" },
+  { name: "Întâlniri", href: "/meetings", icon: "calendar", description: "Pregătește conversațiile comerciale din Calendar și context autorizat.", permission: "workspace.read" },
   { name: "Secvențe", href: "/sequences", icon: "megaphone", description: "Pregătește pași de comunicare cu ieșiri sigure și control uman.", permission: "documents.read" },
-  { name: "Aprobări", shortName: "Aprobări", href: "/approvals", icon: "clipboard-check", description: "Confirmă schimbările interne înainte ca acestea să fie aplicate.", permission: "signals.read" },
+  { name: "Aprobări", shortName: "Aprobări", href: "/approvals", icon: "shield-check", description: "Confirmă schimbările interne înainte ca acestea să fie aplicate.", permission: "signals.read" },
   { name: "Activitatea mea", shortName: "Activitate", href: "/today", icon: "clipboard-check", permission: "actions.read" },
-  { name: "Workflow-uri", href: "/workflows", icon: "clipboard-check", description: "Evaluează contextul comercial și pregătește acțiuni sigure, cu audit complet.", permission: "settings.update" },
-  { name: "Lucru pregătit", shortName: "Pregătit", href: "/prepared", icon: "document", description: "Revizuiește drafturile și actualizările pregătite înainte de execuție.", permission: "documents.read" },
+  { name: "Workflow-uri", href: "/workflows", icon: "workflow", description: "Evaluează contextul comercial și pregătește acțiuni sigure, cu audit complet.", permission: "settings.update" },
+  { name: "Lucru pregătit", shortName: "Pregătit", href: "/prepared", icon: "prepared", description: "Revizuiește drafturile și actualizările pregătite înainte de execuție.", permission: "documents.read" },
   { name: "Inteligență operațională", shortName: "Inteligență", href: "/ai", icon: "sparkles", description: "Vezi ce poate face sistemul, ce necesită aprobare și ce rămâne blocat.", permission: "dashboard.read" },
-  { name: "Recuperare venituri", shortName: "Recuperare", href: "/recoverable", icon: "banknotes", description: "Prioritizează oportunitățile fără responsabil, termen sau următoarea acțiune.", permission: "opportunities.read" },
-  { name: "Pipeline", href: "/pipeline", icon: "chart-bar", permission: "opportunities.read" },
+  { name: "Recuperare comercială", shortName: "Recuperare", href: "/recoverable", icon: "banknotes", description: "Prioritizează oportunitățile fără responsabil, termen sau următoarea acțiune.", permission: "opportunities.read" },
+  { name: "Pipeline", href: "/pipeline", icon: "pipeline", permission: "opportunities.read" },
   { name: "Companii", href: "/companies", icon: "building-office", permission: "workspace.read" },
   { name: "Contacte", href: "/contacts", icon: "user-group", permission: "workspace.read" },
-  { name: "Oportunități", href: "/opportunities", icon: "sparkles", permission: "opportunities.read" },
+  { name: "Oportunități", href: "/opportunities", icon: "deal", permission: "opportunities.read" },
   { name: "Documente", href: "/documents", icon: "document", permission: "documents.read" },
   { name: "Rapoarte", href: "/reports", icon: "chart-bar", permission: "reports.read" },
   { name: "Aplicații", href: "/apps", icon: "puzzle", permission: "workspace.read" }

@@ -1,5 +1,7 @@
 "use server";
 
+import { commercialDocumentHref, internalDocumentStatus } from "@/lib/documents/capabilities";
+import { presentOpportunityState, formatProductCurrency, formatProductDateTime } from "@/lib/ui/presentation";
 import { requirePermission } from "@/lib/authz/require-permission";
 import { getCurrentBusinessForUser } from "@/lib/business/current-business";
 import {
@@ -56,7 +58,7 @@ export async function searchWorkspace(rawQuery: string): Promise<CommercialSearc
     supabase.from("crm_contacts").select("id,full_name,email,phone,organization_id,job_title,updated_at").eq("business_id", businessId).eq("is_active", true).or(`full_name.ilike.${pattern},normalized_name.ilike.${pattern},normalized_email.ilike.${pattern},phone.ilike.${pattern}`).order("updated_at", { ascending: false }).limit(5),
     supabase.from("opportunities").select("id,title,status,summary,organization_id,estimated_value_high,currency,updated_at").eq("business_id", businessId).or(exactId ? `id.eq.${exactId},title.ilike.${pattern}` : `title.ilike.${pattern},summary.ilike.${pattern}`).order("updated_at", { ascending: false }).limit(5),
     supabase.from("opportunity_actions").select("id,opportunity_id,title,status,due_at,updated_at").eq("business_id", businessId).ilike("title", pattern).order("updated_at", { ascending: false }).limit(5),
-    supabase.from("opportunity_documents").select("id,opportunity_id,title,status,created_at").eq("business_id", businessId).ilike("title", pattern).order("updated_at", { ascending: false }).limit(5)
+    supabase.from("opportunity_documents").select("id,opportunity_id,title,document_type,status,created_at").eq("business_id", businessId).ilike("title", pattern).order("updated_at", { ascending: false }).limit(5)
   ]);
 
   const firstError = [organizations.error, contacts.error, opportunities.error, actions.error, documents.error].find(Boolean);
@@ -85,9 +87,9 @@ export async function searchWorkspace(rawQuery: string): Promise<CommercialSearc
   const records: CommercialSearchRecord[] = [
     ...(organizations.data ?? []).map((row) => ({ id: row.id, entityType: "company" as const, title: row.name, context: [row.industry, row.city, row.website].filter(Boolean).join(" · ") || "Companie", href: `/crm/organizations/${row.id}`, searchableText: [row.industry, row.city, row.website].filter(Boolean).join(" "), relatedCompanyId: row.id, updatedAt: row.updated_at })),
     ...contactRows.map((row) => ({ id: row.id, entityType: "contact" as const, title: row.full_name, context: [row.job_title, row.email, row.phone].filter(Boolean).join(" · ") || "Contact", href: `/contacts?contact=${row.id}`, searchableText: [row.job_title, row.email, row.phone].filter(Boolean).join(" "), relatedCompanyId: row.organization_id, updatedAt: row.updated_at })),
-    ...opportunityRows.map((row) => ({ id: row.id, entityType: "opportunity" as const, title: row.title, context: `Status: ${row.status}${row.estimated_value_high ? ` · valoare estimată ${row.estimated_value_high} ${row.currency ?? "RON"}, nu venit confirmat` : ""}`, href: `/opportunities/${row.id}`, searchableText: [row.summary, row.status].filter(Boolean).join(" "), status: row.status, amount: row.estimated_value_high, currency: row.currency, relatedCompanyId: row.organization_id, updatedAt: row.updated_at })),
-    ...(actions.data ?? []).map((row) => ({ id: row.id, entityType: "action" as const, title: row.title, context: `Status: ${row.status}${row.due_at ? ` · termen ${row.due_at}` : ""}`, href: `/opportunities/${row.opportunity_id}`, searchableText: row.status, status: row.status, updatedAt: row.updated_at })),
-    ...(documents.data ?? []).map((row) => ({ id: row.id, entityType: "document" as const, title: row.title, context: `Status: ${row.status}`, href: `/opportunities/${row.opportunity_id}`, searchableText: row.status, status: row.status, updatedAt: row.created_at }))
+    ...opportunityRows.map((row) => ({ id: row.id, entityType: "opportunity" as const, title: row.title, context: `Stare: ${presentOpportunityState(row.status).label}${row.estimated_value_high != null ? ` · ${formatProductCurrency(row.estimated_value_high, row.currency ?? "RON")} estimat, nu venit confirmat` : ""}`, href: `/opportunities/${row.id}`, searchableText: [row.summary, row.status].filter(Boolean).join(" "), status: row.status, amount: row.estimated_value_high, currency: row.currency, relatedCompanyId: row.organization_id, updatedAt: row.updated_at })),
+    ...(actions.data ?? []).map((row) => ({ id: row.id, entityType: "action" as const, title: row.title, context: `Stare: ${row.status === "done" ? "Finalizată" : row.status === "cancelled" ? "Anulată" : "În așteptare"}${row.due_at ? ` · termen ${formatProductDateTime(row.due_at)}` : ""}`, href: `/opportunities/${row.opportunity_id}?tab=workflow#workflow-actions-list`, searchableText: row.status, status: row.status, updatedAt: row.updated_at })),
+    ...(documents.data ?? []).map((row) => ({ id: row.id, entityType: "document" as const, title: row.title, context: `Stare: ${internalDocumentStatus(row.status)}`, href: commercialDocumentHref({id:row.id,type:row.document_type,status:row.status},row.opportunity_id), searchableText: row.status, status: row.status, updatedAt: row.created_at }))
   ];
 
   const response = executeCommercialSearch(intent, { records });

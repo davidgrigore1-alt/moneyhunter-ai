@@ -27,11 +27,11 @@ export function workflowActivationPreflight(definition: WorkflowDefinition, perm
   return {
     canActivate: errors.length === 0, errors, available: capability?.automatic ?? false,
     trigger: workflowTriggerRegistry[definition.trigger]?.label ?? "Declanșator nevalid",
-    triggerExplanation: capability?.explanation ?? "", target: "Oportunitatea din același workspace",
+    triggerExplanation: capability?.explanation ?? "", target: "Oportunitatea din același spațiu de lucru",
     conditions: definition.conditions.map((condition) => `${presentWorkflowConditionField(condition.field)} ${presentWorkflowOperator(condition.operator)}${condition.value == null ? "" : " " + (condition.field === "stage" ? workflowStageLabels[String(condition.value)] ?? "Etapă nevalidă" : condition.value)}`),
     actions: definition.actions.map((action) => presentWorkflowAction(action.type)),
     externalEffect: "Niciun email, eveniment Calendar sau CRM extern nu este modificat automat.",
-    approval: "Notificările sunt interne. Taskurile, următorul pas și emailurile rămân planuri G1 pentru confirmare.",
+    approval: "Notificările sunt interne. Acțiunile, următorul pas și emailurile rămân propuneri pregătite pentru confirmare.",
     permissions: permissions !== null && !missingPermissions.length ? "Permisiunile creatorului sunt confirmate; runtime-ul le verifică din nou la fiecare rulare." : "Autoritate insuficientă sau neverificată."
   };
 }

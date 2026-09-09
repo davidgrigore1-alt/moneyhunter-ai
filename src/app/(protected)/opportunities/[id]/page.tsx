@@ -1,3 +1,5 @@
+import { evidenceHref } from "@/lib/evidence-reference";
+import surface from "@/components/ui/ProductSurface.module.css";
 import Link from "next/link";
 import { getImpactLinks } from "@/lib/revenue-impact-server";
 import { getCommercialTruthForOpportunity } from "@/lib/commercial-truth-server";
@@ -8,7 +10,7 @@ import { DataCard } from "@/components/dashboard/DataCard";
 import { DemoNotice } from "@/components/dashboard/DemoNotice";
 import { PageShell } from "@/components/dashboard/PageShell";
 import { getOpportunityTypeLabel } from "@/components/dashboard/OpportunityCard";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ProductButton";
 import { CreateTaskForm } from "@/components/revenue/TaskControls";
 import { OpportunityActionWorkbench } from "@/components/opportunities/OpportunityActionWorkbench";
 import { OpportunityControlCenter } from "@/components/opportunities/OpportunityControlCenter";
@@ -119,6 +121,7 @@ export default async function OpportunityDetailPage(
   const activeTab: OpportunityTab = opportunityTabs.some((tab) => tab.id === searchParams?.tab) ? searchParams!.tab as OpportunityTab : "context";
   return (
     <PageShell
+      entity="opportunities"
       wide
       eyebrow={getOpportunityTypeLabel(opportunity.type)}
       title={opportunity.title}
@@ -135,7 +138,7 @@ export default async function OpportunityDetailPage(
           { label: "Valoare estimată", value: commercialState.financial.estimatedValue !== null ? formatCurrency(commercialState.financial.estimatedValue, commercialState.financial.currency) : "Neconfirmată", detail: "Nu reprezintă venit confirmat" },
           { label: "Venit confirmat", value: commercialState.financial.confirmedRevenue !== null && commercialState.financial.confirmedRevenueCurrency ? formatCurrency(commercialState.financial.confirmedRevenue, commercialState.financial.confirmedRevenueCurrency) : "Neconfirmat", tone: commercialState.financial.confirmedRevenue !== null ? "success" : "default" }
         ]} />
-        <section aria-labelledby="opportunity-current-state" className="product-work-surface grid gap-4 border-l-[3px] border-l-[rgb(var(--interaction))] p-4 md:grid-cols-[minmax(0,1fr)_minmax(15rem,0.42fr)] md:items-center sm:p-5">
+        <section aria-labelledby="opportunity-current-state" className={surface.decision}>
           <div className="min-w-0">
             <p className="text-micro font-semibold text-[rgb(var(--text-muted))]">STARE CURENTĂ</p>
             <h2 id="opportunity-current-state" className="mt-1 text-section-title font-semibold">{currentFacts.blocker}</h2>
@@ -146,7 +149,7 @@ export default async function OpportunityDetailPage(
             <p className="text-micro font-semibold text-[rgb(var(--text-muted))]">URMĂTOAREA ACȚIUNE SIGURĂ</p>
             <p className="mt-1 text-sm font-semibold">{currentFacts.action.label}</p>
             <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Necesită control uman. Nu execută automat o acțiune externă.</p>
-            <Button href={currentFacts.action.href} size="small" className="mt-3">{currentFacts.action.label}</Button>
+            <Button href={evidenceHref(currentFacts.action.href)} size="small" className="mt-3">{currentFacts.action.label}</Button>
           </div>
         </section>
         <RecordTabs tabs={opportunityTabs} activeTab={activeTab} label="Secțiunile oportunității" />
@@ -155,7 +158,7 @@ export default async function OpportunityDetailPage(
           <CommercialTruthSnapshot truth={commercialTruth} showFacts={false}/>
           <details className="min-w-0"><summary className="focus-ring cursor-pointer rounded py-2 text-xs font-medium text-[rgb(var(--text-muted))]">Execuție și înregistrări CRM</summary><div id="opportunity-commercial-facts" className="scroll-mt-24" data-guide-anchor="opportunity-commercial-facts"><OpportunityControlCenter opportunity={opportunity} commercialState={commercialState} assignableProfiles={assignableProfiles} /></div></details>
           <div className="grid items-start gap-6 xl:grid-cols-12">
-            <div className="min-w-0 xl:col-span-8"><OpportunityIntelligenceTimeline result={intelligenceTimeline} showCurrentState={false} /></div>
+            <div className="min-w-0 xl:col-span-8"><OpportunityIntelligenceTimeline result={intelligenceTimeline} opportunityId={opportunity.id} showCurrentState={false} /></div>
             <aside className="grid min-w-0 gap-5 xl:sticky xl:top-20 xl:col-span-4" aria-label="Decizie și intervenție">
               {explainedRecommendation ? <div id="opportunity-evidence" className="scroll-mt-24" data-guide-anchor="opportunity-evidence"><RecommendationExplanationCard recommendation={explainedRecommendation} currentState={commercialState} compact /></div> : null}
               {preparedWork[0] ? <ActionPreview item={preparedWork[0]} compact /> : null}

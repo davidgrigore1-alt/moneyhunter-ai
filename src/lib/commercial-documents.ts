@@ -7,7 +7,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireGoogleConnectorActor,getOwnedGoogleConnection } from "@/lib/google-workspace/repository";
 import { DRIVE_SCOPE,documentKinds,uuidPattern,type DocumentKind,type SourceState } from "@/lib/google-workspace/drive-types";
 import { safeOriginalEvidenceHref } from "@/lib/evidence-reference";
-import { documentSourceState,internalCommercialTypes } from "@/lib/documents/capabilities";
+import { documentSourceState,internalCommercialTypes,internalDocumentStatus } from "@/lib/documents/capabilities";
 
 export {internalCommercialTypes} from "@/lib/documents/capabilities";
 const internalLabels:Record<string,string>={offer_draft:"Ofertă",offer:"Ofertă",procurement_checklist:"Listă de achiziții",checklist:"Listă de verificare",grant_summary:"Sinteză finanțare"};
@@ -81,7 +81,7 @@ if (result.error) {
    sourceModifiedAt:external?row.modified_time??null:row.updated_at??null,lastSyncedAt:row.last_synced_at??null,
    sourceState:external?row.state:undefined,
    status:external?documentSourceState(row.state).label:
-    row.status==="approved"?"Aprobat":row.status==="sent"?"Marcat ca trimis":"În lucru",
+    internalDocumentStatus(row.status!),
    detailHref:external?`/opportunities/${context.id}/sources/${row.id}`:`/documents/${row.id}`,
    sourceHref:external?safeOriginalEvidenceHref(row.web_view_link??undefined)??undefined:undefined,
    availableActions:{sync:!!authorized&&hasPermission(authorization,"documents.generate"),remove:external&&owns&&hasPermission(authorization,"documents.update")}

@@ -1,8 +1,9 @@
+import { internalDocumentStatus } from "@/lib/documents/capabilities";
 import Link from "next/link";
 import { DocumentContextualAsk } from "@/components/documents/DocumentContextualAsk";
 import { notFound } from "next/navigation";
 import { PageShell } from "@/components/dashboard/PageShell";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ProductButton";
 import { getInternalCommercialDocument } from "@/lib/commercial-documents";
 import { formatProductDateTime } from "@/lib/ui/presentation";
 import styles from "@/components/documents/Documents.module.css";
@@ -13,8 +14,8 @@ export default async function InternalDocumentPage(props:{params:Promise<{id:str
   const document=await getInternalCommercialDocument(id);
   if(!document)notFound();
   const contextHref="/opportunities/"+document.context.id+"?tab=workflow#opportunity-documents";
-  const status=document.status==="approved"?"Aprobat intern":document.status==="sent"?"Marcat ca trimis":"În lucru";
-  return <PageShell wide eyebrow="Document comercial" title={document.title} description="Document pregătit în ReveNew · conținut salvat"
+  const status=internalDocumentStatus(document.status);
+  return <PageShell entity="documents" wide eyebrow="Document comercial" title={document.title} description="Document pregătit în ReveNew · conținut salvat"
     breadcrumbs={[{label:"Documente",href:"/documents"},{label:document.title}]}
     actions={<Button href="#document-intelligence" variant="secondary">Inteligență operațională</Button>}>
     <div className={styles.workspace}>

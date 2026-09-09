@@ -97,6 +97,8 @@ test("evidence is allowlisted metadata and cannot carry raw content or remote de
   assert.equal(evidenceHref("/opportunities/a#action-schedule"), "/opportunities/a?tab=schedule#action-schedule");
   assert.equal(evidenceHref("/opportunities/a#commercial-response"), "/opportunities/a?tab=response#action-response");
   assert.equal(evidenceHref("/opportunities/a?tab=responsibility"), "/opportunities/a?tab=responsibility");
+  assert.equal(evidenceHref("/opportunities/a#opportunity-source-context"), "/opportunities/a?tab=workflow#opportunity-source-context");
+  assert.equal(evidenceHref("/opportunities/a#opportunity-timeline"), "/opportunities/a?tab=context#opportunity-timeline");
 });
 test("linked evidence excludes another tenant and content, activity stays chronological", () => {
   const record = opportunity({ timeline: [
@@ -153,12 +155,13 @@ test("queue keeps semantic selection and existing action paths, no external muta
   assert.doesNotMatch(evidence, /dangerouslySetInnerHTML/);
 });
 
-test("Control Center keeps operational analysis near the top before the intervention workbench", () => {
+test("Control Center prioritizes the intervention workbench and retains analysis on expansion", () => {
   const ui = fs.readFileSync("src/components/dashboard/ExecutionControlCenter.tsx", "utf8");
   assert.match(ui, /Ce necesită atenție acum/);
   assert.match(ui, /<SegmentedFilter[\s\S]*label="Filtrează situațiile"/);
   assert.match(ui, /product-work-surface/);
   assert.match(ui, /Analiză operațională[\s\S]*<ControlCenterVisuals/);
-  assert.ok(ui.indexOf("<ControlCenterVisuals") < ui.indexOf("execution-case-detail"));
+  assert.ok(ui.indexOf("<ControlCenterVisuals") > ui.indexOf("execution-case-detail"));
+  assert.match(ui, /<details[\s\S]*?styles.analysis[\s\S]*?<summary[\s\S]*?Analiză operațională[\s\S]*?<ControlCenterVisuals/);
   assert.doesNotMatch(ui, /fetch\(|send_email|dangerouslySetInnerHTML/);
 });

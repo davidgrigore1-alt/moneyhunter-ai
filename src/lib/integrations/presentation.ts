@@ -16,7 +16,7 @@ export const capabilityLabels: Record<CapabilityStatus, string> = {
   controlled: "Controlat",
   requires_authorization: "Permisiune necesară",
   unavailable: "Indisponibil",
-  planned: "Planificat",
+  planned: "Evaluare înainte de implementare",
   error: "Necesită atenție",
   syncing: "Sincronizare"
 };

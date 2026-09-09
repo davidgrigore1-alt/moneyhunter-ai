@@ -6,7 +6,7 @@ import { DataCard } from "@/components/dashboard/DataCard";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { InboxIngestionActions } from "@/components/inbox/InboxIngestionActions";
 import { SignalPreparationPanel } from "@/components/signals/SignalPreparationPanel";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ProductButton";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { SegmentedFilter } from "@/components/ui/SegmentedFilter";

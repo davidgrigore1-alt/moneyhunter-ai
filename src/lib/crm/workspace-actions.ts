@@ -331,3 +331,27 @@ export async function createCrmOpportunity(formData: FormData): Promise<CrmActio
     return crmDatabaseError(error);
   }
 }
+
+export async function setCompanyPrimaryContact(companyId: string, contactId: string): Promise<CrmActionResult> {
+  const context = await getCrmContext();
+  if (!context.ok) return context;
+  if (![companyId, contactId].every(id => /^[0-9a-f-]{36}$/i.test(id))) return { ok: false, error: "Selectează un contact valid." };
+  const { data, error } = await context.supabase.rpc("set_company_primary_contact", { target_business_id: context.businessId, target_company_id: companyId, target_contact_id: contactId });
+  if (error || data !== contactId) return { ok: false, error: "Contactul principal nu a putut fi actualizat. Verifică accesul și asocierea cu această companie." };
+  revalidatePath(`/crm/organizations/${companyId}`); revalidatePath("/companies"); revalidatePath("/contacts"); revalidatePath("/ai");
+  return { ok: true, id: contactId, message: "Contactul principal a fost actualizat." };
+}
+
+export async function createCompanyPrimaryContact(companyId: string, requestId: string, form: FormData): Promise<CrmActionResult> {
+  const context = await getCrmContext();
+  if (!context.ok) return context;
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const name = String(form.get("fullName") ?? "").trim();
+  const job = String(form.get("jobTitle") ?? "").trim();
+  const email = String(form.get("email") ?? "").trim().toLowerCase();
+  if (!uuid.test(companyId) || !uuid.test(requestId) || !name || name.length > 180 || job.length > 140 || email.length > 254 || (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) return { ok: false, error: "Verifică numele și datele contactului." };
+  const { data, error } = await context.supabase.rpc("create_company_primary_contact", { target_business_id: context.businessId, target_company_id: companyId, request_contact_id: requestId, contact_name: name, contact_job_title: job || null, contact_email: email || null });
+  if (error || data !== requestId) return { ok: false, error: "Contactul nu a putut fi confirmat. Verifică datele și accesul la companie, apoi reîncearcă." };
+  revalidatePath(`/crm/organizations/${companyId}`); revalidatePath("/companies"); revalidatePath("/contacts"); revalidatePath("/ai");
+  return { ok: true, id: requestId, message: "Contactul a fost adăugat. Selecția curentă este afișată în companie." };
+}

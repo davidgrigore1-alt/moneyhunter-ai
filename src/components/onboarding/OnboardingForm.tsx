@@ -1,5 +1,8 @@
 "use client";
 
+import { IntegrationBrandIcon } from "@/components/ui/IntegrationBrandIcon";
+import { DocumentTextIcon } from "@heroicons/react/24/outline";
+import gate from "@/components/ui/ProductFoundation.module.css";
 import { Select } from "@/components/ui/Select";
 import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -28,8 +31,7 @@ import {
   type FieldErrors
 } from "@/lib/forms/validation";
 
-const steps = ["Identitatea firmei", "Oferta comercială", "Contextul cererilor", "Cum ai aflat", "Conexiuni opționale", "Verificare"] as const;
-const discoveryOptions = ["Google", "ChatGPT / AI", "LinkedIn", "Instagram", "TikTok", "YouTube", "Newsletter", "Eveniment", "Recomandare", "Partener", "Altă sursă"] as const;
+const steps = ["Compania", "Oferta", "Primul proces", "Sursele", "Verificare"] as const;
 
 type FieldName = keyof OnboardingDraft;
 
@@ -268,9 +270,6 @@ export function OnboardingForm({ initialDraft = emptyOnboardingDraft, initialSte
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<FieldErrors<FieldName>>({});
   const [serverError, setServerError] = useState("");
-  const [discoverySource, setDiscoverySource] = useState("");
-  const [connectionSkipOpen, setConnectionSkipOpen] = useState(false);
-  const [connectionSkipConfirmed, setConnectionSkipConfirmed] = useState(false);
   const errorRef = useRef<HTMLDivElement>(null);
 
   const regionLabel = administrativeAreaLabel(draft.countryCode);
@@ -354,10 +353,6 @@ export function OnboardingForm({ initialDraft = emptyOnboardingDraft, initialSte
   }
 
   async function goNext() {
-    if (step === 4 && !connectionSkipConfirmed) {
-      setConnectionSkipOpen(true);
-      return;
-    }
     const nextErrors = validateStep(draft, step);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) {
@@ -402,26 +397,19 @@ export function OnboardingForm({ initialDraft = emptyOnboardingDraft, initialSte
   }
 
   return (
-    <div className="grid w-full gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,0.76fr)]">
+    <div className={`${gate.foundation} ${gate.onboarding} grid w-full gap-6 lg:grid-cols-[minmax(0,1fr)_280px]`}>
       <div className="lg:col-span-2"><div className="h-1 overflow-hidden bg-[rgb(var(--surface-muted))]"><div className="h-full bg-[rgb(var(--primary))] transition-[width] duration-normal motion-reduce:transition-none" style={{ width: `${((step + 1) / steps.length) * 100}%` }} /></div><p className="mt-2 text-right text-xs text-[rgb(var(--text-muted))]">Pasul {step + 1} din {steps.length}</p></div>
       <div className="grid min-w-0 gap-5">
-      <section className="grid gap-4 border-b border-[rgb(var(--border))] pb-5">
-        <div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-[rgb(var(--primary))]">Metoda de pornire</p><h2 className="mt-1 font-display text-xl font-semibold tracking-tight text-[rgb(var(--foreground))]">Cum aduci primele date în ReveNew?</h2><p className="mt-1 max-w-3xl text-sm leading-6 text-[rgb(var(--text-muted))]">Configurează manual sau importă un CSV. Echipa verifică informația înainte ca aceasta să devină oportunitate.</p></div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <button type="button" onClick={() => setEntryMode("manual")} aria-pressed={entryMode === "manual"} className={`focus-ring rounded-control border p-3 text-left transition ${entryMode === "manual" ? "border-[rgb(var(--primary))] bg-[rgb(var(--primary)/0.1)] shadow-sm" : "border-[rgb(var(--border))] bg-[rgb(var(--surface))] hover:border-[rgb(var(--border-strong))]"}`}><span className="block font-semibold text-[rgb(var(--foreground))]">Configurare manuală</span><span className="mt-1 block text-sm leading-5 text-[rgb(var(--text-muted))]">Completez contextul firmei, oferta și sursele comerciale.</span></button>
-          <button type="button" onClick={() => setEntryMode("import")} aria-pressed={entryMode === "import"} className={`focus-ring rounded-control border p-3 text-left transition ${entryMode === "import" ? "border-[rgb(var(--primary))] bg-[rgb(var(--primary)/0.1)] shadow-sm" : "border-[rgb(var(--border))] bg-[rgb(var(--surface))] hover:border-[rgb(var(--border-strong))]"}`}><span className="block font-semibold text-[rgb(var(--foreground))]">Import CSV controlat</span><span className="mt-1 block text-sm leading-5 text-[rgb(var(--text-muted))]">Încarc date existente și verific maparea înainte de import.</span></button>
-        </div>
-        <p className="flex items-center gap-2 text-xs leading-5 text-[rgb(var(--text-muted))]"><span className="text-[rgb(var(--primary))]" aria-hidden="true">✓</span> Importul nu trimite mesaje și nu pornește outreach extern. Tu păstrezi controlul.</p>
-        {resumed ? <p className="text-sm font-semibold text-[rgb(var(--primary))]" role="status">Continui configurarea existentă. Ultimul pas salvat și datele valide au fost restaurate.</p> : null}
-      </section>
-      <nav aria-label="Pași onboarding" className="flex gap-1 overflow-x-auto rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-1">
+      <header className="border-b border-[rgb(var(--border))] pb-5"><p className="text-xs text-[rgb(var(--primary))]">Configurarea echipei</p><h1 className="mt-2 text-3xl font-semibold tracking-tight">Începem cu un singur proces.</h1><p className="mt-3 text-sm leading-6 text-[rgb(var(--text-muted))]">Stabilește contextul firmei și ce merită urmărit. Sursele se autorizează separat.</p>{resumed ? <p className="mt-3 text-xs" role="status">Continui de la ultimul pas salvat.</p> : null}</header>
+      <nav aria-label="Pași onboarding" className="grid grid-cols-5 gap-1">
         {steps.map((label, index) => (
           <button
             key={label}
             type="button"
+            disabled={index > step}
             onClick={() => index <= step && setStep(index)}
             aria-current={index === step ? "step" : undefined}
-            className={`focus-ring flex min-w-[150px] flex-1 items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-semibold transition ${
+            className={`focus-ring flex min-w-0 flex-col items-start gap-2 rounded-md px-2 py-2 text-left text-xs sm:flex-row sm:items-center font-semibold transition ${
               index === step ? "bg-[rgb(var(--primary)/0.12)] text-[rgb(var(--foreground))]" : index < step ? "bg-[rgb(var(--surface))] text-[rgb(var(--foreground))]" : "text-[rgb(var(--text-muted))]"
             }`}
           >
@@ -438,7 +426,7 @@ export function OnboardingForm({ initialDraft = emptyOnboardingDraft, initialSte
       <section className="rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-5 shadow-sm sm:p-6">
         <div className="flex flex-col gap-2 border-b border-[rgb(var(--border))] pb-4 sm:flex-row sm:items-end sm:justify-between">
           <div><p className="text-xs font-semibold uppercase tracking-[0.14em] text-[rgb(var(--primary))]">Pasul {step + 1} din {steps.length}</p><h2 className="mt-1 font-display text-2xl font-semibold text-[rgb(var(--foreground))]">{steps[step]}</h2></div>
-          <p className="max-w-md text-sm leading-6 text-[rgb(var(--text-muted))]">{step === 0 ? "Definește identitatea și datele de contact ale firmei." : step === 1 ? "Ajută ReveNew să interpreteze valoarea și relevanța comercială." : step === 2 ? "Stabilește unde apar semnalele și ce probleme urmărești." : "Verifică informația înainte de crearea spațiului de lucru."}</p>
+          <p className="max-w-md text-sm leading-6 text-[rgb(var(--text-muted))]">{step === 0 ? "Firma în care echipa va continua lucrul." : step === 1 ? "Ajută ReveNew să interpreteze valoarea și relevanța comercială." : step === 2 ? "Alege situația comercială pe care vrei să o urmărești prima." : "Verifică informația înainte de crearea spațiului de lucru."}</p>
         </div>
 
         {step === 0 ? (
@@ -452,7 +440,7 @@ export function OnboardingForm({ initialDraft = emptyOnboardingDraft, initialSte
               </Select>
               {errors.industry ? <p className="mt-2 text-sm text-[rgb(var(--danger-text))]">{errors.industry}</p> : null}
             </label>
-            {draft.industry === "Alt domeniu" ? <Field required label="Alt domeniu" name="customIndustry" value={draft.customIndustry} onChange={updateField} error={errors.customIndustry} placeholder="Descrie domeniul" /> : <Field label="Denumirea juridică" name="legalName" value={draft.legalName} onChange={updateField} placeholder="Auto Management SRL" />}
+            {draft.industry === "Alt domeniu" ? <Field required label="Alt domeniu" name="customIndustry" value={draft.customIndustry} onChange={updateField} error={errors.customIndustry} placeholder="Descrie domeniul" /> : null}
             <label className="block">
               <span className="text-sm font-medium text-[rgb(var(--foreground))]">Țara *</span>
               <Select id="countryCode" required value={draft.countryCode} autoComplete="country" onChange={(event) => updateField("countryCode", event.target.value)} className="mt-2 h-11 w-full rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-3 text-sm text-[rgb(var(--foreground))] outline-none focus:border-[rgb(var(--primary))] focus:ring-2 focus:ring-[rgb(var(--primary)/0.18)]">
@@ -468,6 +456,7 @@ export function OnboardingForm({ initialDraft = emptyOnboardingDraft, initialSte
               <Field required label="Orașul/localitatea" name="city" value={draft.city} onChange={updateField} error={errors.city} placeholder="Exemplu: Ploiești" autoComplete="address-level2" />
               <p className="mt-2 text-[0.8125rem] leading-5 text-[rgb(var(--text-muted))]">Introdu localitatea sediului sau punctului principal de lucru.</p>
             </div>
+            <details className="md:col-span-2 border-t border-[rgb(var(--border))] pt-3" open={Boolean(errors.companyPhone || errors.cui || errors.website) || undefined}><summary className="focus-ring cursor-pointer rounded py-2 text-sm">Contact și date juridice <span className="text-xs text-[rgb(var(--text-muted))]">· telefon necesar pentru configurare</span></summary><div className="mt-3 grid gap-4 md:grid-cols-2">
             <div className="grid gap-3 sm:grid-cols-[0.9fr_1.1fr] md:col-span-2">
               <label className="block">
                 <span className="text-sm font-medium text-[rgb(var(--foreground))]">Țara telefonului</span>
@@ -477,10 +466,11 @@ export function OnboardingForm({ initialDraft = emptyOnboardingDraft, initialSte
               </label>
               <Field required label="Telefonul firmei" name="companyPhone" value={draft.companyPhone} onChange={updateField} error={errors.companyPhone} placeholder="+40 721 000 000" type="tel" autoComplete="tel" />
             </div>
-            {draft.industry === "Alt domeniu" ? <Field label="Denumirea juridică" name="legalName" value={draft.legalName} onChange={updateField} placeholder="Auto Management SRL" /> : null}
+            <Field label="Denumirea juridică" name="legalName" value={draft.legalName} onChange={updateField} placeholder="Denumirea din acte" />
             {draft.countryCode === "RO" ? <Field label="CUI" name="cui" value={draft.cui} onChange={updateField} error={errors.cui} placeholder="RO12345678" /> : null}
             <Field label="Website" name="website" value={draft.website} onChange={updateField} error={errors.website} placeholder="firma.ro" autoComplete="url" />
             <Field label="Cod poștal" name="postalCode" value={draft.postalCode} onChange={updateField} placeholder="077190" autoComplete="postal-code" />
+            </div></details>
           </div>
         ) : null}
 
@@ -543,28 +533,19 @@ export function OnboardingForm({ initialDraft = emptyOnboardingDraft, initialSte
 
         {step === 3 ? (
           <div className="mt-5 grid gap-5">
-            <div><h3 className="text-lg font-semibold">Cum ai aflat de ReveNew?</h3><p className="mt-1 text-sm leading-6 text-[rgb(var(--text-muted))]">Pas opțional. Alegerea nu influențează configurarea sau accesul.</p></div>
-            <div className="flex flex-wrap gap-2">
-              {discoveryOptions.map((option) => <button key={option} type="button" aria-pressed={discoverySource === option} onClick={() => setDiscoverySource((current) => current === option ? "" : option)} className={`focus-ring min-h-10 rounded-control border px-3 text-sm font-medium transition-colors ${discoverySource === option ? "border-[rgb(var(--primary))] bg-[rgb(var(--primary-muted))] text-[rgb(var(--foreground))]" : "border-[rgb(var(--border))] bg-[rgb(var(--surface))] text-[rgb(var(--text-muted))] hover:border-[rgb(var(--border-strong))]"}`}>{option}</button>)}
-            </div>
-            <p className="text-xs leading-5 text-[rgb(var(--text-faint))]">Această selecție este păstrată numai în pasul curent; persistarea necesită o destinație de date aprobată și nu face parte din această schimbare de interfață.</p>
-          </div>
-        ) : null}
-
-        {step === 4 ? (
-          <div className="mt-5 grid gap-5">
-            <div className="border-y border-[rgb(var(--border))] py-5">
-              <h3 className="font-semibold text-[rgb(var(--foreground))]">Conexiuni disponibile în siguranță</h3>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-[rgb(var(--text-muted))]">În versiunea curentă nu există o conexiune Gmail, Calendar sau telefonie pe care să o putem activa onest din acest flux. Poți intra în workspace și importa date controlat ulterior.</p>
+            <div><h3 className="text-lg font-semibold">De unde aducem primul context?</h3><p className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">Alegi metoda acum. Conectarea sau importul se confirmă după crearea spațiului de lucru.</p></div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <button type="button" aria-pressed={entryMode === "manual"} onClick={() => setEntryMode("manual")} className="focus-ring rounded-control border border-[rgb(var(--border))] p-4 text-left aria-pressed:border-[rgb(var(--primary))] aria-pressed:bg-[rgb(var(--primary)/0.06)]"><span className="block text-sm font-semibold">Încep manual</span><span className="mt-2 block text-xs leading-5 text-[rgb(var(--text-muted))]">Adaug primul caz și îi verific contextul.</span></button>
+              <button type="button" aria-pressed={entryMode === "import"} onClick={() => setEntryMode("import")} className="focus-ring rounded-control border border-[rgb(var(--border))] p-4 text-left aria-pressed:border-[rgb(var(--primary))] aria-pressed:bg-[rgb(var(--primary)/0.06)]"><span className="block text-sm font-semibold">Pornesc de la un fișier</span><span className="mt-2 block text-xs leading-5 text-[rgb(var(--text-muted))]">Verific datele și maparea înainte de import.</span></button>
             </div>
             <ul className="divide-y divide-[rgb(var(--border))] border-y border-[rgb(var(--border))] text-sm">
-              <li className="py-3"><span className="font-medium text-[rgb(var(--foreground))]">Email și calendar</span><span className="mt-1 block text-[rgb(var(--text-muted))]">Neconectate; conversațiile și întâlnirile nu sunt importate automat.</span></li>
-              <li className="py-3"><span className="font-medium text-[rgb(var(--foreground))]">Telefonie și voce</span><span className="mt-1 block text-[rgb(var(--text-muted))]">Inactive; ReveNew nu înregistrează și nu inițiază apeluri.</span></li>
+              <li className="flex items-start gap-3 py-4"><IntegrationBrandIcon provider="gmail" /><div><strong>Google Workspace</strong><p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Gmail, Calendar și Drive · autorizare din Aplicații, după configurare.</p></div></li>
+              <li className="flex items-start gap-3 py-4"><DocumentTextIcon className="h-9 w-9 shrink-0 text-[rgb(var(--entity-document))]" aria-hidden="true" /><div><strong>CSV / XLSX</strong><p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Fișier local · selectezi documentul și verifici datele înainte de folosire.</p></div></li>
+              <li className="py-4"><strong>CRM sau alte sisteme</strong><p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">Conectarea se evaluează în funcție de proces și acces. Nicio integrare nu este activată aici.</p></li>
             </ul>
-            {connectionSkipConfirmed ? <p className="text-sm font-medium text-[rgb(var(--text-muted))]" role="status">Ai confirmat continuarea fără conexiuni. Le poți evalua ulterior din Setări.</p> : null}
           </div>
         ) : null}
-        {step === 5 ? (
+        {step === 4 ? (
           <div className="mt-5 grid gap-4 text-sm leading-6 text-[rgb(var(--text-muted))]">
             <p className="rounded-control border border-[rgb(var(--primary)/0.3)] bg-[rgb(var(--primary)/0.08)] p-4 text-[rgb(var(--text-muted))]">După creare vei continua în spațiul de lucru. Poți importa date în Inbox Comercial, iar fiecare semnal rămâne sub controlul echipei înainte de conversie sau contact extern.</p>
             <div className="grid gap-3 md:grid-cols-2">
@@ -604,31 +585,17 @@ export function OnboardingForm({ initialDraft = emptyOnboardingDraft, initialSte
         {serverError ? <p className="text-sm text-[rgb(var(--danger-text))]">{serverError}</p> : null}
       </div>
       </div>
-      <aside className="min-h-[34rem] overflow-hidden border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] lg:sticky lg:top-6" aria-label="Previzualizare spațiu de lucru ReveNew">
-        <div className="flex h-11 items-center gap-2 border-b border-[rgb(var(--border))] px-3"><span className="grid size-6 place-items-center rounded bg-[rgb(var(--primary))] text-[0.625rem] font-bold text-[rgb(var(--primary-foreground))]">{(draft.businessName || "RN").split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase()}</span><span className="truncate text-xs font-semibold">{draft.businessName || "Compania ta"}</span></div>
-        <div className="grid min-h-[31rem] grid-cols-[8.5rem_1fr]">
-          <nav className="border-r border-[rgb(var(--border))] p-2 text-[0.6875rem] text-[rgb(var(--text-muted))]" aria-label="Previzualizare navigare">
-            {["Acasă", "Activitatea mea", "Inbox Comercial", "Companii", "Contacte", "Oportunități", "Pipeline", "Rapoarte"].map((item, index) => <span key={item} className={`mb-0.5 flex min-h-7 items-center rounded px-2 ${index === 0 ? "bg-[rgb(var(--surface-muted))] font-semibold text-[rgb(var(--foreground))]" : ""}`}>{item}</span>)}
-          </nav>
-          <div className="p-5">
-            <p className="text-xs text-[rgb(var(--text-muted))]">Previzualizare live</p>
-            <h2 className="mt-2 text-xl font-semibold tracking-[-0.03em]">{draft.businessName || "Compania ta"}</h2>
-            <p className="mt-1 text-xs text-[rgb(var(--text-muted))]">{draft.industry === "Alt domeniu" ? draft.customIndustry : draft.industry || "Domeniu de activitate"} · {draft.currency || "RON"}</p>
-            <div className="mt-8 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-3"><p className="text-xs font-semibold">Întreabă ReveNew</p><p className="mt-2 text-xs text-[rgb(var(--text-faint))]">Ce necesită atenție astăzi?</p></div>
-            <div className="mt-6 border-t border-[rgb(var(--border))] pt-4"><p className="text-xs font-semibold">Context comercial</p><dl className="mt-3 grid gap-3 text-xs"><div><dt className="text-[rgb(var(--text-faint))]">Ofertă principală</dt><dd className="mt-1 font-medium">{draft.mainOffering || "Se completează la pasul următor"}</dd></div><div><dt className="text-[rgb(var(--text-faint))]">Problemă urmărită</dt><dd className="mt-1 font-medium">{draft.mainCommercialProblem || "Se completează în configurare"}</dd></div>{discoverySource ? <div><dt className="text-[rgb(var(--text-faint))]">Sursă descoperire</dt><dd className="mt-1 font-medium">{discoverySource}</dd></div> : null}</dl></div>
-          </div>
-        </div>
+      <aside className="self-start rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-5 lg:sticky lg:top-6" aria-label="Rezumatul configurării">
+        <IntegrationBrandIcon provider="revenew" />
+        <p className="mt-5 text-xs uppercase tracking-widest text-[rgb(var(--primary))]">Spațiul echipei</p>
+        <h2 className="mt-2 break-words text-xl font-semibold tracking-tight">{draft.businessName || "Compania ta"}</h2>
+        <dl className="mt-5 grid gap-4 text-sm">
+          <div><dt className="text-xs text-[rgb(var(--text-muted))]">Activitate</dt><dd className="mt-1">{draft.industry === "Alt domeniu" ? draft.customIndustry : draft.industry || "De completat"}</dd></div>
+          <div><dt className="text-xs text-[rgb(var(--text-muted))]">Primul proces</dt><dd className="mt-1">{draft.mainCommercialProblem === "Altă problemă" ? draft.customCommercialProblem : draft.mainCommercialProblem || "De ales"}</dd></div>
+          <div><dt className="text-xs text-[rgb(var(--text-muted))]">Pornire</dt><dd className="mt-1">{entryMode === "import" ? "Fișier cu date de verificat" : "Primul caz adăugat manual"}</dd></div>
+        </dl>
+        <p className="mt-6 border-t border-[rgb(var(--border))] pt-4 text-xs leading-6 text-[rgb(var(--text-muted))]">Dovezi la vedere.<br />Responsabilitate explicită.<br />Decizia rămâne la echipă.</p>
       </aside>
-      {connectionSkipOpen ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/65 p-4" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setConnectionSkipOpen(false)}>
-          <section role="dialog" aria-modal="true" aria-labelledby="connection-skip-title" aria-describedby="connection-skip-description" className="w-full max-w-md rounded-panel border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-elevated))] p-5 shadow-modal">
-            <h2 id="connection-skip-title" className="text-lg font-semibold">Continui cu mai puține funcții?</h2>
-            <p id="connection-skip-description" className="mt-2 text-sm leading-6 text-[rgb(var(--text-muted))]">Fără o conexiune aprobată, ReveNew nu poate importa automat contextul din email și calendar.</p>
-            <ul className="mt-4 divide-y divide-[rgb(var(--border))] border-y border-[rgb(var(--border))] text-sm text-[rgb(var(--text-secondary))]"><li className="py-3">Fără sincronizare automată a conversațiilor</li><li className="py-3">Fără context automat pentru întâlniri</li></ul>
-            <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-end"><Button type="button" variant="secondary" onClick={() => setConnectionSkipOpen(false)}>Înapoi</Button><Button type="button" onClick={async () => { const nextStep = Math.min(step + 1, steps.length - 1); const progress = await saveOnboardingProgress(nextStep, entryMode, draft); if (!progress.ok) setServerError(progress.error ?? "Progresul nu a putut fi salvat."); setConnectionSkipConfirmed(true); setConnectionSkipOpen(false); setStep(nextStep); }}>Continuă fără integrare</Button></div>
-          </section>
-        </div>
-      ) : null}
     </div>
   );
 }

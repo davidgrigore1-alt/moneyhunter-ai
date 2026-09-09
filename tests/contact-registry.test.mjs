@@ -28,6 +28,7 @@ function loader(overrides = {}) {
         const base = path.resolve("src", id.slice(2));
         return load(base + (fs.existsSync(base + ".ts") ? ".ts" : ".tsx"));
       }
+      if (id.startsWith(".")) { const base = path.resolve(path.dirname(file), id); return load(base + (fs.existsSync(base + ".ts") ? ".ts" : ".tsx")); }
       return require(id);
     } }, { filename: file });
     return module.exports;

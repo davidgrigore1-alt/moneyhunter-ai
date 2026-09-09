@@ -75,7 +75,7 @@ export function IntegrationDetailDrawer({
               <div className="flex flex-wrap items-center gap-2">
                 <p className="micro-label">{item.category}</p>
                 {provider ? <CapabilityStatus status={provider.status} label={provider.label} /> : <StatusPill tone={item.stage === "next" ? "gold" : "neutral"}>
-                  {item.stage === "next" ? "În curând" : "Planificat"}
+                  Evaluare înainte de implementare
                 </StatusPill>}
               </div>
               <h2 id="integration-detail-title" className="mt-2 break-words text-xl font-semibold tracking-[-0.025em] text-[rgb(var(--foreground))]">
@@ -95,7 +95,7 @@ export function IntegrationDetailDrawer({
         </header>
 
         {provider ? <div className="app-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain">
-          <p className="p-5 text-sm leading-6 text-[rgb(var(--text-muted))]">Conversațiile Gmail și întâlnirile Calendar autorizate pot susține Ask ReveNew, Inbox și pregătirea întâlnirilor. Conectarea contului nu autorizează automat toate serviciile Google.</p>
+          <p className="p-5 text-sm leading-6 text-[rgb(var(--text-muted))]">Conversațiile Gmail și întâlnirile Calendar autorizate pot susține Întreabă ReveNew, Inbox și pregătirea întâlnirilor. Conectarea contului nu autorizează automat toate serviciile Google.</p>
           <GoogleCapabilities state={state} onManageDrive={onManageGoogle} />
           <div className="border-t border-[rgb(var(--border))] p-5 text-xs leading-5 text-[rgb(var(--text-muted))]">
             <p className="font-semibold text-[rgb(var(--foreground))]">Acces privat · control explicit</p>
@@ -112,7 +112,7 @@ export function IntegrationDetailDrawer({
           </section>
 
           <section className="border-b border-[rgb(var(--border))] p-5 md:border-r">
-            <p className="micro-label">Ce aduce în ReveNew</p>
+            <p className="micro-label">Ce evaluăm pentru proces</p>
             <div className="mt-4 grid gap-0">
               {item.useCases.map((useCase) => (
                 <div key={useCase.label} className="grid grid-cols-[1.5rem_minmax(0,1fr)] gap-3 border-t border-[rgb(var(--border))] py-3.5 first:border-t-0 first:pt-0">
@@ -127,7 +127,7 @@ export function IntegrationDetailDrawer({
           </section>
 
           <section className="border-b border-[rgb(var(--border))] p-5">
-            <p className="micro-label">Capabilități planificate</p>
+            <p className="micro-label">Criterii de evaluare</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {item.capabilities.map((capability) => (
                 <span key={capability} className="inline-flex min-h-[22px] items-center rounded-md border border-[rgb(var(--border))] px-2 text-xs text-[rgb(var(--text-secondary))]">
@@ -150,7 +150,7 @@ export function IntegrationDetailDrawer({
                 <LockClosedIcon className="mt-0.5 h-4 w-4 text-[rgb(var(--text-faint))]" aria-hidden="true" />
                 <div>
                   <p className="text-xs font-semibold text-[rgb(var(--foreground))]">Acces proiectat</p>
-                  <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">{item.scope === "Utilizator" ? "Conexiune privată utilizatorului care o autorizează." : "Conexiune destinată contextului comun al workspace-ului, cu acces controlat."}</p>
+                  <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-muted))]">{item.scope === "Utilizator" ? "Conexiune privată utilizatorului care o autorizează." : "Conexiune destinată contextului comun al spațiului de lucru, cu acces controlat."}</p>
                 </div>
               </div>
               <div className="flex gap-3">
@@ -172,7 +172,7 @@ export function IntegrationDetailDrawer({
             disabled
             className="inline-flex h-9 cursor-not-allowed items-center justify-center gap-2 rounded-button border border-[rgb(var(--border))] px-3 text-xs font-medium text-[rgb(var(--text-muted))]"
           >
-            {item.stage === "next" ? "Disponibil în curând" : "Planificat"}
+            Evaluare înainte de implementare
             <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
           </button>}
         </footer>

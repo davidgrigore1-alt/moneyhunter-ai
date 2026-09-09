@@ -1,3 +1,4 @@
+import { EntityMark } from "@/components/ui/EntityMark";
 import Link from "next/link";
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 import { Breadcrumbs } from "@/components/dashboard/Breadcrumbs";
@@ -25,7 +26,7 @@ export function CompanyIdentity({ snapshot }: Props) {
     <Breadcrumbs items={[{ label: "Companii", href: "/companies" }, { label: organization.name }]} />
     <header className={styles.identity}>
       <span className={styles.monogram} aria-hidden="true">{initials}</span>
-      <div className={styles.identityText}><p className="product-eyebrow">Company 360</p><h1>{organization.name}</h1><p>{[identity.industry, identity.location].filter(Boolean).join(" · ") || "Profil comercial în curs de completare"}<span>Relație · {model.relationship}</span>{website ? <a className="focus-ring" href={website} target="_blank" rel="noopener noreferrer">Website<ArrowTopRightOnSquareIcon className="h-3.5 w-3.5" aria-hidden="true" /></a> : null}</p></div>
+      <div className={styles.identityText}><p className="product-eyebrow flex items-center gap-2"><EntityMark entity="companies" />Companie · vedere completă</p><h1>{organization.name}</h1><p>{[identity.industry, identity.location].filter(Boolean).join(" · ") || "Profil comercial în curs de completare"}<span>Relație · {model.relationship}</span>{website ? <a className="focus-ring" href={website} target="_blank" rel="noopener noreferrer">Website<ArrowTopRightOnSquareIcon className="h-3.5 w-3.5" aria-hidden="true" /></a> : null}</p></div>
       <CreateOpportunityPanel organizations={[organization]} />
     </header>
     <section className={styles.summary} aria-label="Situația comercială">

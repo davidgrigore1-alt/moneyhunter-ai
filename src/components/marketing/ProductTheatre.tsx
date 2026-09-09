@@ -2,31 +2,21 @@
 import { paintFlow } from "@/lib/marketing/flow-timing";
 
 import Image from "next/image";
-import { useEffect, useReducer, useRef, useState, type CSSProperties } from "react";
-import { ArrowRightIcon, BoltIcon, BuildingOffice2Icon, ChartBarIcon, ChevronDownIcon, DocumentTextIcon, FolderIcon, InboxIcon, LockClosedIcon, MagnifyingGlassIcon, ShieldCheckIcon, Squares2X2Icon, UserGroupIcon, WrenchScrewdriverIcon } from "@heroicons/react/24/outline";
+import { primaryNavigation, groupNavigationItems } from "@/lib/navigation";
+import { NavigationIcon } from "@/components/dashboard/NavigationIcon";
+import { useEffect, useReducer, useRef, useState } from "react";
+import { ArrowRightIcon, ChevronDownIcon, LockClosedIcon, MagnifyingGlassIcon, ShieldCheckIcon, Squares2X2Icon } from "@heroicons/react/24/outline";
 import { landingDemo as d } from "@/lib/marketing/demo";
 import { beatDuration, playbackReducer, staticPlayback, theatreBeats } from "@/lib/marketing/theatre-playback";
 import { theatreQuestion, theatreSources } from "@/lib/marketing/theatre-portfolio";
 import { MarketingBrand } from "./MarketingBrand";
-import { CompanyMark, ExcelMark, ModuleMark, PersonAvatar } from "./MarketingEntityMark";
+import { CompanyMark, ExcelMark, PersonAvatar } from "./MarketingEntityMark";
 import { AnswerScene, CompaniesScene, QueryScene, ReportsScene, WorkflowScene } from "./TheatreScenes";
 import s from "./hero.module.css";
 import t from "./theatre.module.css";
 
-const navigation = [
-  { label: "Control Center", icon: Squares2X2Icon },
-  { label: "Inteligență operațională", icon: BoltIcon, scene: 0 },
-  { label: "Inbox Comercial", icon: InboxIcon },
-  { label: "Aprobări", icon: ShieldCheckIcon },
-  { label: "Lucru pregătit", icon: DocumentTextIcon },
-  { label: "Companii", icon: BuildingOffice2Icon, scene: 2, module: "companies" as const },
-  { label: "Contacte", icon: UserGroupIcon, module: "contacts" as const },
-  { label: "Oportunități", icon: BoltIcon, module: "opportunities" as const },
-  { label: "Documente", icon: FolderIcon },
-  { label: "Secvențe", icon: ArrowRightIcon, module: "sequences" as const },
-  { label: "Workflow-uri", icon: WrenchScrewdriverIcon, scene: 3 },
-  { label: "Rapoarte", icon: ChartBarIcon, scene: 4 },
-];
+const navigation = groupNavigationItems(primaryNavigation);
+const sceneByRoute: Record<string, number> = { "/ai": 0, "/companies": 2, "/workflows": 3, "/reports": 4 };
 const sceneNames = ["Inteligență operațională", "Inteligență operațională", "Companii", "Workflow-uri", "Rapoarte"];
 
 export function ProductTheatre() {
@@ -43,7 +33,6 @@ export function ProductTheatre() {
   const phase = playback.beat;
   const beat = phase === 5 ? 4 : phase;
   const running = enhanced && !reduced && visible && foreground && playback.mode === "playing";
-  const selectedIndex = navigation.findIndex(item => item.scene === (beat <= 1 ? 0 : beat));
 
   useEffect(() => {
     setEnhanced(true);
@@ -105,7 +94,7 @@ export function ProductTheatre() {
     else document.getElementById("theatre-source-facts")?.focus();
   }
 
-  return <figure ref={figure} className={s.theatre} id="cum-functioneaza" aria-labelledby="theatre-caption" aria-describedby="theatre-keyboard" aria-keyshortcuts="Space" tabIndex={0} onKeyDown={event => { if (event.target === event.currentTarget && event.key === " " && !reduced) { event.preventDefault(); dispatch({ type: "toggle" }); } }} data-beat={phase} data-running={running} data-enhanced={enhanced}>
+  return <figure ref={figure} className={s.theatre} id="produs" aria-labelledby="theatre-caption" aria-describedby="theatre-keyboard" aria-keyshortcuts="Space" tabIndex={0} onKeyDown={event => { if (event.target === event.currentTarget && event.key === " " && !reduced) { event.preventDefault(); dispatch({ type: "toggle" }); } }} data-beat={phase} data-running={running} data-enhanced={enhanced}>
     <figcaption id="theatre-caption" className={s.theatreCaption}><span><span className={s.captionRule} />UN CAZ. TOT CONTEXTUL.</span><span>Scenariu de prezentare · companii și valori de exemplu</span></figcaption>
     <div ref={stage} className={s.stage}>
       <div className={s.device} data-theatre-viewport>
@@ -114,7 +103,7 @@ export function ProductTheatre() {
           <aside className={t.sidebar} aria-label="Navigare ilustrativă, fără acțiuni">
             <MarketingBrand /><div className={t.workspaceLabel}>Portofoliu comercial<ChevronDownIcon /></div>
             <div className={t.search}><MagnifyingGlassIcon /><span>Caută</span><small>⌘ K</small></div>
-            <div className={t.sideItems} style={{ "--selection-top": `${selectedIndex * 33 + (selectedIndex >= 5 ? 13 : 0) + (selectedIndex >= 8 ? 13 : 0)}px` } as CSSProperties}>{navigation.map((item,index) => <div key={item.label} className={t.sideItem} data-selected={item.scene === (beat <= 1 ? 0 : beat)} data-divider={index === 5 || index === 8}>{item.module ? <ModuleMark kind={item.module} /> : <item.icon />}<span>{item.label}</span>{item.scene === 2 ? <small>8</small> : null}</div>)}</div>
+            <div className={t.sideItems}>{navigation.map(group => <div key={group.id}><p className={t.sideGroup}>{group.label || "Control"}</p>{group.items.map(item => <div key={item.href} className={t.sideItem} data-selected={sceneByRoute[item.href] === (beat <= 1 ? 0 : beat)} data-entity={item.href.slice(1)}><span className={t.navIcon}><NavigationIcon name={item.icon} /></span><span>{item.name}</span>{item.href === "/companies" ? <small>8</small> : null}</div>)}</div>)}</div>
             <div className={t.sidebarUser}><PersonAvatar /><span>{d.owner}<small>Spațiul echipei</small></span><ChevronDownIcon /></div>
           </aside>
           <div className={t.appContent}>

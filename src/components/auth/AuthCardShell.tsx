@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/ui/Logo";
+import gate from "@/components/ui/ProductFoundation.module.css";
 
 type AuthCardShellProps = {
   eyebrow: string;
@@ -30,12 +31,12 @@ export function AuthCardShell({
   const isSignup = variant === "signup";
 
   return (
-    <main className={`min-h-screen bg-[rgb(var(--background))] text-[rgb(var(--foreground))] lg:grid lg:grid-cols-[minmax(19rem,0.72fr)_minmax(32rem,1.28fr)]`}>
+    <main className={`${gate.foundation} ${gate.auth} min-h-screen bg-[rgb(var(--background))] text-[rgb(var(--foreground))] lg:grid lg:grid-cols-[minmax(19rem,0.82fr)_minmax(32rem,1.18fr)]`}>
       <aside className={`relative hidden min-h-screen overflow-hidden border-r border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-9 lg:flex lg:flex-col lg:justify-between xl:p-12`}>
           <div className="relative">
             <Logo />
             <p className="mt-16 text-xs font-semibold uppercase tracking-[0.12em] text-[rgb(var(--primary))]">{isSignup ? "Configurare ghidată · 01" : "Acces controlat · 01"}</p>
-            <p className="mt-4 max-w-md font-display text-4xl font-semibold leading-[1.04] tracking-[-0.045em] text-[rgb(var(--foreground))] xl:text-5xl">{isSignup ? "Un început clar pentru fiecare decizie comercială." : "Revii la firul comercial, nu la un dashboard generic."}</p>
+            <p className="mt-4 max-w-md font-display text-4xl font-semibold leading-[1.04] tracking-[-0.045em] text-[rgb(var(--foreground))] xl:text-5xl">{isSignup ? "Un început clar pentru fiecare decizie comercială." : "Revii la context. Continui cu un pas clar."}</p>
             <p className="mt-5 max-w-md text-base leading-7 text-[rgb(var(--text-muted))]">{isSignup ? "Creezi accesul acum. Firma, contextul comercial și primul flux se configurează controlat după confirmarea emailului." : "Priorități, dovezi, responsabil și următoarea decizie într-un spațiu de lucru izolat."}</p>
           </div>
           <div className="relative grid gap-3" aria-label="Principii de încredere ReveNew">

@@ -8,7 +8,7 @@ import {
 
 import { PageShell } from "@/components/dashboard/PageShell";
 import { RecordSummaryBar } from "@/components/records/RecordSummaryBar";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ProductButton";
 import {
   getOwnedExternalContext,
   requireGoogleConnectorActor,
@@ -22,10 +22,10 @@ import {
 export const dynamic = "force-dynamic";
 
 const regionClass =
-  "border-y border-[rgb(var(--border))] bg-[rgb(var(--surface))]";
+  "rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]";
 
 const innerSurfaceClass =
-  "border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))]";
+  "rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface))]";
 
 async function getMeetings() {
   try {
@@ -47,13 +47,15 @@ async function getMeetings() {
     });
 
     return {
-      connected: Boolean(result.connection),
+      unavailable: false,
+      connected: Boolean(result.connection && result.connection.status !== "disconnected" && result.connection.calendar_status === "connected"),
       events: result.events
         .filter((event) => event.event_status !== "cancelled")
         .sort((a, b) => a.starts_at.localeCompare(b.starts_at)),
     };
   } catch {
     return {
+      unavailable: true,
       connected: false,
       events: [],
     };
@@ -86,7 +88,7 @@ function meetingState(
 }
 
 export default async function MeetingsPage() {
-  const { connected, events } = await getMeetings();
+  const { connected, events, unavailable } = await getMeetings();
   const now = Date.now();
 
   const upcoming = events.filter(
@@ -251,6 +253,7 @@ export default async function MeetingsPage() {
 
   return (
     <PageShell
+      entity="meetings"
       wide
       eyebrow="Calendar comercial"
       title="Întâlniri"
@@ -271,7 +274,7 @@ export default async function MeetingsPage() {
             { label: "Urmează", value: upcoming.length, detail: "Următoarele 30 de zile" },
             { label: "Context anterior", value: completed.length, detail: "Fără rezultat presupus" },
             { label: "Cu oportunitate", value: linkedCount, detail: "Asocieri CRM confirmate" },
-            { label: "Sursă", value: connected ? "Calendar conectat" : "Indisponibil", detail: "Context autorizat" },
+            { label: "Sursă", value: unavailable ? "Verificare indisponibilă" : connected ? "Calendar conectat" : "Neconectat", detail: "Context autorizat" },
           ]}
         />
 
@@ -345,12 +348,12 @@ export default async function MeetingsPage() {
                   />
 
                   <h3 className="mt-3 text-sm font-semibold">
-                    Nicio întâlnire programată
+                    {unavailable ? "Agenda nu a putut fi verificată" : "Nicio întâlnire în contextul disponibil"}
                   </h3>
 
                   <p className="mx-auto mt-1 max-w-md text-xs leading-5 text-[rgb(var(--text-muted))]">
-                    {connected
-                      ? "Calendarul este conectat, dar nu există evenimente în următoarele 30 de zile."
+                    {unavailable ? "Nu am putut verifica sursa autorizată. Reîncarcă pagina sau verifică starea din Aplicații." : connected
+                      ? "Nu există întâlniri viitoare în selecția sincronizată. Această vedere include cel mult 16 evenimente, între ultimele 14 și următoarele 30 de zile."
                       : "Conectează Google Calendar pentru a vedea agenda autorizată și contextul comercial asociat."}
                   </p>
 

@@ -1,5 +1,7 @@
 "use client";
 
+import { AvailableSources } from "./AvailableSources";
+import controls from "@/components/ui/PremiumControls.module.css";
 import { useRef, useState } from "react";
 import {
   ArrowPathRoundedSquareIcon,
@@ -30,7 +32,7 @@ const tabs: Array<{ id: Tab; label: string }> = [
 ];
 
 const operationalRegion =
-  "border-y border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]";
+  "rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))]";
 
 export function IntegrationHub({
   state,
@@ -55,15 +57,16 @@ export function IntegrationHub({
   return (
     <>
       <PageShell
+        entity="apps"
         wide
         eyebrow="Aplicații"
-        title="Integrări"
-        description="Conexiuni autorizate, capabilități disponibile și surse planificate"
+        title="Aplicații și integrări"
+        description="Surse disponibile și sisteme evaluate pentru procesul echipei."
         actions={
           <button
             type="button"
             onClick={() => setTab("catalog")}
-            className="focus-ring inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-button bg-[rgb(var(--primary))] px-3.5 text-xs font-semibold text-[rgb(var(--primary-foreground))] transition-colors hover:bg-[rgb(var(--primary-hover))]"
+            className={`focus-ring inline-flex h-9 shrink-0 items-center justify-center gap-2 px-3.5 text-xs font-semibold ${controls.primary}`}
           >
             <PlusIcon
               className="h-4 w-4"
@@ -76,7 +79,7 @@ export function IntegrationHub({
         <div className="grid gap-5">
           <div className="flex items-center justify-between gap-4 border-b border-[rgb(var(--border))]">
             <nav
-              className="flex items-center gap-1"
+              className={controls.segments}
               aria-label="Secțiuni aplicații"
             >
               {tabs.map((item) => (
@@ -101,12 +104,7 @@ export function IntegrationHub({
                 >
                   {item.label}
 
-                  {tab === item.id ? (
-                    <span
-                      className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-[rgb(var(--primary))]"
-                      aria-hidden="true"
-                    />
-                  ) : null}
+
                 </button>
               ))}
             </nav>
@@ -123,7 +121,7 @@ export function IntegrationHub({
             </div>
           </div>
 
-          <div className="flex items-center gap-3 border-y border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-2 py-3 sm:px-4">
+          <div className="flex items-center gap-3 rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] px-2 py-3 sm:px-4">
             <ShieldCheckIcon
               className="h-4 w-4 shrink-0 text-[rgb(var(--interaction))]"
               aria-hidden="true"
@@ -133,7 +131,7 @@ export function IntegrationHub({
               <strong className="font-semibold text-[rgb(var(--foreground))]">
                 Control implicit.
               </strong>{" "}
-              Datele externe sunt tratate ca date, nu instrucțiuni.
+              Contextul folosit depinde de sursele selectate și de accesul acordat.
               Acțiunile cu efect extern necesită control explicit.
             </div>
 
@@ -157,9 +155,11 @@ export function IntegrationHub({
             </StatusPill>
           </div>
 
+          {tab === "connections" ? <AvailableSources state={state} /> : null}
           {tab === "connections" ? (
             <section
               className={`${operationalRegion} p-4 sm:p-5`}
+              id="google-connection"
               aria-labelledby="connections-title"
             >
               <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -172,7 +172,7 @@ export function IntegrationHub({
                     id="connections-title"
                     className="mt-1 text-lg font-semibold tracking-[-0.015em] text-[rgb(var(--foreground))]"
                   >
-                    Surse autorizate și folosite în ReveNew
+                    Cont Google și autorizări
                   </h2>
 
                   <p className="mt-1 max-w-[48rem] text-sm leading-6 text-[rgb(var(--text-muted))]">
@@ -222,7 +222,7 @@ export function IntegrationHub({
                 <p className="mt-1 max-w-[52rem] text-sm leading-6 text-[rgb(var(--text-muted))]">
                   Explorează ce poate fi conectat. Etichetele descriu
                   disponibilitatea reală; nimic nu este prezentat ca
-                  funcțional înainte să existe connectorul.
+                  disponibil înainte de implementare.
                 </p>
               </div>
                 <IntegrationCatalog

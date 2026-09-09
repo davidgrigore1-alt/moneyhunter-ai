@@ -183,7 +183,7 @@ function serverHarness({ actions, conditions = [] } = {}) {
       actions: actions ?? [{ type: "create_internal_task", description: "Primul task", requiresHumanApproval: true }, { type: "create_notification", description: "Notificarea originală", requiresHumanApproval: false }],
       created_by_profile_id: ids.profile, created_at: now, updated_at: now }],
     opportunities: [{ id: ids.target, business_id: ids.business, owner_profile_id: ids.profile, title: "Oportunitate autorizată", status: "new", lifecycle_status: "open", updated_at: now }],
-    opportunity_actions: [], opportunity_events: [], opportunity_documents: [], business_audit_events: [], business_approval_requests: [], external_email_messages: [], external_calendar_events: [], organizations: []
+    opportunity_actions: [], opportunity_events: [], opportunity_documents: [], business_audit_events: [], business_approval_requests: [], external_email_messages: [], external_calendar_events: [], crm_organizations: []
   };
   const h = { tables, queries: [], failures: [], permissions: ["settings.update", "actions.create", "documents.generate"], creatorPermissions: ["actions.create", "documents.generate"], authorized: true, currentBusiness: ids.business, before: null };
   h.failNext = (table, operation, predicate = () => true) => h.failures.push({ table, operation, predicate });
@@ -229,7 +229,20 @@ function serverHarness({ actions, conditions = [] } = {}) {
       return { data: structuredClone(this.one ? projected[0] ?? null : projected), error: null };
     }
   }
-  const client = { from: (table) => new Query(table) };
+  const client = { from: (table) => new Query(table), rpc: (name, args) => {
+    if (name === "workflow_approval_event") return new Query("business_approval_requests").eq("business_id", args.target_business_id).eq("id", args.target_approval_id);
+    return (async () => {
+    if (name === "workflow_has_pending_approval") {
+      const result = await new Query("business_approval_requests").eq("business_id", args.target_business_id).eq("entity_id", args.target_opportunity_id).eq("status", "pending");
+      return { data: !!result.data?.length && tables.opportunities.some(row => row.business_id === args.target_business_id && row.id === args.target_opportunity_id), error: result.error };
+    }
+    if (name === "workflow_company_name") {
+      const result = await new Query("crm_organizations").eq("business_id", args.target_business_id).eq("id", args.target_company_id).maybeSingle();
+      return { data: result.data?.name ?? null, error: result.error };
+    }
+    throw new Error("Unexpected RPC: " + name);
+    })();
+  } };
   const planner = compile("src/lib/ai/action-planner.ts", {
     "@/lib/ai/preparation-intent": { hasDirectPreparationIntent:()=>false },
     "@/lib/commercial-state-invalidation": compile("src/lib/commercial-state-invalidation.ts", { "next/cache": { revalidatePath: () => {} } }),
@@ -276,6 +289,31 @@ function serverHarness({ actions, conditions = [] } = {}) {
   h.recover = () => h.runtime.recoverCommercialWorkflowRun(tables.commercial_workflow_runs[0].id);
   h.run = () => tables.commercial_workflow_runs[0];
   return h;
+}
+
+test("company condition uses only the matching tenant projection", async () => {
+  const h = serverHarness({ conditions: [{ field: "company", operator: "equals", value: "Nord" }] });
+  const companyId = crypto.randomUUID();
+  h.tables.opportunities[0].organization_id = companyId;
+  h.tables.crm_organizations.push({ id: companyId, business_id: crypto.randomUUID(), name: "Nord" });
+  await h.start();
+  assert.equal(h.run().status, "blocked");
+  assert.equal(h.run().condition_results[0].matched, false);
+  assert.equal(h.run().condition_results[0].observedValue, null);
+  assert.equal(h.tables.ask_action_plans.length, 0);
+  assert.equal(h.tables.communication_notifications.length, 0);
+});
+
+for (const table of ["crm_organizations", "business_approval_requests"]) {
+  test(`projection failure in ${table} fails closed before preparation`, async () => {
+    const h = serverHarness();
+    h.tables.opportunities[0].organization_id = crypto.randomUUID();
+    h.failNext(table, "select");
+    await h.start();
+    assert.equal(h.run().status, "failed");
+    assert.equal(h.tables.ask_action_plans.length, 0);
+    assert.equal(h.tables.communication_notifications.length, 0);
+  });
 }
 
 for (const status of ["completed", "prepared", "blocked", "cancelled", "pending"]) {
@@ -572,7 +610,7 @@ test("G2B registry distinguishes the contract from three authoritative wired sou
     ["approval_completed", "opportunity_created", "stage_changed"]);
   for (const trigger of ["reply_received", "email_received", "next_action_overdue", "meeting_upcoming", "scheduled_review"]) {
     const entry = registry.workflowTriggerCapability(trigger);
-    assert.equal(entry.automatic, false); assert.equal(entry.label, "Trigger disponibil ulterior"); assert.ok(entry.explanation);
+    assert.equal(entry.automatic, false); assert.equal(entry.label, "Declanșator în evaluare"); assert.ok(entry.explanation);
   }
   assert.match(registry.workflowTriggerCapability("reply_received").explanation, /nu dovedește un răspuns/);
 });

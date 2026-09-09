@@ -1,5 +1,6 @@
 "use client";
 
+import controls from "./PremiumControls.module.css";
 import { cn } from "@/lib/utils";
 
 export type SegmentedFilterOption<T extends string> = {
@@ -27,6 +28,7 @@ export function SegmentedFilter<T extends string>({
       aria-label={label}
       className={cn(
         "inline-flex max-w-full flex-wrap items-center gap-1 rounded-control border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-1",
+        controls.segments,
         className,
       )}
     >

@@ -1,5 +1,7 @@
 "use client";
 
+import styles from "./Search.module.css";
+import { EntityMark, type ProductEntity } from "@/components/ui/EntityMark";
 import Link from "next/link";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -15,10 +17,10 @@ import { searchWorkspace } from "@/lib/search/actions";
 export const GLOBAL_SEARCH_OPEN_EVENT = "revenew:open-global-search";
 const quickActions = [
   { id: "ask", group: "Acțiuni rapide", title: "Întreabă ReveNew", context: "Deschide interfața de inteligență operațională", href: "/ai" },
-  { id: "create-company", group: "Acțiuni rapide", title: "Creează companie", context: "Adaugă o companie în workspace-ul curent", href: "/companies?create=1" },
+  { id: "create-company", group: "Acțiuni rapide", title: "Creează companie", context: "Adaugă o companie în spațiul de lucru curent", href: "/companies?create=1" },
   { id: "create-contact", group: "Acțiuni rapide", title: "Creează contact", context: "Adaugă o persoană și leag-o de o companie", href: "/contacts?create=1" },
   { id: "create-opportunity", group: "Acțiuni rapide", title: "Creează oportunitate", context: "Pornește o oportunitate comercială asociată unei companii", href: "/opportunities?create=1" },
-  { id: "today", group: "Acțiuni rapide", title: "Deschide activitatea de astăzi", context: "Task-uri, termene și situații care necesită atenție", href: "/today" },
+  { id: "today", group: "Acțiuni rapide", title: "Deschide activitatea de astăzi", context: "Acțiuni, termene și situații care necesită atenție", href: "/today" },
   { id: "approvals", group: "Acțiuni rapide", title: "Deschide aprobările", context: "Revizuiește deciziile care necesită control uman", href: "/approvals" },
   { id: "prepared", group: "Acțiuni rapide", title: "Revizuiește lucrul pregătit", context: "Drafturi și actualizări pregătite înainte de execuție", href: "/prepared" }
 ] as const;
@@ -262,11 +264,12 @@ export function GlobalSearch() {
                       onClick={() => closeSearch(false)}
                       onMouseMove={() => setActiveIndex(index)}
                       className={cn(
+                        styles.result,
                         "focus-ring rounded-control px-3 py-2.5 transition-colors duration-fast",
                         activeIndex === index ? "bg-[rgb(var(--surface-muted))] shadow-[inset_2px_0_0_rgb(var(--primary))]" : "hover:bg-[rgb(var(--surface-subtle))]"
                       )}
                     >
-                      <span className="block truncate text-sm font-semibold text-[rgb(var(--foreground))]">{result.title}</span>
+                      <span className="flex min-w-0 items-center gap-2 text-sm font-semibold text-[rgb(var(--foreground))]"><EntityMark entity={searchEntity(result.href)} /><span className="truncate">{result.title}</span></span>
                       <span className="mt-0.5 block truncate text-xs text-[rgb(var(--text-muted))]">{result.context}</span>
                       {"reason" in result ? <span className="mt-1 block text-xs leading-5 text-[rgb(var(--text-muted))]"><strong className="text-[rgb(var(--foreground))]">De ce apare:</strong> {result.reason}</span> : null}
                       {"evidence" in result && result.evidence?.[0] ? <span className="mt-0.5 block text-xs leading-5 text-[rgb(var(--text-faint))]">Dovadă: {result.evidence[0].label}</span> : null}
@@ -309,4 +312,16 @@ function SearchSkeleton({ compact = false }: { compact?: boolean }) {
   return <div className="grid gap-2 p-2" aria-label="Se caută în înregistrări">
     {(compact ? [0] : [0, 1, 2]).map((item) => <Skeleton key={item} className="h-14" />)}
   </div>;
+}
+
+function searchEntity(href: string): ProductEntity {
+  if (/^\/(companies|crm\/organizations)/.test(href)) return "companies";
+  if (/^\/(contacts|crm\/contacts)/.test(href)) return "contacts";
+  if (href.startsWith("/documents")) return "documents";
+  if (href.startsWith("/meetings")) return "meetings";
+  if (href.startsWith("/sequences")) return "sequences";
+  if (href.startsWith("/workflows")) return "workflows";
+  if (href.startsWith("/reports")) return "reports";
+  if (href.startsWith("/apps")) return "apps";
+  return "opportunities";
 }

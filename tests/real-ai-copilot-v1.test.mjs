@@ -19,7 +19,7 @@ function compile(relativePath, aliases = {}) {
 
 const types = compile("src/lib/ai/copilot-types.ts");
 const workflowFoundation = compile("src/lib/workflow-foundation.ts");
-const workflowDrafting = compile("src/lib/workflow-drafting.ts", { "@/lib/workflow-foundation": workflowFoundation });
+const workflowDrafting = compile("src/lib/workflow-drafting.ts", { "@/lib/workflow-foundation": workflowFoundation, "./workflow-trigger-registry": compile("src/lib/workflow-trigger-registry.ts") });
 const validation = compile("src/lib/ai/copilot-validation.ts", { "@/lib/ai/copilot-types": types });
 const evals = compile("src/lib/ai/copilot-evals.ts");
 

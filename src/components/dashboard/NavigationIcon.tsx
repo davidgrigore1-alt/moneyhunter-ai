@@ -1,5 +1,5 @@
 import {
-  BanknotesIcon,
+  BanknotesIcon, CalendarDaysIcon, ArrowsRightLeftIcon, ViewColumnsIcon, BoltIcon, DocumentCheckIcon,
   BuildingOffice2Icon,
   ChartBarIcon,
   Cog6ToothIcon,
@@ -18,6 +18,7 @@ import type { NavigationIconName } from "@/lib/navigation";
 import type { ComponentType, SVGProps } from "react";
 
 const icons = {
+  calendar: CalendarDaysIcon, workflow: ArrowsRightLeftIcon, pipeline: ViewColumnsIcon, deal: BoltIcon, prepared: DocumentCheckIcon,
   banknotes: BanknotesIcon,
   "building-office": BuildingOffice2Icon,
   "chart-bar": ChartBarIcon,

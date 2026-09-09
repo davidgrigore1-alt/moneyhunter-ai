@@ -2,7 +2,7 @@
 import { useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowUpTrayIcon, DocumentTextIcon } from "@heroicons/react/24/outline";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ProductButton";
 import { parseDocumentCsv, DOCUMENT_CSV_LIMITS } from "@/lib/documents/csv";
 import styles from "./Documents.module.css";
 

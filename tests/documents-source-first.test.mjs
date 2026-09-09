@@ -22,7 +22,7 @@ function harness(canImport=true) {
   const states=[];let cursor=0,calls=0;
   const React={useState(initial){const index=cursor++;if(!(index in states))states[index]=initial;return [states[index],value=>{states[index]=typeof value==='function'?value(states[index]):value;}];},useRef(value){const index=cursor++;return states[index]??(states[index]={current:value});}};
   const component=compile('src/components/documents/DocumentCsvImport.tsx',{
-    react:React,'next/link':'a','@/components/ui/Button':{Button:'button'},'./StructuredGrid':{StructuredGrid:'grid'},'./SourceMappingReview':{SourceMappingReview:'mapping-review'},
+    react:React,'next/link':'a','@/components/ui/ProductButton':{Button:'button'},'./StructuredGrid':{StructuredGrid:'grid'},'./SourceMappingReview':{SourceMappingReview:'mapping-review'},
     '@/lib/documents/csv':csv,'@/lib/documents/source-review':review,'@/lib/commercial-ingestion-fields':fields,'./Documents.module.css':{},
     '@/lib/commercial-ingestion-actions':{previewCommercialSignalImport:async()=>{calls++;return {ok:true,accepted:[],rejected:[]};},confirmCommercialSignalImport:async()=>{calls++;return {ok:true};}}
   });

@@ -26,6 +26,7 @@ function loader(overrides = {}) {
       module, exports: module.exports, URL,
       require: id => {
         if (id in overrides) return overrides[id];
+        if (id.endsWith(".module.css")) return new Proxy({}, { get: (_, key) => String(key) });
         if (id === "next/link") return ({ children, ...props }) => React.createElement("a", props, children);
         if (id === "next/navigation") return { redirect: () => { throw Error("Unexpected redirect"); } };
         if (id === "@/lib/auth/auth-state") return { resolveAuthPageState: async () => ({ status: "anonymous" }) };
@@ -97,18 +98,21 @@ test("theme initialization preserves saved preferences while auth rendering neve
   }
 });
 
+// React may hoist nonvisual image preload hints ahead of the rendered boundary.
+const authBoundary = /^(?:<link (?=[^>]*rel="preload")(?=[^>]*as="image")[^>]*\/>)*<div class="auth-theme"><main/;
+
 test("all auth pages render their initial and reason states inside the server dark boundary", async () => {
   const { default: Layout } = load("src/app/(auth)/layout.tsx");
   for (const route of ["login", "signup", "forgot-password", "reset-password", "verify-email"]) {
     const Page = load(`src/app/(auth)/${route}/page.tsx`).default;
     const page = await Page({ searchParams: Promise.resolve({ reason: "invalid_link" }) });
     const html = renderToStaticMarkup(React.createElement(Layout, null, page));
-    assert.match(html, /^<div class="auth-theme"><main/);
+    assert.match(html, authBoundary);
     assert.doesNotMatch(html, /signup-premium-theme/);
     assert.match(html, /<h1/);
   }
   const Retry = load("src/app/auth/bootstrap/retry/page.tsx").default;
-  assert.match(renderToStaticMarkup(React.createElement(Retry)), /^<div class="auth-theme"><main/);
+  assert.match(renderToStaticMarkup(React.createElement(Retry)), authBoundary);
 });
 
 test("active-session and unconfirmed account states retain the same auth boundary", async () => {
@@ -118,7 +122,7 @@ test("active-session and unconfirmed account states retain the same auth boundar
     for (const route of ["login", "signup"]) {
       const Page = scoped(`src/app/(auth)/${route}/page.tsx`).default;
       const html = renderToStaticMarkup(React.createElement(Layout, null, await Page({})));
-      assert.match(html, /^<div class="auth-theme"><main/);
+      assert.match(html, authBoundary);
       assert.match(html, status === "authenticated" ? /Sesiune activă/ : status === "authenticated_unconfirmed" ? /Verifică adresa de email/ : /Reîncearcă/);
     }
   }

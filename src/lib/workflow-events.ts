@@ -33,9 +33,9 @@ export async function dispatchStageChangedEvent(businessId: string, eventId: str
 
 export async function dispatchApprovalCompletedEvent(businessId: string, approvalId: string) {
   try {
-    const { data: approval, error } = await admin().from("business_approval_requests")
-      .select("id,status,entity_type,entity_id,decided_at,decided_by_profile_id")
-      .eq("id", approvalId).eq("business_id", businessId).maybeSingle();
+    const { data: approval, error } = await admin().rpc("workflow_approval_event", {
+      target_business_id: businessId, target_approval_id: approvalId
+    }).maybeSingle<{ id: string; status: string; entity_type: string; entity_id: string; decided_at: string | null; decided_by_profile_id: string | null }>();
     if (error || !approval) throw new Error("workflow_approval_unavailable");
     if (!["approved", "executed"].includes(approval.status) || !approval.decided_at || !approval.decided_by_profile_id) return { failed: false, suppressed: true };
     let targetId: string;

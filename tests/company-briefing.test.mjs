@@ -202,7 +202,7 @@ test("route reads notes only for Notes and owner-private context only for Execut
       "@/lib/ai/google-context-tool": { getExternalContextForCompany: async id => { calls.push(["private", id]); return { connection: null, emails: [], events: [] }; } },
       "@/lib/workspace-notes": { getWorkspaceNotes: async (...args) => { calls.push(["notes", ...args]); return []; } }
     };
-    for (const id of ["company/CompanyBusinessMemory", "company/CompanyBriefing", "company/CompanyExecutionWorkspace", "company/CompanyContextualAsk", "dashboard/DataCard", "dashboard/PageShell", "workspace/RecordNotes"]) overrides[`@/components/${id}`] = stub;
+    for (const id of ["company/PrimaryContactPicker", "company/CompanyBusinessMemory", "company/CompanyBriefing", "company/CompanyExecutionWorkspace", "company/CompanyContextualAsk", "dashboard/DataCard", "dashboard/PageShell", "workspace/RecordNotes"]) overrides[`@/components/${id}`] = stub;
     const page = modules(overrides)("src/app/(protected)/crm/organizations/[id]/page.tsx").default;
     const html = renderToStaticMarkup(await page({ params: Promise.resolve({ id: "company" }), searchParams: Promise.resolve({ tab }) }));
     assert.deepEqual(calls, tab === "execution" ? [["private", "company"]] : tab === "notes" ? [["notes", "company", "company"]] : []);

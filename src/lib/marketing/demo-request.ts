@@ -16,7 +16,7 @@ export function validateDemoRequest(values: DemoRequestValues): DemoRequestError
   return errors;
 }
 
-// Only an approved server adapter may provide this result. No adapter is wired yet.
+// Confirmation requires the receipt returned after database persistence.
 export function isDemoRequestAccepted(result: unknown): result is { accepted: true; receipt: string } {
   if (!result || typeof result !== "object") return false;
   const item = result as Record<string, unknown>;

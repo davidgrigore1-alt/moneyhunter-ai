@@ -1,0 +1,14 @@
+import fs from 'node:fs';
+import crypto from 'node:crypto';
+import { execFileSync } from 'node:child_process';
+const root='artifacts/product-convergence-gate3';
+const baseline=JSON.parse(fs.readFileSync(root+'/baseline.json','utf8'));
+const files=execFileSync('git',['ls-files','--cached','--others','--exclude-standard','-z'],{encoding:'utf8'}).split('\0').filter(p=>p&&!p.startsWith('.env')&&!p.startsWith('artifacts/'));
+const hash=p=>crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');
+const changed=files.filter(p=>/^(src|docs|scripts|tests|supabase)\//.test(p)&&fs.existsSync(p)&&hash(p)!==baseline[p]).sort();
+const frozen=Object.keys(baseline).filter(p=>p.startsWith('src/components/marketing/')||p.startsWith('public/marketing/')||p==='src/app/page.tsx'||p==='src/app/globals.css'||p==='src/app/layout.tsx'||p.startsWith('src/app/(marketing)/'));
+const violations=frozen.filter(p=>!fs.existsSync(p)||hash(p)!==baseline[p]);
+fs.writeFileSync(root+'/changed-files.txt',changed.join('\n')+'\n');
+fs.writeFileSync(root+'/frozen-check.json',JSON.stringify({frozenCount:frozen.length,violations,files:frozen},null,2));
+console.log(JSON.stringify({changed:changed.length,frozen:frozen.length,violations}));
+if(violations.length)process.exitCode=1;

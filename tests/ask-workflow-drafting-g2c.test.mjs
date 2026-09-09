@@ -26,13 +26,15 @@ function compile(relativePath, aliases = {}) {
 const foundation = compile("src/lib/workflow-foundation.ts");
 const drafting = compile("src/lib/workflow-drafting.ts", {
   "@/lib/workflow-foundation": foundation,
+  "./workflow-trigger-registry": compile("src/lib/workflow-trigger-registry.ts"),
 });
 
 test("Ask translates the acceptance example into the canonical inactive G2A definition", () => {
   const result = drafting.interpretCommercialWorkflowRequest(
     "Pentru oportunitățile active peste 25.000 EUR, dacă follow-up-ul devine restant, pregătește un email și creează un task de review.",
   );
-  assert.equal(result.state, "ready");
+  assert.equal(result.state, "partial");
+  assert.match(result.unsupportedIntents.join(" "), /Activarea nu este disponibilă/);
   assert.equal(result.definition.status, "draft");
   assert.equal(result.definition.trigger, "next_action_overdue");
   assert.equal(result.definition.conditions.some((item) => item.field === "estimated_value" && item.operator === "greater_than" && item.value === 25000), true);
@@ -82,7 +84,8 @@ test("explicit exposure, currency and missing-next-action constraints survive ca
     ["Creează un workflow pentru oportunitățile cu expunere peste 50.000 RON când lipsește următoarea acțiune.", 50000, "RON"],
   ]) {
     const result = drafting.interpretCommercialWorkflowRequest(question);
-    assert.equal(result.state, "ready");
+    assert.equal(result.state, "partial");
+    assert.match(result.unsupportedIntents.join(" "), /Activarea nu este disponibilă/);
     assert.equal(result.definition.trigger, "scheduled_review");
     assert.equal(result.definition.conditions.some((item) => item.field === "estimated_value" && item.operator === "greater_than" && item.value === amount), true);
     assert.equal(result.definition.conditions.some((item) => item.field === "currency" && item.operator === "equals" && item.value === currency), true);
@@ -99,7 +102,8 @@ test("explicit missing-next-action phrases do not trigger redundant clarificatio
     "lipsa acțiunii următoare",
   ]) {
     const result = drafting.interpretCommercialWorkflowRequest(`Creează un workflow când ${phrase} și pregătește un task intern.`);
-    assert.equal(result.state, "ready");
+    assert.equal(result.state, "partial");
+    assert.match(result.unsupportedIntents.join(" "), /Activarea nu este disponibilă/);
     assert.equal(result.definition.trigger, "scheduled_review");
     assert.equal(result.definition.conditions.some((item) => item.field === "execution_state" && item.value === "next_action_missing"), true);
   }
@@ -179,7 +183,7 @@ test("preview exposes canonical blocks, explicit confirmation and exact builder 
   assert.match(preview, /Atunci/);
   assert.match(preview, /Creează workflow Draft/);
   assert.match(preview, /Continuă în builder/);
-  assert.match(preview, /Ask ReveNew nu o activează, nu o rulează și nu trimite emailuri/);
+  assert.match(preview, /Activarea se face separat; salvarea nu rulează workflow-ul și nu trimite emailuri/);
   assert.match(conversation, /WorkflowDraftPreview/);
   assert.match(preview, /fetch\("\/api\/ai\/workflow-drafts"/);
   assert.match(preview, /Draft creat\. Rămâne inactiv până la activarea explicită din builder/);

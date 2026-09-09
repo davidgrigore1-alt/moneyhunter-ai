@@ -1,6 +1,7 @@
+import { DecisionFlow } from "@/components/workflows/DecisionFlow";
 import Link from "next/link";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ProductButton";
 import { PageShell } from "@/components/dashboard/PageShell";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { ActionPreview } from "@/components/intelligence/ActionPreview";
@@ -27,6 +28,8 @@ export default async function PreparedWorkPage(props: { searchParams?: Promise<{
 
   return (
     <PageShell
+      wide
+      entity="documents"
       eyebrow="Execuție controlată"
       title="Lucru pregătit"
       actions={<Button href="/outreach" variant="secondary">Studio de follow-up</Button>}
@@ -39,8 +42,8 @@ export default async function PreparedWorkPage(props: { searchParams?: Promise<{
       </section>
 
       {registry.items.length && selected ? (
-        <div className="mt-3 grid min-w-0 items-start gap-4 xl:grid-cols-[minmax(17rem,21rem)_minmax(0,1fr)]">
-          <nav aria-label="Coada lucrului pregătit" className={`${requestedId ? "hidden xl:block" : "block"} xl:max-h-[calc(100dvh-17rem)]`}>
+        <div className="mt-3 grid min-w-0 grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(17rem,21rem)_minmax(0,1fr)]">
+          <nav aria-label="Coada lucrului pregătit" className={`min-w-0 ${requestedId ? "hidden xl:block" : "block"} xl:max-h-[calc(100dvh-17rem)]`}>
             <div className="flex flex-col overflow-hidden rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface-elevated))] xl:max-h-[calc(100dvh-17rem)]">
               <div className="shrink-0 border-b border-[rgb(var(--border))] px-4 py-3">
                 <h2 className="text-sm font-semibold">Coadă de decizie</h2>
@@ -58,7 +61,7 @@ export default async function PreparedWorkPage(props: { searchParams?: Promise<{
                       </div>
                       <ul>{items.map((item) => {
                         const active = item.id === selected.id;
-                        return <li key={item.id} className="border-t border-[rgb(var(--border))] first:border-t-0"><Link aria-current={active ? "page" : undefined} href={`/prepared?item=${encodeURIComponent(item.id)}`} scroll={false} className={`focus-ring group flex min-h-[3.75rem] min-w-0 items-center gap-3 border-l-2 px-3.5 py-2.5 transition-colors hover:bg-[rgb(var(--surface-subtle))] ${active ? "border-[rgb(var(--interaction))] bg-[rgb(var(--interaction)/0.08)]" : "border-transparent"}`}><div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold">{item.title}</p><p className="mt-1 truncate text-[0.6875rem] text-[rgb(var(--text-muted))]">{item.target.label}{item.deadline ? ` · termen ${formatProductDate(item.deadline, { year: false })}` : ""}</p></div><ChevronRightIcon className={`h-4 w-4 shrink-0 ${active ? "text-[rgb(var(--interaction))]" : "text-[rgb(var(--text-faint))] group-hover:text-[rgb(var(--primary))]"}`} aria-hidden="true" /></Link></li>;
+                        return <li key={item.id} className="border-t border-[rgb(var(--border))] first:border-t-0"><Link aria-current={active ? "page" : undefined} href={`/prepared?item=${encodeURIComponent(item.id)}`} scroll={false} className={`focus-ring group flex min-h-[3.75rem] min-w-0 items-center gap-3 border-l-2 px-3.5 py-2.5 transition-colors hover:bg-[rgb(var(--surface-subtle))] ${active ? "border-[rgb(var(--primary))] bg-[rgb(var(--primary)/0.08)]" : "border-transparent"}`}><div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold">{item.title}</p><p className="mt-1 truncate text-[0.6875rem] text-[rgb(var(--text-muted))]">{item.target.label}{item.deadline ? ` · termen ${formatProductDate(item.deadline, { year: false })}` : ""}</p></div><ChevronRightIcon className={`h-4 w-4 shrink-0 ${active ? "text-[rgb(var(--primary))]" : "text-[rgb(var(--text-faint))] group-hover:text-[rgb(var(--primary))]"}`} aria-hidden="true" /></Link></li>;
                       })}</ul>
                     </section>
                   );
@@ -67,9 +70,15 @@ export default async function PreparedWorkPage(props: { searchParams?: Promise<{
             </div>
           </nav>
 
-          <section aria-label="Detaliul lucrului selectat" className={`${requestedId ? "block" : "hidden xl:block"} xl:max-h-[calc(100dvh-17rem)]`}>
+          <section aria-label="Detaliul lucrului selectat" className={`min-w-0 ${requestedId ? "block" : "hidden xl:block"} `}>
             <Link href="/prepared" className="focus-ring mb-3 inline-flex items-center gap-1 rounded-sm text-xs font-semibold text-[rgb(var(--primary))] hover:underline xl:hidden"><ChevronLeftIcon className="h-4 w-4" aria-hidden="true" />Înapoi la coadă</Link>
-            {askItems.find(item=>item.id===selected.id)?.askAction ? <PreparedActionCard action={askItems.find(item=>item.id===selected.id)!.askAction} /> : <ActionPreview item={selected} />}
+            {askItems.find(item=>item.id===selected.id)?.askAction ? <><DecisionFlow steps={[
+              { detail: selected.reason || "Propunere salvată din analiza autorizată." },
+              { detail: `${selected.evidence.length} referințe asociate; verifică sursele înainte de confirmare.` },
+              { detail: "Autorizarea și starea țintei se reverifică la aplicare." },
+              { detail: selected.title },
+              { detail: "Pregătit, neexecutat. Confirmarea explicită este necesară." },
+            ]} /><PreparedActionCard action={askItems.find(item=>item.id===selected.id)!.askAction} /></> : <ActionPreview item={selected} />}
           </section>
         </div>
       ) : (

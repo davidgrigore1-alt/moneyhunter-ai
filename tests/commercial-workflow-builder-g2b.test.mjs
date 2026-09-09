@@ -75,7 +75,7 @@ test("test and history UX explain decisions without executing actions", () => {
   const builder = read("src/components/workflows/WorkflowBuilder.tsx");
   const editor = read("src/app/(protected)/workflows/[workflowId]/page.tsx");
   const runtime = read("src/lib/workflow-runtime.ts");
-  assert.match(builder, /Testează fără mutații/);
+  assert.match(builder, /Testează fără executare/);
   assert.match(editor, /Istoric de rulare/);
   assert.match(editor, /Detaliul deciziei/);
   assert.match(editor, /Nicio acțiune nu a fost executată în acest test/);

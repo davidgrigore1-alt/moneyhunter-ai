@@ -11,7 +11,7 @@ function harness(){
  const states=[],requests=[],routes=[];let cursor=0;
  const react={useId:()=> 'upload-test',useState(initial){const i=cursor++;if(!(i in states))states[i]=initial;return [states[i],v=>states[i]=v];},useRef(v){const i=cursor++;return states[i]??(states[i]={current:v});}};
  const compile=(file,aliases={})=>{const module={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText,{module,exports:module.exports,TextEncoder,TextDecoder,fetch:async(url,options)=>{requests.push({url,...options});return {ok:true,json:async()=>({sourceId:'source',versionId:'version'})};},require:id=>id in aliases?aliases[id]:native(id)});return module.exports;};
- const component=compile('src/components/documents/LocalDocumentUpload.tsx',{react,'next/navigation':{useRouter:()=>({push:r=>routes.push(r),refresh:()=>{}})},'@/components/ui/Button':{Button:'button'},'@/lib/documents/csv':compile('src/lib/documents/csv.ts'),'./Documents.module.css':{}});
+ const component=compile('src/components/documents/LocalDocumentUpload.tsx',{react,'next/navigation':{useRouter:()=>({push:r=>routes.push(r),refresh:()=>{}})},'@/components/ui/Button':{Button:'button'},'@/components/ui/ProductButton':{Button:'button'},'@/lib/documents/csv':compile('src/lib/documents/csv.ts'),'./Documents.module.css':{}});
  const render=()=>{cursor=0;return component.LocalDocumentUpload({});};
  const find=fn=>flat(render()).find(fn);
  const settle=()=>new Promise(r=>setImmediate(r));

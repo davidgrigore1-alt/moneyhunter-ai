@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertBanner } from "@/components/ui/AlertBanner";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ProductButton";
 
 type ErrorStateProps = {
   title?: string;

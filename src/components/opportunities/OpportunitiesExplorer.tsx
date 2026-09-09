@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { EntityMark } from "@/components/ui/EntityMark";
 import { EmptyState } from "@/components/dashboard/EmptyState";
-import { StatusBadge } from "@/components/dashboard/StatusBadge";
-import { Button } from "@/components/ui/Button";
+import { getStatusLabel } from "@/components/dashboard/StatusBadge";
+import { Button } from "@/components/ui/ProductButton";
 import { assessOpportunityAttention } from "@/lib/opportunity-attention";
 import type { Opportunity } from "@/lib/types";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -32,7 +33,7 @@ export function OpportunitiesExplorer({
   const allSelected = opportunities.length > 0 && opportunities.every((item) => selectedIds.has(item.id));
 
   if (!opportunities.length) {
-    return <div className="grid gap-3"><EmptyState title={emptyTitle} description={emptyDescription} />{emptyCtaLabel && emptyCtaHref ? <div className="flex justify-center"><Button href={emptyCtaHref}>{emptyCtaLabel}</Button></div> : null}</div>;
+    return <EmptyState calm icon={<EntityMark entity="opportunities" />} title={emptyTitle} description={emptyDescription} action={emptyCtaLabel && emptyCtaHref ? <Button href={emptyCtaHref}>{emptyCtaLabel}</Button> : null} />;
   }
 
   const rows = opportunities.map((opportunity) => {
@@ -51,27 +52,27 @@ export function OpportunitiesExplorer({
     <>
       {selectedIds.size > 0 ? <div role="status" className="product-floating-surface sticky top-2 z-20 mb-2 flex flex-wrap items-center justify-between gap-3 px-3 py-2"><p className="text-xs font-semibold"><span className="tabular-nums text-[rgb(var(--primary))]">{selectedIds.size}</span> selectate</p><Button type="button" variant="ghost" size="small" onClick={() => setSelectedIds(new Set())}>Șterge selecția</Button></div> : null}
     <ul className="divide-y divide-[rgb(var(--border))] border-y border-[rgb(var(--border-strong))] lg:hidden" aria-label="Registru oportunități">
-      {rows.map(({ opportunity, nextAction, attentionLabel, attentionRail }) => <li key={opportunity.id} className={`product-interactive-row border-l-2 px-1 py-3 ${attentionRail} ${selectedIds.has(opportunity.id) ? "bg-[rgb(var(--surface-elevated))]" : ""}`}>
+      {rows.map(({ opportunity, nextAction, attentionLabel, attentionRail }) => <li key={opportunity.id} className={`product-interactive-row border-l-2 px-1 py-3 ${attentionRail} ${selectedIds.has(opportunity.id) ? "bg-[rgb(var(--primary)/0.07)]" : ""}`}>
         <div className="flex items-start gap-3">
           <input type="checkbox" checked={selectedIds.has(opportunity.id)} onChange={() => setSelectedIds((current) => { const next = new Set(current); if (next.has(opportunity.id)) next.delete(opportunity.id); else next.add(opportunity.id); return next; })} aria-label={"Selectează oportunitatea " + opportunity.title} className="mt-1 size-4 shrink-0 accent-[rgb(var(--interaction))]" />
           <Link href={`/opportunities/${opportunity.id}`} className="focus-ring min-w-0 flex-1 rounded-control">
             <span className="block truncate text-sm font-semibold" title={opportunity.title}>{opportunity.title}</span>
             <span className="mt-1 block truncate text-xs text-[rgb(var(--text-muted))]">{companyName(opportunity)} · {attentionLabel}</span>
-            <span className="mt-2 block truncate text-xs font-medium text-[rgb(var(--text-secondary))]">{nextAction?.title ?? opportunity.recommendedAction ?? "Următor pas neconfirmat"}</span>
+            <span className="mt-2 block truncate text-sm font-medium text-[rgb(var(--text-secondary))]">{nextAction?.title ?? opportunity.recommendedAction ?? "Următor pas neconfirmat"}</span>
             <span className="mt-1 block text-micro text-[rgb(var(--text-faint))]">{formatDate(nextAction?.dueDate ?? opportunity.deadline)} · {opportunity.ownerName ?? "Fără responsabil"}</span>
-            <span className="mt-2 block text-right text-xs font-semibold tabular-nums">{formatCurrency(opportunity.estimatedValueHigh, opportunity.currency ?? "RON")} <span className="font-normal text-[rgb(var(--text-faint))]">estimat</span></span>
+            <span className="mt-2 block text-right text-sm font-semibold tabular-nums">{formatCurrency(opportunity.estimatedValueHigh, opportunity.currency ?? "RON")} <span className="font-normal text-[rgb(var(--text-faint))]">estimat</span></span>
           </Link>
         </div>
       </li>)}
     </ul>
-    <div className="hidden overflow-x-auto border-y border-[rgb(var(--border-strong))] bg-[rgb(var(--surface))] lg:block" role="region" aria-label="Registru oportunități" tabIndex={0}>
-      <table className="w-full min-w-[1060px] table-fixed border-collapse text-left text-sm">
+    <div className="hidden overflow-x-auto rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--surface))] lg:block" role="region" aria-label="Registru oportunități" tabIndex={0}>
+      <table className="w-full min-w-[1040px] table-fixed border-collapse text-left text-sm">
         <caption className="sr-only">Oportunitățile comerciale din selecția curentă</caption>
         <thead className="bg-[rgb(var(--surface-subtle))] text-[0.6875rem] font-semibold text-[rgb(var(--text-secondary))]">
           <tr className="border-b border-[rgb(var(--border-strong))]">
             <th scope="col" className="w-[23%] px-3 py-2.5"><span className="flex items-center gap-2"><input type="checkbox" checked={allSelected} onChange={() => setSelectedIds(allSelected ? new Set() : new Set(opportunities.map((item) => item.id)))} aria-label="Selectează oportunitățile vizibile" className="size-4 accent-[rgb(var(--primary))]" />Oportunitate</span></th>
             <th scope="col" className="w-[15%] px-3 py-2.5">Companie</th>
-            <th scope="col" className="w-[11%] px-3 py-2.5">Status</th>
+            <th scope="col" className="w-[11%] px-3 py-2.5">Stare</th>
             <th scope="col" className="w-[20%] px-3 py-2.5">Următor pas</th>
             <th scope="col" className="w-[10%] px-3 py-2.5">Termen</th>
             <th scope="col" className="w-[11%] px-3 py-2.5">Responsabil</th>
@@ -79,24 +80,24 @@ export function OpportunitiesExplorer({
           </tr>
         </thead>
         <tbody className="divide-y divide-[rgb(var(--border))]">
-          {rows.map(({ opportunity, nextAction, attention, attentionLabel, attentionRail }) => {
+          {rows.map(({ opportunity, nextAction, attention, attentionRail }) => {
             return (
-              <tr key={opportunity.id} aria-selected={selectedIds.has(opportunity.id)} className={`product-interactive-row group focus-within:bg-[rgb(var(--surface-elevated))] ${selectedIds.has(opportunity.id) ? "bg-[rgb(var(--surface-elevated))]" : ""}`}>
+              <tr key={opportunity.id} aria-selected={selectedIds.has(opportunity.id)} className={`product-interactive-row group focus-within:bg-[rgb(var(--surface-elevated))] ${selectedIds.has(opportunity.id) ? "bg-[rgb(var(--primary)/0.07)]" : ""}`}>
                 <td className={`border-l-2 px-3 py-2.5 align-middle ${attentionRail}`}>
                   <div className="flex min-w-0 items-start gap-2"><input type="checkbox" checked={selectedIds.has(opportunity.id)} onChange={() => setSelectedIds((current) => { const next = new Set(current); if (next.has(opportunity.id)) next.delete(opportunity.id); else next.add(opportunity.id); return next; })} aria-label={"Selectează oportunitatea " + opportunity.title} className="mt-0.5 size-4 shrink-0 accent-[rgb(var(--primary))]" /><Link href={"/opportunities/" + opportunity.id} className="focus-ring block min-w-0 flex-1 rounded-control">
                     <span className="block truncate font-semibold text-[rgb(var(--foreground))] decoration-[rgb(var(--interaction))] underline-offset-4 group-hover:text-[rgb(var(--primary))] group-hover:underline" title={opportunity.title}>{opportunity.title}</span>
-                    <span className="mt-0.5 block truncate text-xs text-[rgb(var(--text-faint))]">{attentionLabel} · {opportunity.type.replaceAll("_", " ")}</span>
+                    <span className="mt-0.5 block truncate text-xs text-[rgb(var(--text-faint))]">{attention.reasons[0]?.label ?? ""}</span>
                   </Link></div>
                 </td>
                 <td className="truncate px-3 py-2.5 text-[rgb(var(--text-secondary))]">{companyName(opportunity)}</td>
-                <td className="px-3 py-2.5"><StatusBadge status={opportunity.status} /></td>
+                <td className="px-3 py-2.5"><span className={`text-sm font-medium ${opportunity.status === "won" ? "text-[rgb(var(--success-text))]" : opportunity.status === "lost" ? "text-[rgb(var(--danger-text))]" : "text-[rgb(var(--text-secondary))]"}`}>{getStatusLabel(opportunity.status)}</span></td>
                 <td className="px-3 py-2.5">
                   <p className="truncate font-medium text-[rgb(var(--foreground))]">{nextAction?.title ?? opportunity.recommendedAction ?? "Neplanificat"}</p>
-                  <p className="mt-0.5 truncate text-xs text-[rgb(var(--text-faint))]">{attention.reasons[0]?.label ?? "Fără excepție activă"}</p>
+
                 </td>
-                <td className="px-3 py-2.5 text-xs text-[rgb(var(--text-muted))]">{formatDate(nextAction?.dueDate ?? opportunity.deadline)}</td>
-                <td className="truncate px-3 py-2.5 text-xs font-medium text-[rgb(var(--text-secondary))]">{opportunity.ownerName ?? "Neatribuit"}</td>
-                <td className="px-3 py-2.5 text-right text-xs font-semibold tabular-nums text-[rgb(var(--foreground))]">{formatCurrency(opportunity.estimatedValueHigh, opportunity.currency ?? "RON")}<span className="mt-0.5 block font-normal text-[rgb(var(--text-faint))]">Estimat</span></td>
+                <td className="px-3 py-2.5 text-sm text-[rgb(var(--text-muted))]">{formatDate(nextAction?.dueDate ?? opportunity.deadline)}</td>
+                <td className="truncate px-3 py-2.5 text-sm font-medium text-[rgb(var(--text-secondary))]">{opportunity.ownerName ?? "Neatribuit"}</td>
+                <td className="px-3 py-2.5 text-right text-sm font-semibold tabular-nums text-[rgb(var(--foreground))]">{formatCurrency(opportunity.estimatedValueHigh, opportunity.currency ?? "RON")}</td>
               </tr>
             );
           })}

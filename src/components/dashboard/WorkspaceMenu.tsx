@@ -142,7 +142,7 @@ export function WorkspaceMenu({ businessName, userEmail, userName, isDemo = fals
             if (event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget)) return;
             setOpen(false);
           }}
-          className={cn("absolute top-11 z-50 w-[min(17.5rem,calc(100vw-1.5rem))] rounded-card border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-elevated))] p-1.5 shadow-modal", variant === "sidebar" ? "left-0" : "right-0")}
+          className={cn("absolute z-50 w-[min(17.5rem,calc(100vw-1.5rem))] rounded-card border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-elevated))] p-1.5 shadow-modal", variant === "sidebar" ? "bottom-full left-0 mb-2" : "right-0 top-11")}
         >
           <div className="flex min-w-0 items-center gap-2.5 px-2.5 py-2">
             <WorkspaceIdentityMark displayName={resolvedDisplayName} initials={identityPreview?.initials} />
