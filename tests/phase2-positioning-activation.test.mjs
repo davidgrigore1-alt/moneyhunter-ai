@@ -9,8 +9,11 @@ test("Phase 2 positioning defines commercial recovery without debt ambiguity", (
   const landing = read("src/components/marketing/LandingChapters.tsx");
   const visuals = ["ProductTheatre", "TheatreScenes"].map(name => read(`src/components/marketing/${name}.tsx`)).join("\n");
   const plans = read("src/lib/billing/plans.ts");
-  assert.match(landing, /firul execuției: ce necesită atenție, cine răspunde și care este următorul pas/);
-  assert.match(landing, /instrumentul pentru facturare și procese fiscale/);
+  assert.match(landing, /caz, dovezi, responsabil, pas următor și rezultat/);
+  assert.match(landing, /Nu reprezintă o încasare bancară verificată/);
+  const financialBoundary = read("src/components/marketing/LandingVisuals.tsx");
+  assert.match(financialBoundary, /Facturarea și încasarea rămân separat/);
+  assert.match(financialBoundary, /Reconcilierea automată a facturilor și plăților nu este disponibilă/);
   assert.match(visuals, /Pregătit · revizuire necesară/);
   assert.match(visuals, /Așteaptă revizuirea umană/);
   for (const plan of ["Start", "Growth", "Scale", "Enterprise"]) assert.match(plans, new RegExp(`title: "${plan}"`));

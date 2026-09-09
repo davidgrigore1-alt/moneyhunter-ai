@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
+import { loadTS } from "./helpers/phase32-modules.mjs";
 
 const read = (file) => fs.readFileSync(path.resolve(file), "utf8");
 
@@ -43,9 +44,13 @@ test("A4.3 Documents is an operational registry with compact tools and responsiv
 test("A4.3 document detail separates prepared, approved and executed truth", () => {
   const page = read("src/app/(protected)/documents/[id]/page.tsx");
   assert.match(page, /aria-label="Proveniență și context"/);
-  assert.match(page, /status\s*===\s*"approved"/);
+  const { internalDocumentStatus } = loadTS("src/lib/documents/capabilities.ts");
+  assert.match(page, /internalDocumentStatus\(document\.status\)/);
+  assert.equal(internalDocumentStatus("approved"), "Aprobat intern");
+  assert.equal(internalDocumentStatus("ready_to_send"), "Pregătit pentru revizuire");
+  assert.equal(internalDocumentStatus("sent"), "Marcat ca trimis");
+  assert.equal(internalDocumentStatus("unknown"), "Stare neconfirmată");
   assert.match(page, /nu dovedește trimiterea/);
-  assert.match(page, /status\s*===\s*"sent"/);
   assert.match(page, /Aprobarea, execuția și rezultatul comercial se verifică separat/);
   assert.match(page, /<pre className=\{styles.body\}/);
   assert.doesNotMatch(page, /dangerouslySetInnerHTML/);

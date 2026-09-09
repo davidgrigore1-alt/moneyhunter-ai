@@ -15,8 +15,9 @@ test("landing presents an evidence-led and human-controlled commercial path", ()
   assert.match(source, /Nu o încasare verificată/);
   assert.match(source, /Nu execută autonom acțiuni externe/);
   assert.match(source, /Gmail și Calendar pot furniza context după configurare, autorizare și sincronizare/);
-  assert.match(source, /nu au un conector ReveNew implementat/);
-  assert.match(source, /fără a indica un parteneriat/);
+  assert.match(source, /nu au în prezent un conector ReveNew implementat/);
+  assert.match(source, /opțiuni de evaluare la cerere, nu conectări active/);
+  assert.doesNotMatch(source, /partener(?:iat)? (?:oficial|certificat)|certificat de (?:Google|Microsoft)/i);
   assert.doesNotMatch(source, /ROI garantat|venit garantat|recuperare automată|Inteligență AI/i);
   assert.doesNotMatch(source, /live Gmail|live Google Calendar|voce activă/i);
 });

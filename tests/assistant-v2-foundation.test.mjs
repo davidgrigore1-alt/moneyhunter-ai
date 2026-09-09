@@ -1,3 +1,4 @@
+import { assertJsx } from "./helpers/jsx-contract.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
@@ -27,8 +28,8 @@ test("assistant v2 explains key screens with route-specific, human-controlled gu
   assert.match(assistant, />Întreabă ReveNew</);
   assert.match(assistant, /Asistent ReveNew/);
   assert.match(assistant, /Răspunde pe baza informațiilor autorizate din ReveNew\./);
-  assert.match(assistant, /<CopilotConversation\b[^\n]*\bautoFocus\b/);
-  assert.match(conversation, /Doar informații autorizate/);
+  assertJsx(assistant, "CopilotConversation", { autoFocus: true });
+  assert.match(conversation, /Doar date autorizate · fără execuție externă/);
   const cases = [
     ["/dashboard", "screen-dashboard", "Control Center"],
     ["/inbox", "screen-inbox", "Inbox Comercial"],

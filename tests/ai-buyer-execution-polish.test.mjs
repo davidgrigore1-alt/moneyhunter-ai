@@ -1,3 +1,4 @@
+import { assertJsx } from "./helpers/jsx-contract.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
@@ -57,12 +58,13 @@ test("A4.1 keeps AI truth explicit and turns Inbox into a compact decision queue
   const inbox = read("src/components/inbox/CommercialInboxClient.tsx");
   const connectedEmail = read("src/components/inbox/ConnectedEmailInbox.tsx");
 
-  assert.match(aiPage, /aria-\[current=page\]:border-\[rgb\(var\(--interaction\)\)\]/);
-  assert.match(ask, /contextul autorizat/);
+  assertJsx(aiPage, "a", { href: '`/ai?tab=${tab.id}`', "aria-current": 'activeTab === tab.id ? "page" : undefined' });
+  assertJsx(ask, "CopilotConversation", { lockedContext: /pageType: "ai"/ });
   assert.match(conversation, /Context autorizat/);
-  assert.match(conversation, /Concluzie ReveNew/);
+  assertJsx(conversation, "p", { className: "styles.conclusion" });
+  assertJsx(conversation, "IntelligenceDecisionBrief", { answer: "item.answer" });
   assert.match(conversation, /Informații lipsă sau neconfirmate/);
-  assert.match(conversation, /Nu este executată nicio acțiune externă/);
+  assert.match(conversation, /Doar date autorizate · fără execuție externă/);
   assert.doesNotMatch(conversation, /focus-within:shadow|shadow-card/);
 
   assert.match(inbox, /<SegmentedFilter/);

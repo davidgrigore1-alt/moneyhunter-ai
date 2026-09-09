@@ -1,3 +1,4 @@
+import { assertJsx, assertConditionalComponent } from "./helpers/jsx-contract.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
@@ -172,7 +173,9 @@ test("AI page uses URL tabs with Ask as the default and keeps the registry secon
   assert.match(page, /: "ask";/);
   assert.match(page, /href=\{`\/ai\?tab=\$\{tab\.id\}`\}/);
   assert.match(page, /activeTab === "ask" \? <AskReveNew\b/);
-  assert.match(page, /activeTab === "discoveries" \? <CommercialDiscoveries/);
+  assertConditionalComponent(page, 'activeTab === "discoveries"', "ExecutionDiscoveries");
+  assertConditionalComponent(page, 'activeTab === "discoveries"', "CommercialDiscoveries");
+  assertJsx(page, "CommercialDiscoveries", { result: "discoveries", error: "!discoveries" });
   assert.match(page, /activeTab === "recommendations" \?/);
   assert.match(page, /activeTab === "capabilities" \?/);
   assert.doesNotMatch(page, /flex-row-reverse|flex-col-reverse|\border-(?:first|last|\d+)/);

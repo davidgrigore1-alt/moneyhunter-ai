@@ -2,7 +2,23 @@ import fs from 'node:fs';
 import {runLocalSql} from '../demo/local-supabase.mjs';
 const migration=fs.readFileSync('supabase/migrations/20260909011852_marketing_demo_requests.sql','utf8');
 const sql=`begin;
-${process.argv.includes('--existing') ? '' : migration}
+${process.argv.includes('--existing') ? '' : `
+-- Apply the immutable migration only in a database where the table is absent.
+-- Existing tables/functions/policies are verified as-is, never repaired by this harness.
+select to_regclass('public.marketing_demo_requests') is null as install_capture_fixture \\gset
+\\if :install_capture_fixture
+${migration}
+\\endif
+`}
+do $$ begin
+ if to_regclass('public.marketing_demo_requests') is null
+   or to_regprocedure('public.capture_marketing_demo_request(uuid,jsonb)') is null then
+   raise exception 'lead capture schema incomplete';
+ end if;
+ if not (select relrowsecurity from pg_class where oid='public.marketing_demo_requests'::regclass) then
+   raise exception 'lead capture RLS disabled';
+ end if;
+end $$;
 set local role service_role;
 do $$ declare r uuid; payload jsonb := '{"name":"SQL validation","email":"capture-sql@example.invalid","company":"Local validation","phone":"","goal":"<script>literal untrusted text</script>","contactConsent":true}'; begin
   r:=public.capture_marketing_demo_request('aa111111-1111-4111-8111-111111111111',payload);

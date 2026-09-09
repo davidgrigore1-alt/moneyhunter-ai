@@ -1,3 +1,4 @@
+import { assertJsx, jsxElements } from "./helpers/jsx-contract.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
@@ -28,7 +29,7 @@ test("shared page hierarchy is compact and contextual guidance uses progressive 
   const pageHeader = read("src/components/dashboard/PageHeader.tsx");
   const guide = read("src/components/guidance/ContextualPageGuide.tsx");
 
-  assert.match(pageShell, /className=\{`app-page/);
+  assertJsx(pageShell, "div", { className: /\bapp-page\b/ });
   assert.match(pageShell, /app-section-stack mt-5/);
   assert.doesNotMatch(pageHeader, /uppercase tracking-\[0\.12em\]/);
   assert.match(guide, /<details className="group" data-revenew-disclosure="page-guide">/);
@@ -82,7 +83,8 @@ test("important redesigned surfaces keep semantic DOM order aligned with present
   assert.ok(companyPage.indexOf("<CompanyBusinessMemory") < companyPage.indexOf("<CompanyContextualAsk"));
   assert.ok(conversation.indexOf("<form onSubmit={submit}") < conversation.indexOf('aria-live="polite"'));
   assert.ok(settings.indexOf("<nav") < settings.indexOf("<PersonalizationSettingsPanel"));
-  assert.ok(onboarding.indexOf('<section className="rounded-panel') < onboarding.indexOf('<aside className="min-h-[34rem]'));
+  const summary = assertJsx(onboarding, "aside", { "aria-label": "Rezumatul configurării" });
+  assert.ok(jsxElements(onboarding, "section").some(section => section.position < summary.position));
 });
 test("semantic motion remains restrained and reduced-motion safe", () => {
   const css = read("src/app/globals.css");

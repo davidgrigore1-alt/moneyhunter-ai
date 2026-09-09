@@ -1,3 +1,4 @@
+import { assertJsx } from "./helpers/jsx-contract.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
@@ -8,11 +9,15 @@ const read = (file) => fs.readFileSync(path.resolve(file), "utf8");
 test("A4.5 reports use the shared factual summary and semantic distribution table", () => {
   const reports = read("src/app/(protected)/reports/page.tsx");
 
-  assert.match(reports, /<PageShell\s+wide/);
+  assertJsx(reports, "PageShell", { wide: true });
   assert.match(reports, /<RecordSummaryBar label="Adevărul executiv al raportului"/);
   assert.match(reports, /Nu este venit confirmat\./);
-  assert.match(reports, /<caption className="sr-only">Distribuția oportunităților/);
-  assert.match(reports, /<th scope="col"[^>]*>Etapă<\/th>/);
+  assertJsx(reports, "StageDistribution", { stages: "reportDistribution", total: "opportunities.length" });
+  const distribution = read("src/components/reports/StageDistribution.tsx");
+  assertJsx(distribution, "table");
+  assertJsx(distribution, "caption");
+  assertJsx(distribution, "th", { scope: "row" });
+  assert.match(distribution, /Estimări RON; monedele diferite nu sunt cumulate/);
 });
 
 test("A4.5 pilot proof retains explicit truth boundaries and semantic comparison", () => {
@@ -28,11 +33,13 @@ test("A4.5 Apps presents compact provider rows without upgrading planned states"
   const hub = read("src/components/apps/IntegrationHub.tsx");
   const catalog = read("src/components/apps/IntegrationCatalog.tsx");
 
-  assert.match(hub, /<PageShell\s+wide/);
+  assertJsx(hub, "PageShell", { wide: true });
   assert.match(hub, /Etichetele descriu[\s\S]*disponibilitatea reală/);
-  assert.match(catalog, /border-y border-\[rgb\(var\(--border\)\)\]/);
-  assert.match(catalog, /Vezi integrarea planificată/);
-  assert.doesNotMatch(catalog, /xl:grid-cols-3/);
+  assertJsx(catalog, "AvailableSources", { state: "state" });
+  assertJsx(catalog, "section", { "aria-label": "Evaluare înainte de implementare" });
+  assert.match(catalog, /item\.stage !== "implemented"/);
+  assertJsx(catalog, "button", { type: "button", "aria-haspopup": "dialog", onClick: /onSelect\(item\)/ });
+  assert.match(catalog, /nu sunt integrări active/);
 });
 
 test("A4.5 Settings keeps quiet grouped navigation and names the active scope", () => {

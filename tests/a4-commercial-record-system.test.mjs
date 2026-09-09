@@ -22,7 +22,8 @@ test("A4.2 registries use one compact tool surface and responsive semantic recor
   assert.match(crm, /hidden overflow-x-auto[\s\S]*lg:block/);
   assert.match(explorer, /aria-label="Registru oportunități"/);
   assert.match(explorer, /Valoare estimată/);
-  assert.match(explorer, />Estimat</);
+  assert.match(explorer, /formatCurrency\(opportunity\.estimatedValueHigh, opportunity\.currency \?\? "RON"\)/);
+  // The column owns the estimate label; no repeated desktop row badge is required.
 });
 
 test("contact context comes only from explicit persisted opportunity associations", () => {

@@ -1,3 +1,4 @@
+import { assertJsx } from "./helpers/jsx-contract.mjs";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
@@ -47,11 +48,14 @@ test("A4.4 Workflow editor stays linear, content-driven and explicit about test 
 
   assert.match(builder, /Când · Declanșator/);
   assert.match(builder, /Dacă · Condiție/);
-  assert.match(builder, /ReveNew verifică · Gard comercial/);
+  assert.match(builder, /workflowGuardCopy/);
+  assertJsx(builder, "button", { onClick: /setSelected\("guard"\)/ });
   assert.match(builder, /Atunci · Acțiunea/);
-  assert.match(builder, /Testează fără mutații/);
+  assert.match(builder, /Testează fără executare/);
+  assert.match(builder, /runWorkflowTest/);
   assert.match(builder, /Emailurile nu sunt trimise automat/);
-  assert.match(builder, /xl:max-h-\[min\(43rem,calc\(100dvh-12rem\)\)\]/);
+  assertJsx(builder, "section", { "aria-label": "Canvas workflow" });
+  assertJsx(builder, "aside", { "aria-label": "Inspector workflow" });
   assert.doesNotMatch(builder, /min-h-\[660px\]/);
   assert.match(page, /Nicio acțiune nu a fost executată în acest test/);
   assert.match(page, /efectele confirmate sunt păstrate/);

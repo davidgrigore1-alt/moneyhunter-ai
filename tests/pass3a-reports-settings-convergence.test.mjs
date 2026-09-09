@@ -1,3 +1,4 @@
+import { assertJsx } from "./helpers/jsx-contract.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
@@ -30,7 +31,8 @@ test("personalization keeps real controls in compact semantic rows", () => {
 test("reports uses truthful rows and tables instead of decorative metric card stacks", () => {
   const reports = read("src/app/(protected)/reports/page.tsx");
 
-  assert.match(reports, /<table/);
+  assertJsx(reports, "StageDistribution", { stages: "reportDistribution", total: "opportunities.length" });
+  assertJsx(read("src/components/reports/StageDistribution.tsx"), "table");
   assert.match(reports, /function MetricRows/);
   assert.match(reports, /activeTab === "overview"/);
   assert.match(reports, /activeTab === "operations"/);

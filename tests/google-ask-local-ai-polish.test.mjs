@@ -1,3 +1,4 @@
+import { assertJsx } from "./helpers/jsx-contract.mjs";
 import assert from "node:assert/strict";
 import {preparation,noSelectedSource} from './helpers/phase32-modules.mjs';
 import fs from "node:fs";
@@ -213,7 +214,9 @@ test("Ask history is newest-first, locally clearable and individually dismissibl
   assert.match(conversation, /Șterge conversația/);
   assert.match(conversation, /Istoric · \{previousCount\}/);
   assert.match(conversation, /current\.filter\(\(turn\) => turn\.id !== item\.id\)/);
-  assert.match(conversation, /Analiza este în curs/);
+  assert.match(conversation, /loading \? <IntelligenceAnalysisStatus/);
+  const status = read("src/components/intelligence/IntelligenceAnalysisStatus.tsx");
+  assertJsx(status, "span", { role: "status", "aria-live": "polite", "aria-atomic": "true" });
   assert.doesNotMatch(conversation, /setInterval/);
   assert.match(conversation, /AbortController/);
   assert.match(read("src/components/intelligence/IntelligenceEvidence.tsx"), /Dovezi și acoperire/);
@@ -252,10 +255,17 @@ test("Apps keeps real Google health separate from planned providers", () => {
   assert.match(apps, /IntegrationHub/);
   assert.match(hub, /GoogleWorkspaceCard/);
   assert.match(catalog, /Microsoft 365/);
-  assert.match(catalog, /Outlook Mail/);
+  assert.match(catalog, /evaluation\("outlook", "Outlook"/);
   assert.match(catalog, /Slack/);
-  assert.match(catalog, /stage: "next"/);
-  assert.match(google, /Gmail și Calendar pentru context comercial privat și controlat/);
+  const { integrationCatalog } = compile("src/lib/integrations/catalog.ts");
+  assert.equal(integrationCatalog.find(item => item.id === "google-workspace").stage, "implemented");
+  for (const item of integrationCatalog.filter(item => item.id !== "google-workspace")) {
+    assert.equal(item.stage, "planned", item.id);
+    assert.match(item.note, /nu are un conector ReveNew activ/);
+  }
+  assert.match(google, /connection\.capabilities\.emailRead/);
+  assert.match(google, /connection\.capabilities\.calendarRead/);
+  assert.match(google, /connection\.capabilities\.emailSend/);
   assert.match(google, /trimiterea necesită confirmare finală/);
 });
 

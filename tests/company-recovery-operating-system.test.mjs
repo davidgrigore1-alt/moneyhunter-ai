@@ -1,3 +1,4 @@
+import { assertJsx } from "./helpers/jsx-contract.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { createRequire } from "node:module";
@@ -100,7 +101,7 @@ test("Company 360 remains protected and presents empty and populated operating c
   assert.match(loader, /getCurrentBusinessForUser\(\{ redirectIfMissing: true \}\)/);
   assert.match(loader, /\.eq\("id", organizationId\)\.eq\("business_id", businessId\)/);
   assert.match(loader, /buildCompanyIntelligenceSnapshot/);
-  assert.match(route, /Company 360/);
+  assert.match(route, /Companie · vedere completă/);
   assert.match(route, /CompanyBusinessMemory/);
   assert.match(route, /CompanyContextualAsk/);
   assert.match(route, /Ce contează acum|snapshot\.memory/);
@@ -137,7 +138,7 @@ test("Company 360 connects each attention item to its evidence-backed source rou
   const route = read("src/app/(protected)/crm/organizations/[id]/page.tsx") + read("src/components/company/CompanyBriefing.tsx");
   const memory = read("src/components/company/CompanyBusinessMemory.tsx");
   const intelligence = read("src/lib/company-intelligence.ts");
-  assert.match(route, /CompanyBusinessMemory memory=\{snapshot\.memory\}/);
+  assertJsx(route, "CompanyBusinessMemory", { memory: "snapshot.memory" });
   assert.match(memory, /companySourceHref\(item\.href \?\? item\.evidence\.href\)/);
   assert.match(memory, /<Link href=\{href\}/);
   assert.match(memory, /label=\{item\.evidence\.label\}/);

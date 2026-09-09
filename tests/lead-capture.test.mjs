@@ -9,6 +9,31 @@ import * as jsxRuntime from 'react/jsx-runtime';
 function load(file,mocks={}) {const mod={exports:{}};const full=path.resolve(file);vm.runInNewContext(ts.transpileModule(fs.readFileSync(full,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,{module:mod,exports:mod.exports,require(spec){if(spec in mocks)return mocks[spec];return load(spec.startsWith('@/')?'src/'+spec.slice(2)+'.ts':path.resolve(path.dirname(full),spec+'.ts'),mocks);},Object,Array,String,RegExp});return mod.exports;}
 const valid={requestId:'aa111111-1111-4111-8111-111111111111',name:' Ana ',email:' ANA@EXAMPLE.COM ',company:' Firmă ',phone:'',goal:'Oferte fără răspuns',contactConsent:true,website:''};
 const {parseLeadCapture}=load('src/lib/marketing/lead-capture.ts');
+
+test('local verifier gates migration creation and verifies existing authorization without replacing schema',()=>{
+  const script=fs.readFileSync('scripts/validation/verify-lead-capture.mjs','utf8')
+    .replace(/^import .*;\r?\n/gm,'');
+  for(const argv of [[],['--existing']]) {
+    let captured;
+    vm.runInNewContext(script,{fs,process:{argv},runLocalSql(sql){captured=sql;return '';},console:{log(){}}});
+    assert.match(captured,/^begin;/);
+    assert.match(captured,/rollback;$/);
+    assert.doesNotMatch(captured,/\b(?:drop|truncate)\s+(?:table|schema|function)|create\s+or\s+replace/i);
+    assert.match(captured,/lead capture schema incomplete/);
+    assert.match(captured,/lead capture RLS disabled/);
+    assert.match(captured,/revoked platform admin can read/);
+    assert.match(captured,/anonymous access/);
+    if(argv.length) assert.doesNotMatch(captured,/create table public\.marketing_demo_requests/);
+    else {
+      assert.match(captured,/to_regclass\('public\.marketing_demo_requests'\) is null as install_capture_fixture \\gset/);
+      const guard=captured.indexOf('\\if :install_capture_fixture');
+      const migration=captured.indexOf('create table public.marketing_demo_requests');
+      const end=captured.indexOf('\\endif');
+      assert.ok(guard>=0 && guard<migration && migration<end);
+      assert.ok(end<captured.indexOf('set local role service_role'));
+    }
+  }
+});
 test('public intake validates shape, consent, honeypot, bounds and normalizes without inventing fields',()=>{
   assert.equal(parseLeadCapture(valid).email,'ana@example.com');assert.equal(parseLeadCapture(valid).name,'Ana');
   for(const value of [null,[],{}, {...valid,contactConsent:false},{...valid,website:'spam'},{...valid,name:[]},{...valid,requestId:'bad'},{...valid,email:'a@b.ro\nBcc:a@c.ro'},{...valid,goal:'x'.repeat(2001)},{...valid,phone:'\0'}])assert.equal(parseLeadCapture(value),null);

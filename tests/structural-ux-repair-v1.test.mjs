@@ -1,3 +1,4 @@
+import { assertJsx } from "./helpers/jsx-contract.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
@@ -77,8 +78,11 @@ test("core record registries use native tables and compact operational disclosur
 
   assert.match(crm, /<Link href=\{`\/crm\/organizations\/\$\{organization\.id\}`\}/);
   assert.match(opportunities, /<Link href=\{"\/opportunities\/" \+ opportunity\.id\}/);
-  assert.match(filters, /<form method="get"/);
+  assertJsx(filters, "form", { id: "opportunity-registry-filters", method: "get" });
+  assertJsx(filters, "Select", { form: "opportunity-registry-filters", name: "name" });
   assert.match(filters, /<details[\s\S]*Filtre avansate/);
-  assert.match(savedViews, /return <details[\s\S]*Vizualizări private/);
+  assertJsx(savedViews, "details");
+  assert.match(savedViews, /Vizualizări salvate/);
+  assert.match(savedViews, /nu sunt partajate cu echipa/);
   assert.doesNotMatch(filters + savedViews, /\border-\d+|flex-row-reverse|target:block/);
 });

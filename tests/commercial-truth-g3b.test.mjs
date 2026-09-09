@@ -1,3 +1,4 @@
+import { assertJsx } from "./helpers/jsx-contract.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
@@ -201,7 +202,7 @@ test("G3C workspace contradiction includes the linked Drive case outside the eig
 
 test("G3C connected context includes Drive and uses truthful selection copy",()=>{
  const page=read("src/app/(protected)/dashboard/page.tsx");assert.match(page,/Google Drive/);assert.match(page,/driveStatus === "connected"/);assert.match(page,/document relevant/);
- assert.match(read("src/components/intelligence/CopilotConversation.tsx"),/>Analizează<\/Button>/);
+ assertJsx(read("src/components/intelligence/CopilotConversation.tsx"), "Button", {type:"submit", disabled:"question.trim().length < 2"});
  assert.match(read("src/components/apps/DriveWorkspace.tsx"),/files.length===1\?"document":"documente"/);
  assert.match(read("src/app/(protected)/documents/page.tsx"),/<button[\s\S]*?type="submit"[\s\S]*?aria-label="Caută documente"[\s\S]*?>/);
 });

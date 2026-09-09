@@ -1,3 +1,4 @@
+import { assertJsx } from "./helpers/jsx-contract.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { createRequire } from "node:module";
@@ -263,7 +264,7 @@ test("business memory excludes non-critical profile gaps from the primary Compan
 test("Company 360 exposes a bounded executive decision layer instead of raw feeds", () => {
   const route = read("src/app/(protected)/crm/organizations/[id]/page.tsx");
   const memory = read("src/components/company/CompanyBusinessMemory.tsx");
-  assert.match(route, /CompanyBusinessMemory memory=\{snapshot\.memory\} executiveDecision=\{snapshot\.executiveDecision\}/);
+  assertJsx(route, "CompanyBusinessMemory", { memory: "snapshot.memory", executiveDecision: "snapshot.executiveDecision" });
   for (const label of ["Ce contează acum", "CompanyEvidenceLine", "Alte situații de revizuit"]) assert.match(memory, new RegExp(label));
   assert.match(memory, /Sursă:/);
   assert.doesNotMatch(route, /snapshot\.timeline\.map|snapshot\.signals\.slice/);
