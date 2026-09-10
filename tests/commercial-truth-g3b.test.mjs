@@ -18,7 +18,7 @@ function loader(mocks={}){
  };return load;
 }
 const engine=loader()("src/lib/commercial-truth.ts");
-const business="10000000-0000-4000-8000-000000000001",oppId="20000000-0000-4000-8000-000000000001",owner="30000000-0000-4000-8000-000000000001";
+const business="10000000-0000-4000-8000-000000000001",oppId="20000000-0000-4000-8000-000000000001",owner="30000000-0000-4000-8000-000000000001",vectorCompany="40000000-0000-4000-8000-000000000002";
 const now="2026-08-28T12:00:00Z";
 function opportunity(extra={}){return {id:oppId,businessId:business,title:"Audit operațional flotă",organizationId:"40000000-0000-4000-8000-000000000001",
  status:"reviewed",ownerProfileId:owner,ownerName:"Irina Petrescu",currency:"EUR",estimatedValueLow:12000,estimatedValueHigh:12000,
@@ -37,14 +37,17 @@ test("fact and interpretation remain different typed contracts with real source 
 });
 test("commercial value comparison requires explicit offer field and matching known customer",()=>{
  assert.ok(truth().issues.some(i=>i.id==="value:doc-1"));
- assert.ok(truth({opportunity:opportunity({currency:"RON",estimatedValueLow:88000,estimatedValueHigh:88000})}).issues.some(i=>i.id==="value:doc-1"));
+ assert.equal(truth({opportunity:opportunity({currency:"RON",estimatedValueLow:88000,estimatedValueHigh:88000})}).issues.some(i=>i.id==="value:doc-1"),false);
  for(const text of ["Total: 88.000 EUR","Bugetul competitorului: 88.000 EUR","Valoare ofertă: 88.000 EUR"]){
   assert.equal(truth({segments:[segment(text)]}).issues.some(i=>i.id==="value:doc-1"),false);
  }
  assert.equal(truth({segments:[segment(undefined,{kind:"brief"})]}).claims.some(c=>c.derivation==="explicit_source_field"&&c.type==="commercial_value"),false);
 });
 test("Atlas Fleet versus explicitly identified Vector Industrial produces a review-only association signal",()=>{
- const result=truth({companyName:"Atlas Fleet"}),issue=result.issues.find(i=>i.id==="customer:doc-1");
+ const result=truth({companyName:"Atlas Fleet",companyDirectory:[
+  {businessId:business,id:opportunity().organizationId,name:"Atlas Fleet",normalizedName:"atlas fleet"},
+  {businessId:business,id:vectorCompany,name:"Vector Industrial",normalizedName:"vector industrial"}
+ ]}),issue=result.issues.find(i=>i.id==="customer:doc-1");
  assert.equal(issue.title,"Verifică asocierea documentului");assert.equal(issue.state,"needs_review");
  assert.match(issue.explanation,/Vector Industrial/);assert.match(issue.explanation,/Atlas Fleet/);
  assert.equal(result.issues.some(i=>i.id==="value:doc-1"),false);
@@ -111,7 +114,9 @@ function serverHarness(options={}){
   const query={select(fields){queries.push({table,fields});return query;},eq(key,value){queries.push({table,key,value});query.where??={};query.where[key]=value;return query;},
    order(){return query;},limit(){return query;},in(key,value){query.ids=value;return query;},maybeSingle(){return query;},
    then(resolve,reject){
-    const data=table==="crm_organizations"?{name:options.companyName??"Vector Industrial"}:
+    const data=table==="crm_organizations"?(query.ids?
+     (options.companyDirectory??[]).filter(item=>query.ids.includes(item.normalized_name)):
+     {id:opportunity().organizationId,name:options.companyName??"Vector Industrial",normalized_name:"vector industrial"}):
      table==="external_document_sources"?(options.sources??[]).filter(s=>!query.where?.opportunity_id||s.opportunity_id===query.where.opportunity_id):
      table==="external_document_segments"?(options.segments??[]):
      table==="opportunities"?(query.ids?(options.visibleDocumentIds??[]).filter(id=>query.ids.includes(id)).map(id=>({id})):(options.recentIds??[]).map(id=>({id}))):[];

@@ -12,6 +12,8 @@ import { requireGoogleConnectorActor,getOwnedExternalContext } from "@/lib/googl
 import { GOOGLE_GMAIL_SCOPE,GOOGLE_CALENDAR_SCOPE } from "@/lib/google-workspace/oauth";
 import { uuidPattern } from "@/lib/google-workspace/drive-types";
 import { assembleCommercialTruth,TRUTH_LIMITS,type TruthSegment,type TruthPrivateContext } from "@/lib/commercial-truth";
+import { CONTEXT_INTEGRITY_ADAPTER_LIMITS,collectContextCustomerIdentityKeys,type ContextIntegrityCompanyIdentity } from "@/lib/context-integrity/commercial-truth-adapter";
+import type { ContextIntegrityCoverage } from "@/lib/context-integrity/types";
 
 /** Structured current facts: no model, source segments, Google calls, or document bodies. */
 export const getCurrentCommercialStateForOpportunity=cache(async(opportunityId:string)=>{
@@ -32,38 +34,84 @@ export const getCommercialTruthForOpportunity=cache(async(opportunityId:string)=
  const opportunity=await getOpportunityForCurrentBusiness(opportunityId);
  if(!opportunity||opportunity.businessId!==actor.businessId)throw new Error("truth_scope_forbidden");
  const limitations:string[]=[],segments:TruthSegment[]=[];
- let companyName:string|null=null;
+ let companyName:string|null=null,companyDirectory:ContextIntegrityCompanyIdentity[]=[];
+ let companyDirectoryComplete=hasPermission(authorization,"workspace.read");
+ let contextIntegrityCoverage:ContextIntegrityCoverage={status:"unavailable",evaluatedSourceCount:0,expectedSourceCount:null,
+  limitations:["drive_context_not_evaluated"]};
  const client=await createSupabaseServerClient();
  if(client&&opportunity.organizationId&&hasPermission(authorization,"workspace.read")){
-  const company=await client.from("crm_organizations").select("name").eq("id",opportunity.organizationId).eq("business_id",actor.businessId).maybeSingle();
-  if(!company.error)companyName=company.data?.name??null;
+  const company=await client.from("crm_organizations").select("id,name,normalized_name").eq("id",opportunity.organizationId).eq("business_id",actor.businessId).maybeSingle();
+  if(!company.error&&company.data?.id&&company.data?.name){companyName=company.data.name;
+   companyDirectory=[{businessId:actor.businessId,id:company.data.id,name:company.data.name,normalizedName:company.data.normalized_name??null}];}
+  else if(company.error)companyDirectoryComplete=false;
  }
  if(!companyName)limitations.push("Identitatea companiei nu este confirmată din înregistrarea CRM; nu se compară automat nume sau valori.");
  const admin=createSupabaseAdminClient();
  if(admin&&hasPermission(authorization,"documents.read")){
   try{
    const sources=await admin.from("external_document_sources")
-    .select("id,business_id,opportunity_id,name,document_kind,mime_type,modified_time,last_synced_at,web_view_link")
+    .select("id,business_id,opportunity_id,name,document_kind,mime_type,modified_time,last_synced_at,web_view_link,content_hash,provider_version")
     .eq("business_id",actor.businessId).eq("opportunity_id",opportunityId).eq("state","synced")
     .order("modified_time",{ascending:false,nullsFirst:false}).order("id").limit(TRUTH_LIMITS.sources+1);
    if(sources.error)throw new Error("truth_source_unavailable");
-   if((sources.data?.length??0)>TRUTH_LIMITS.sources)limitations.push("Sunt evaluate cele mai recente șase documente disponibile, nu întreaga arhivă.");
+   const sourceLimited=(sources.data?.length??0)>TRUTH_LIMITS.sources;
+   if(sourceLimited)limitations.push("Sunt evaluate cele mai recente șase documente disponibile, nu întreaga arhivă.");
    const selected=sources.data?.slice(0,TRUTH_LIMITS.sources)??[];
+   contextIntegrityCoverage={status:sourceLimited?"partial":"complete",evaluatedSourceCount:selected.length,
+    expectedSourceCount:sourceLimited?(sources.data?.length??selected.length):selected.length,
+    limitations:sourceLimited?["drive_source_limit_reached"]:[]};
    if(selected.length){
     const rows=await admin.from("external_document_segments")
      .select("id,source_id,text,location_label").eq("business_id",actor.businessId)
      .in("source_id",selected.map(source=>source.id)).order("ordinal").order("source_id").limit(TRUTH_LIMITS.segments+1);
     if(rows.error)throw new Error("truth_source_unavailable");
-    if((rows.data?.length??0)>TRUTH_LIMITS.segments)limitations.push("Documentele lungi sunt evaluate pe fragmente limitate; absența unui câmp nu confirmă absența lui în document.");
+    if((rows.data?.length??0)>TRUTH_LIMITS.segments){
+     limitations.push("Documentele lungi sunt evaluate pe fragmente limitate; absența unui câmp nu confirmă absența lui în document.");
+     contextIntegrityCoverage={...contextIntegrityCoverage,status:"partial",limitations:[...(contextIntegrityCoverage.limitations??[]),"drive_segment_limit_reached"]};
+    }
     for(const row of rows.data?.slice(0,TRUTH_LIMITS.segments)??[]){
      const source=selected.find(item=>item.id===row.source_id);if(!source)continue;
      segments.push({businessId:actor.businessId,opportunityId,sourceId:source.id,segmentId:row.id,title:source.name,
       kind:source.document_kind,mime:source.mime_type,text:row.text,location:row.location_label,
-      modifiedAt:source.modified_time,syncedAt:source.last_synced_at,originalHref:source.web_view_link??undefined});
+      modifiedAt:source.modified_time,syncedAt:source.last_synced_at,originalHref:source.web_view_link??undefined,
+      sourceVersion:source.content_hash??source.provider_version??null});
     }
    }
-  }catch{limitations.push("Dovezile Drive nu sunt disponibile momentan; nu au fost înlocuite cu informații presupuse.");}
- }else limitations.push("Dovezile documentare nu sunt disponibile cu permisiunile curente.");
+  }catch{limitations.push("Dovezile Drive nu sunt disponibile momentan; nu au fost înlocuite cu informații presupuse.");
+   contextIntegrityCoverage={status:"unavailable",evaluatedSourceCount:0,expectedSourceCount:null,limitations:["drive_context_unavailable"]};}
+ }else{limitations.push("Dovezile documentare nu sunt disponibile cu permisiunile curente.");
+  contextIntegrityCoverage={status:"unavailable",evaluatedSourceCount:0,expectedSourceCount:null,limitations:["drive_permission_unavailable"]};}
+ const declaredIdentityKeys=collectContextCustomerIdentityKeys(segments).filter(key=>!companyDirectory.some(company=>company.normalizedName===key));
+ if(declaredIdentityKeys.length){
+  if(client&&hasPermission(authorization,"workspace.read")){
+   const exactDirectory=await client.from("crm_organizations").select("id,business_id,name,normalized_name").eq("business_id",actor.businessId)
+    .in("normalized_name",declaredIdentityKeys).order("normalized_name").order("id").limit(declaredIdentityKeys.length+1);
+   if(exactDirectory.error){companyDirectoryComplete=false;
+    contextIntegrityCoverage={...contextIntegrityCoverage,status:contextIntegrityCoverage.status==="complete"?"partial":contextIntegrityCoverage.status,
+     limitations:[...(contextIntegrityCoverage.limitations??[]),"company_identity_directory_unavailable"]};
+   }else{
+    companyDirectory.push(...(exactDirectory.data??[]).map(item=>({businessId:item.business_id,id:item.id,name:item.name,normalizedName:item.normalized_name})));
+    const unresolvedAliasKeys=declaredIdentityKeys.filter(key=>!companyDirectory.some(company=>company.normalizedName===key));
+    if(unresolvedAliasKeys.length){
+     const aliasDirectory=await client.from("crm_organizations").select("id,business_id,name,normalized_name").eq("business_id",actor.businessId)
+      .order("normalized_name").order("id").limit(CONTEXT_INTEGRITY_ADAPTER_LIMITS.candidateCompanies+1);
+     if(aliasDirectory.error){companyDirectoryComplete=false;
+      contextIntegrityCoverage={...contextIntegrityCoverage,status:contextIntegrityCoverage.status==="complete"?"partial":contextIntegrityCoverage.status,
+       limitations:[...(contextIntegrityCoverage.limitations??[]),"company_identity_alias_directory_unavailable"]};
+     }else{
+      const aliasRows=aliasDirectory.data??[];
+      const aliasLimited=aliasRows.length>CONTEXT_INTEGRITY_ADAPTER_LIMITS.candidateCompanies;
+      companyDirectory.push(...aliasRows.slice(0,CONTEXT_INTEGRITY_ADAPTER_LIMITS.candidateCompanies)
+       .map(item=>({businessId:item.business_id,id:item.id,name:item.name,normalizedName:item.normalized_name})));
+      if(aliasLimited){companyDirectoryComplete=false;
+       contextIntegrityCoverage={...contextIntegrityCoverage,status:contextIntegrityCoverage.status==="complete"?"partial":contextIntegrityCoverage.status,
+        limitations:[...(contextIntegrityCoverage.limitations??[]),"company_identity_alias_directory_incomplete"]};
+      }
+     }
+    }
+   }
+  }else companyDirectoryComplete=false;
+ }
  const privateContext:TruthPrivateContext={emails:[],meetings:[]};
  if(hasPermission(authorization,"workspace.read")){
   try{
@@ -77,7 +125,8 @@ export const getCommercialTruthForOpportunity=cache(async(opportunityId:string)=
   }catch{limitations.push("Contextul privat Gmail/Calendar nu este disponibil pentru această verificare.");}
  }
  const linkedSignals=await getCommercialSignalsForOpportunity(opportunityId);
- return assembleCommercialTruth({businessId:actor.businessId,opportunity,companyName,segments,privateContext,limitations,linkedSignals});
+ return assembleCommercialTruth({businessId:actor.businessId,opportunity,companyName,segments,companyDirectory,companyDirectoryComplete,
+  contextIntegrityCoverage,privateContext,limitations,linkedSignals});
 });
 
 /** Explicitly bounded cross-record scope, using the existing RLS client for candidate visibility. */

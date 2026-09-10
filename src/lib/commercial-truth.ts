@@ -1,6 +1,8 @@
 import { buildOpportunityCommercialState, type OpportunityCommercialState } from "@/lib/opportunity-commercial-state";
 import type { CommercialSignal, Opportunity } from "@/lib/types";
 import { metadataEvidence,type EvidenceReference } from "@/lib/evidence-reference";
+import { buildOpportunityContextIntegrity,type ContextIntegrityCompanyIdentity } from "@/lib/context-integrity/commercial-truth-adapter";
+import type { ContextIntegrityCoverage,ContextIntegrityEvaluation } from "@/lib/context-integrity/types";
 
 export type TruthState="confirmed"|"needs_review"|"insufficient";
 export type ClaimType="commercial_value"|"offer_exists"|"offer_deadline"|"next_step"|"next_step_due_at"|"owner"|"primary_contact"|"customer_identity"|"meeting_commitment"|"client_response_state"|"deadline"|"approval_requirement";
@@ -12,14 +14,16 @@ export type TruthClaim={
 export type TruthIssue={
  id:string;kind:"interpretation"|"missing";title:string;explanation:string;whyItMatters:string;nextStep:string;
  state:"needs_review"|"insufficient";claimIds:string[];evidence:EvidenceReference[];priority:number;
+ origin?:"commercial_truth"|"context_integrity";integrityFindingKey?:string;
 };
 export type CommercialTruth={
  opportunityId:string;title:string;state:TruthState;evaluatedAt:string;claims:TruthClaim[];topFacts:TruthClaim[];
  issues:TruthIssue[];limitations:string[];sourceCount:number;currentState:OpportunityCommercialState;
+ contextIntegrity?:ContextIntegrityEvaluation;
 };
 export type TruthSegment={
  businessId:string;opportunityId:string;sourceId:string;segmentId:string;title:string;kind:string;
- text:string;location:string;modifiedAt:string|null;syncedAt:string|null;originalHref?:string;mime:string;
+ text:string;location:string;modifiedAt:string|null;syncedAt:string|null;originalHref?:string;mime:string;sourceVersion?:string|null;
 };
 export type TruthPrivateContext={
  emails:Array<{id:string;sentAt:string;direction:"inbound"|"outbound"}>;
@@ -48,6 +52,7 @@ export function parseCommercialAmount(raw:string):number|null{
 /** Pure, bounded, read-only evaluation. Connected text is never a command or an action proposal. */
 export function assembleCommercialTruth(input:{
  businessId:string;opportunity:Opportunity;companyName?:string|null;segments?:TruthSegment[];
+ companyDirectory?:ContextIntegrityCompanyIdentity[];companyDirectoryComplete?:boolean;contextIntegrityCoverage?:ContextIntegrityCoverage;
  privateContext?:TruthPrivateContext;limitations?:string[];now?:string;linkedSignals?:CommercialSignal[];
 }):CommercialTruth{
  const opportunity=input.opportunity;
@@ -57,6 +62,11 @@ export function assembleCommercialTruth(input:{
  const claims:TruthClaim[]=[],issues:TruthIssue[]=[],limitations=[...(input.limitations??[])];
  const route="/opportunities/"+opportunity.id;
  const record=metadataEvidence({sourceType:"opportunity",sourceId:opportunity.id,title:opportunity.title,occurredAt:opportunity.updatedAt??null,entityHref:route,commercialRelationship:opportunity.id});
+ const contextIntegrity=buildOpportunityContextIntegrity({businessId:input.businessId,opportunityId:opportunity.id,opportunityTitle:opportunity.title,
+  opportunityObservedAt:opportunity.updatedAt??null,organizationId:opportunity.organizationId,companyName:input.companyName,segments:input.segments??[],
+  companies:input.companyDirectory??[],directoryComplete:input.companyDirectoryComplete,
+  coverage:input.contextIntegrityCoverage??{status:"complete",evaluatedSourceCount:new Set((input.segments??[]).map(segment=>segment.sourceId)).size,
+   expectedSourceCount:new Set((input.segments??[]).map(segment=>segment.sourceId)).size}});
  const add=(type:ClaimType,label:string,value:string,evidence:EvidenceReference[],extra:Partial<TruthClaim>={})=>{
   if(claims.length>=TRUTH_LIMITS.claims)return null;
   const observedAt=evidence[0]?.occurredAt??null;
@@ -65,10 +75,11 @@ export function assembleCommercialTruth(input:{
   if(claim.derivation==="explicit_source_field"&&claim.freshness!=="current")claim.state="needs_review";
   claims.push(claim);return claim;
  };
- const issue=(id:string,kind:TruthIssue["kind"],title:string,explanation:string,whyItMatters:string,nextStep:string,facts:TruthClaim[],priority:number)=>{
+ const issue=(id:string,kind:TruthIssue["kind"],title:string,explanation:string,whyItMatters:string,nextStep:string,facts:TruthClaim[],priority:number,
+  meta:Pick<TruthIssue,"origin"|"integrityFindingKey">={})=>{
   if(issues.some(item=>item.id===id))return;
   issues.push({id,kind,title,explanation,whyItMatters,nextStep,state:kind==="missing"?"insufficient":"needs_review",
-   claimIds:facts.map(f=>f.id),evidence:Array.from(new Map(facts.flatMap(f=>f.evidence).map(e=>[(e.sourceSegmentId??e.sourceId),e])).values()),priority});
+   claimIds:facts.map(f=>f.id),evidence:Array.from(new Map(facts.flatMap(f=>f.evidence).map(e=>[(e.sourceSegmentId??e.sourceId),e])).values()),priority,...meta});
  };
  const amount=opportunity.estimatedValueHigh;
  const value=Number.isFinite(amount)&&amount>0&&opportunity.currency?add("commercial_value","Estimare CRM",
@@ -108,13 +119,20 @@ export function assembleCommercialTruth(input:{
    title:part.title,mimeType:part.mime,sourceLocation:part.location,occurredAt:part.modifiedAt,syncedAt:part.syncedAt,provider:"google_drive",
    entityHref:route+"/sources/"+sourceId+"#segment-"+part.segmentId,originalHref:part.originalHref,commercialRelationship:opportunity.id});
   const fields=parts.flatMap(part=>part.text.split(/\r?\n/).filter(line=>line.length<=220).map(line=>({part,line:line.trim()})));
-  const customerField=fields.find(({line})=>/^(?:client|beneficiar|customer)\s*:\s*\S/i.test(line));
-  const customerValue=customerField?.line.replace(/^[^:]+:\s*/,"").trim().slice(0,120);
-  const sourceCustomer=customerField&&customerValue?add("customer_identity","Client menționat",customerValue,[evidence(customerField.part)],{derivation:"explicit_source_field"}):null;
-  const identityMatches=!!customerValue&&!!input.companyName&&normalize(customerValue)===normalize(input.companyName);
-  if(customer&&sourceCustomer&&!identityMatches)issue("customer:"+sourceId,"interpretation","Verifică asocierea documentului",
+  const declarations=contextIntegrity.declarations.filter(item=>item.sourceId===sourceId);
+  const declaration=declarations.length&&new Set(declarations.map(item=>item.normalizedLabel)).size===1?declarations[0]:null;
+  const customerValue=declaration?.label;
+  const identityMatches=!!declaration&&declaration.resolution==="resolved"&&!!opportunity.organizationId&&declaration.canonicalId===opportunity.organizationId;
+  const sourceCustomer=declaration&&customerValue?add("customer_identity","Client menționat",customerValue,[declaration.evidence],
+   {derivation:"explicit_source_field",state:identityMatches?"confirmed":"needs_review"}):null;
+  const integrityFinding=contextIntegrity.evaluation.findings.find(finding=>finding.kind==="source_association_mismatch"
+   && finding.evidence.some(item=>item.sourceId===sourceId));
+  if(customer&&sourceCustomer&&integrityFinding)issue("customer:"+sourceId,"interpretation","Verifică asocierea documentului",
    "Documentul Google Drive asociat oportunității „"+opportunity.title+"” menționează clientul „"+customerValue+"”, iar compania CRM este „"+input.companyName+"”. ReveNew nu poate determina automat care înregistrare este corectă.",
-   "Valoarea sau termenii pot aparține unui alt context comercial.","Verifică asocierea înainte de follow-up.",[customer,sourceCustomer],100);
+   "Valoarea sau termenii pot aparține unui alt context comercial.","Verifică asocierea înainte de follow-up.",[customer,sourceCustomer],100,
+   {origin:"context_integrity",integrityFindingKey:integrityFinding.key});
+  else if(customer&&declarations.length&&!identityMatches&&!integrityFinding)
+   limitations.push("Identitatea menționată în „"+parts[0].title+"” nu s-a rezolvat unic în CRM; ReveNew nu declară o contradicție.");
   if(parts[0].kind==="offer"){
    const offer=add("offer_exists","Ofertă selectată",parts[0].title,[evidence(parts[0])]);
    if(active&&!future&&next&&offer&&opportunity.actions.length<200)issue("offer-without-next","missing","Oferta nu are următorul pas confirmat",
@@ -127,7 +145,7 @@ export function assembleCommercialTruth(input:{
     if(!parsed||number===null)continue;
     const sourceValue=add("commercial_value","Valoare în ofertă",number.toLocaleString("ro-RO")+" "+parsed[2].toUpperCase(),[evidence(field.part)],
      {amount:number,currency:parsed[2].toUpperCase(),derivation:"explicit_source_field",state:identityMatches?"confirmed":"needs_review"});
-    if(value&&sourceValue&&identityMatches&&(value.currency!==sourceValue.currency||number<opportunity.estimatedValueLow||number>opportunity.estimatedValueHigh))
+    if(value&&sourceValue&&identityMatches&&value.currency===sourceValue.currency&&(number<opportunity.estimatedValueLow||number>opportunity.estimatedValueHigh))
      issue("value:"+sourceId,"interpretation","Verifică valoarea comercială","Estimarea CRM și valoarea explicită din ofertă diferă.",
       "Diferența poate schimba prioritatea comercială; sursele pot reprezenta momente sau versiuni diferite.",
       "Compară valorile și versiunile înainte de actualizarea CRM.",[value,sourceValue],95);
@@ -157,5 +175,6 @@ export function assembleCommercialTruth(input:{
  const topFacts=[...claims].sort((a,b)=>weights[b.type]-weights[a.type]||a.id.localeCompare(b.id)).slice(0,TRUTH_LIMITS.visibleFacts);
  const state:TruthState=ranked.some(i=>i.kind==="interpretation")||claims.some(c=>c.state==="needs_review")?"needs_review":ranked.length||limitations.length?"insufficient":"confirmed";
  return {opportunityId:opportunity.id,title:opportunity.title,state,evaluatedAt,currentState,claims,topFacts,issues:ranked,
-  limitations:Array.from(new Set(limitations)),sourceCount:new Set(claims.flatMap(c=>c.evidence).map(e=>e.sourceType+":"+e.sourceId)).size};
+  limitations:Array.from(new Set(limitations)),sourceCount:new Set(claims.flatMap(c=>c.evidence).map(e=>e.sourceType+":"+e.sourceId)).size,
+  contextIntegrity:contextIntegrity.evaluation};
 }
