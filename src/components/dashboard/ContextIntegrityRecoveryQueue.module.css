@@ -306,3 +306,33 @@
     transition: none;
   }
 }
+
+/* COMMERCIAL_RECOVERY_EMBEDDED_V1 */
+
+.embedded {
+  margin-top: 0;
+  border-block: 0;
+  background: transparent;
+}
+
+.embedded .list {
+  border-top-color: rgb(var(--foreground) / .035);
+}
+
+.embedded .row {
+  padding-block: 14px;
+}
+
+.embedded .impact {
+  max-width: 46rem;
+}
+
+.embeddedFooter {
+  padding: 9px 0 11px;
+  border-top: 0;
+  font-size: 9.5px;
+}
+
+.embeddedFooter .boundary {
+  color: rgb(var(--text-muted));
+}

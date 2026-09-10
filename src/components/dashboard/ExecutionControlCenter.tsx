@@ -19,6 +19,8 @@ import type {
   ExecutionCase,
   ExecutionControlCenterModel,
 } from "@/lib/execution-control-center";
+import type { ContextIntegrityRecoveryQueue as ContextIntegrityRecoveryQueueModel } from "@/lib/context-integrity/recovery-queue";
+import { ContextIntegrityRecoveryQueue } from "@/components/dashboard/ContextIntegrityRecoveryQueue";
 
 import {
   formatProductCurrency,
@@ -385,11 +387,13 @@ function CaseDetail({
 
 export function ExecutionControlCenter({
   model,
+  contextIntegrityQueue = null,
   impactLinks = {},
   fx,
   asOf,
 }: {
   model: ExecutionControlCenterModel;
+  contextIntegrityQueue?: ContextIntegrityRecoveryQueueModel | null;
   impactLinks?: Record<string, string>;
   fx: ReportingFxRate | null;
   asOf: string;
@@ -431,7 +435,7 @@ export function ExecutionControlCenter({
             />
 
             <p className="text-micro font-semibold uppercase tracking-[0.12em] text-[rgb(var(--text-muted))]">
-              Control Center
+              Control Center · Commercial Recovery
             </p>
           </div>
 
@@ -439,12 +443,12 @@ export function ExecutionControlCenter({
             id="execution-center-title"
             className="mt-2 text-page-heading font-semibold tracking-[-0.03em]"
           >
-            Ce necesită atenție acum
+            Ce necesită decizie acum
           </h1>
 
           <p className="mt-1 max-w-3xl text-label leading-5 text-[rgb(var(--text-secondary))]">
-            Situații comerciale ordonate pentru o intervenție
-            sigură, cu responsabil, motiv și valoare estimată.
+            Execuție și context comercial care pot bloca următorul pas,
+            într-un singur loc, cu motiv, responsabil și acțiune sigură.
           </p>
         </div>
 
@@ -461,6 +465,44 @@ export function ExecutionControlCenter({
       ───────────────────────────────────────────── */}
 
       <ExecutiveSnapshot model={model} />
+
+      {contextIntegrityQueue?.items.length ? (
+        <section
+          className={styles.integrityLane}
+          aria-labelledby="commercial-recovery-integrity-title"
+        >
+          <div className={styles.integrityLaneHeader}>
+            <div>
+              <p className={styles.integrityLaneEyebrow}>
+                Integritate comercială
+              </p>
+              <h2 id="commercial-recovery-integrity-title">
+                {contextIntegrityQueue.opportunityCount}{" "}
+                {contextIntegrityQueue.opportunityCount === 1
+                  ? "caz necesită revizuire"
+                  : "cazuri necesită revizuire"}
+              </h2>
+              <p>
+                Neconcordanțe persistente care trebuie clarificate înainte
+                ca informația să fie folosită în execuție.
+              </p>
+            </div>
+            <div className={styles.integrityLaneMeta}>
+              <strong>{contextIntegrityQueue.activeFindingCount}</strong>
+              <span>
+                {contextIntegrityQueue.activeFindingCount === 1
+                  ? "finding activ"
+                  : "findings active"}
+              </span>
+            </div>
+          </div>
+
+          <ContextIntegrityRecoveryQueue
+            queue={contextIntegrityQueue}
+            embedded
+          />
+        </section>
+      ) : null}
 
       {model.sourceState === "fallback" ? (
         <p
@@ -484,14 +526,14 @@ export function ExecutionControlCenter({
         <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b border-[rgb(var(--border-subtle))] pb-3">
           <div>
             <p className="text-metadata font-semibold uppercase tracking-[0.11em] text-[rgb(var(--text-muted))]">
-              Ordine de intervenție
+              Execuție comercială
             </p>
 
             <h2
               id="execution-queue-title"
               className="mt-1 text-sm font-semibold tracking-[-0.012em]"
             >
-              Situațiile care cer o decizie
+              Situațiile care cer intervenție
             </h2>
 
             <p className="mt-1 text-xs text-[rgb(var(--text-muted))]">

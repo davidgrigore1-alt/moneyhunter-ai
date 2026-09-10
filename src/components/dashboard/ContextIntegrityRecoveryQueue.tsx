@@ -79,45 +79,47 @@ function QueueRow({ item }: { item: ContextIntegrityRecoveryItem }) {
 }
 
 export function ContextIntegrityRecoveryQueue({
-  queue
+  queue,
+  embedded = false
 }: {
   queue: ContextIntegrityRecoveryQueueModel | null;
+  embedded?: boolean;
 }) {
   if (!queue?.items.length) return null;
 
-  const primaryItems = queue.items.slice(
-    0,
-    CONTEXT_INTEGRITY_RECOVERY_LIMITS.visibleRows
-  );
-  const remainingItems = queue.items.slice(
-    CONTEXT_INTEGRITY_RECOVERY_LIMITS.visibleRows
-  );
+  const visibleLimit = embedded
+    ? Math.min(2, CONTEXT_INTEGRITY_RECOVERY_LIMITS.visibleRows)
+    : CONTEXT_INTEGRITY_RECOVERY_LIMITS.visibleRows;
+  const primaryItems = queue.items.slice(0, visibleLimit);
+  const remainingItems = queue.items.slice(visibleLimit);
 
   return (
     <section
-      className={styles.root}
-      aria-labelledby="context-integrity-recovery-title"
+      className={`${styles.root} ${embedded ? styles.embedded : ""}`}
+      aria-labelledby={embedded ? undefined : "context-integrity-recovery-title"}
     >
-      <header className={styles.header}>
-        <div>
-          <p className={styles.eyebrow}>Integritate comercială</p>
-          <h2 id="context-integrity-recovery-title">
-            Necesită decizie înainte de execuție
-          </h2>
-          <p className={styles.description}>
-            Neconcordanțe persistente între contextul comercial și
-            sursele conectate. Rămân vizibile până la o decizie
-            umană.
-          </p>
-        </div>
+      {!embedded ? (
+        <header className={styles.header}>
+          <div>
+            <p className={styles.eyebrow}>Integritate comercială</p>
+            <h2 id="context-integrity-recovery-title">
+              Necesită decizie înainte de execuție
+            </h2>
+            <p className={styles.description}>
+              Neconcordanțe persistente între contextul comercial și
+              sursele conectate. Rămân vizibile până la o decizie
+              umană.
+            </p>
+          </div>
 
-        <div className={styles.summary}>
-          <strong>{queue.opportunityCount}</strong>
-          <span>
-            {queue.opportunityCount === 1 ? "caz activ" : "cazuri active"}
-          </span>
-        </div>
-      </header>
+          <div className={styles.summary}>
+            <strong>{queue.opportunityCount}</strong>
+            <span>
+              {queue.opportunityCount === 1 ? "caz activ" : "cazuri active"}
+            </span>
+          </div>
+        </header>
+      ) : null}
 
       <div className={styles.list}>
         {primaryItems.map((item) => (
@@ -139,23 +141,27 @@ export function ContextIntegrityRecoveryQueue({
         </details>
       ) : null}
 
-      <footer className={styles.footer}>
-        <span>
-          {queue.highPriorityCount
-            ? `${queue.highPriorityCount} ${
-                queue.highPriorityCount === 1
-                  ? "caz cu prioritate ridicată"
-                  : "cazuri cu prioritate ridicată"
-              }`
-            : "Fără cazuri critice"}
-        </span>
-        <span>
-          {queue.oldestAgeDays && queue.oldestAgeDays > 0
-            ? `Cel mai vechi · ${queue.oldestAgeDays} ${
-                queue.oldestAgeDays === 1 ? "zi" : "zile"
-              }`
-            : "Cele mai vechi cazuri · astăzi"}
-        </span>
+      <footer className={`${styles.footer} ${embedded ? styles.embeddedFooter : ""}`}>
+        {!embedded ? (
+          <>
+            <span>
+              {queue.highPriorityCount
+                ? `${queue.highPriorityCount} ${
+                    queue.highPriorityCount === 1
+                      ? "caz cu prioritate ridicată"
+                      : "cazuri cu prioritate ridicată"
+                  }`
+                : "Fără cazuri critice"}
+            </span>
+            <span>
+              {queue.oldestAgeDays && queue.oldestAgeDays > 0
+                ? `Cel mai vechi · ${queue.oldestAgeDays} ${
+                    queue.oldestAgeDays === 1 ? "zi" : "zile"
+                  }`
+                : "Cele mai vechi cazuri · astăzi"}
+            </span>
+          </>
+        ) : null}
         {queue.limited ? (
           <span>Vizualizare limitată la contextul autorizat disponibil</span>
         ) : null}

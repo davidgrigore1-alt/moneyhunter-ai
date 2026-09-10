@@ -24,3 +24,87 @@
 @media (min-width: 1280px) { .chartGrid { grid-template-columns: minmax(0,1.65fr) minmax(340px,1fr); } }
 .charts :global(.control-center-disclosure) { border-radius: 8px; background: rgb(var(--surface)); }
 @media (max-width: 640px) { .root :global(.control-center-metric) { flex-basis: 45%; padding: 12px; } .root :global(.control-center-metric strong) { font-size: 17px; } .analysis { padding-inline: 12px; } .charts :global(.control-center-chart-card) { padding: 14px; } }
+
+/* COMMERCIAL_RECOVERY_CONVERGENCE_V1
+   One control surface: execution + persistent context integrity. */
+
+.integrityLane {
+  margin-top: 18px;
+  border-block: 1px solid rgb(var(--foreground) / .055);
+  padding: 16px 0 2px;
+}
+
+.integrityLaneHeader {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 11px;
+}
+
+.integrityLaneEyebrow {
+  margin: 0;
+  color: rgb(var(--intelligence));
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 15px;
+  letter-spacing: .085em;
+  text-transform: uppercase;
+}
+
+.integrityLaneHeader h2 {
+  margin: 4px 0 0;
+  color: rgb(var(--foreground));
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 20px;
+  letter-spacing: -.012em;
+}
+
+.integrityLaneHeader p:not(.integrityLaneEyebrow) {
+  max-width: 48rem;
+  margin: 4px 0 0;
+  color: rgb(var(--text-muted));
+  font-size: 11.5px;
+  line-height: 18px;
+}
+
+.integrityLaneMeta {
+  display: grid;
+  flex: 0 0 auto;
+  justify-items: end;
+}
+
+.integrityLaneMeta strong {
+  color: rgb(var(--foreground));
+  font-size: 18px;
+  font-weight: 620;
+  line-height: 22px;
+  font-variant-numeric: tabular-nums;
+}
+
+.integrityLaneMeta span {
+  margin-top: 1px;
+  color: rgb(var(--text-muted));
+  font-size: 10px;
+  line-height: 15px;
+}
+
+@media (max-width: 640px) {
+  .integrityLaneHeader {
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .integrityLaneMeta {
+    grid-auto-flow: column;
+    gap: 6px;
+    align-items: baseline;
+    justify-items: start;
+  }
+
+  .integrityLaneMeta span {
+    margin-top: 0;
+  }
+}

@@ -316,12 +316,9 @@ export default async function DashboardPage(
           </div>
         ) : null}
 
-        <ContextIntegrityRecoveryQueue
-          queue={contextIntegrityRecoveryQueue}
-        />
-
         <ExecutionControlCenter
           model={executionCenter}
+          contextIntegrityQueue={contextIntegrityRecoveryQueue}
           impactLinks={impactLinks}
           fx={fx}
           asOf={new Date().toISOString()}
