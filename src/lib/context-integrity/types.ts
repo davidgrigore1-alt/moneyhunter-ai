@@ -170,6 +170,7 @@ export type ContextIntegrityFindingState =
 
 export type ContextIntegrityResolutionReason =
   | "kept_current_context"
+  | "source_belongs_elsewhere"
   | "source_relinked"
   | "current_value_confirmed"
   | "observation_marked_historical"

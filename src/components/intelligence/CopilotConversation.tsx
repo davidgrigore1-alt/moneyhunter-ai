@@ -25,22 +25,36 @@ type ConversationItem = { id: string; question: string; answer: CopilotAnswer; a
 
 function executiveHeadlineFor(answer: CopilotAnswer) {
   const truth = answer.commercialTruth?.items[0];
+  const reviewedIntegrityKeys = new Set(
+    (truth?.contextIntegrityPersistence?.cases ?? [])
+      .filter((item) => item.state === "resolved" || item.state === "dismissed")
+      .map((item) => item.findingKey)
+  );
+  const visibleTruthIssues =
+    truth?.issues.filter(
+      (item) =>
+        !(
+          item.origin === "context_integrity" &&
+          item.integrityFindingKey &&
+          reviewedIntegrityKeys.has(item.integrityFindingKey)
+        )
+    ) ?? [];
 
-  if (truth?.issues.some((item) => item.origin === "context_integrity")) {
+  if (visibleTruthIssues.some((item) => item.origin === "context_integrity")) {
     return "Contextul comercial necesită revizuire înainte de următorul pas.";
   }
 
   if (
-    truth?.issues.some((item) => item.id === "overdue-next") ||
+    visibleTruthIssues.some((item) => item.id === "overdue-next") ||
     answer.suggestedAction?.label === "Revizuiește acțiunea restantă"
   ) {
     return "Oportunitatea necesită atenție: există o acțiune restantă.";
   }
 
-  if (truth?.issues.length) {
-    return truth.issues.length === 1
-      ? truth.issues[0].title
-      : `${truth.issues.length} neconcordanțe necesită revizuire.`;
+  if (visibleTruthIssues.length) {
+    return visibleTruthIssues.length === 1
+      ? visibleTruthIssues[0].title
+      : `${visibleTruthIssues.length} neconcordanțe necesită revizuire.`;
   }
 
   if (answer.answer.length > 240) {
