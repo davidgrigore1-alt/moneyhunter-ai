@@ -155,7 +155,9 @@ export default async function OpportunityDetailPage(
         <RecordTabs tabs={opportunityTabs} activeTab={activeTab} label="Secțiunile oportunității" />
         {activeTab === "context" ? <section aria-label="Contextul oportunității" className="grid gap-6">
           {impactLinks[opportunity.id]?<Link className="focus-ring block border-b border-[rgb(var(--border))] py-3 text-xs hover:underline" href={impactLinks[opportunity.id]}>Impact urmărit · Vezi dovada →</Link>:null}
-          <CommercialTruthSnapshot truth={commercialTruth} showFacts={false}/>
+          <div id="context-integrity-review" className="scroll-mt-24">
+            <CommercialTruthSnapshot truth={commercialTruth} showFacts={false}/>
+          </div>
           <details className="min-w-0"><summary className="focus-ring cursor-pointer rounded py-2 text-xs font-medium text-[rgb(var(--text-muted))]">Execuție și înregistrări CRM</summary><div id="opportunity-commercial-facts" className="scroll-mt-24" data-guide-anchor="opportunity-commercial-facts"><OpportunityControlCenter opportunity={opportunity} commercialState={commercialState} assignableProfiles={assignableProfiles} /></div></details>
           <div className="grid items-start gap-6 xl:grid-cols-12">
             <div className="min-w-0 xl:col-span-8"><OpportunityIntelligenceTimeline result={intelligenceTimeline} opportunityId={opportunity.id} showCurrentState={false} /></div>

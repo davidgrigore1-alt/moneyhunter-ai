@@ -27,6 +27,8 @@ import { buildExecutionControlCenter } from "@/lib/execution-control-center";
 import { deriveFirstValueJourney } from "@/lib/first-value-journey";
 import { GettingStarted } from "@/components/guidance/GettingStarted";
 import { IntegrationBrandIcon } from "@/components/ui/IntegrationBrandIcon";
+import { ContextIntegrityRecoveryQueue } from "@/components/dashboard/ContextIntegrityRecoveryQueue";
+import { getContextIntegrityRecoveryQueue } from "@/lib/context-integrity/recovery-queue-server";
 
 export const dynamic = "force-dynamic";
 
@@ -171,6 +173,11 @@ export default async function DashboardPage(
         ? deriveFirstValueJourney(scopedSignals)
         : null;
 
+    const contextIntegrityRecoveryQueue =
+      await getContextIntegrityRecoveryQueue(
+        scopedOpportunities,
+      ).catch(() => null);
+
     const visibleDecisionItems = decisionQueue.items.slice(0, 5);
 
     const morningBrief = buildExecutiveMorningBrief(
@@ -308,6 +315,10 @@ export default async function DashboardPage(
             <GettingStarted journey={gettingStarted} />
           </div>
         ) : null}
+
+        <ContextIntegrityRecoveryQueue
+          queue={contextIntegrityRecoveryQueue}
+        />
 
         <ExecutionControlCenter
           model={executionCenter}
