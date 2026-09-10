@@ -1,0 +1,340 @@
+.root {
+  min-width: 0;
+  padding: 2px 0 0;
+}
+
+.unavailable {
+  margin: 0;
+  border-block: 1px solid rgb(var(--border));
+  padding: 14px 0;
+  color: rgb(var(--text-muted));
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.header {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 2px 0 10px;
+}
+
+.header h3 {
+  min-width: 0;
+  margin: 0;
+  color: rgb(var(--foreground));
+  font-size: 14.5px;
+  font-weight: 650;
+  line-height: 21px;
+  letter-spacing: -.012em;
+}
+
+.header h3 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.header h3 a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.header > span {
+  flex: 0 0 auto;
+  color: rgb(var(--text-muted));
+  font-size: 11.5px;
+  line-height: 18px;
+  white-space: nowrap;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-width: 0;
+  gap: 15px 30px;
+  margin: 0;
+  padding: 20px 0 18px;
+}
+
+.metric {
+  min-width: 0;
+}
+
+.metric dt {
+  margin: 0;
+  color: rgb(var(--text-muted));
+  font-size: 11.5px;
+  font-weight: 520;
+  line-height: 17px;
+}
+
+.metric dd {
+  min-width: 0;
+  margin: 4px 0 0;
+  overflow: hidden;
+  color: rgb(var(--foreground));
+  font-size: 14px;
+  font-weight: 640;
+  line-height: 20px;
+  letter-spacing: -.008em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.whyDetails {
+  border-top: 1px solid rgb(var(--foreground) / .06);
+}
+
+.whyDetails > summary {
+  display: flex;
+  min-height: 52px;
+  cursor: pointer;
+  list-style: none;
+  align-items: center;
+  color: rgb(var(--text-secondary));
+  font-size: 13px;
+  font-weight: 620;
+  line-height: 20px;
+}
+
+.whyDetails > summary::-webkit-details-marker,
+.issueEvidence > summary::-webkit-details-marker,
+.allFacts > summary::-webkit-details-marker,
+.limitations > summary::-webkit-details-marker {
+  display: none;
+}
+
+.whyDetails > summary::before {
+  content: "›";
+  display: inline-block;
+  margin-right: 8px;
+  color: rgb(var(--text-muted));
+  font-size: 18px;
+  line-height: 1;
+  transform: rotate(0deg);
+  transition: transform 130ms ease;
+}
+
+.whyDetails[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.whyBody {
+  padding: 2px 0 16px;
+}
+
+.issueList {
+  display: grid;
+  gap: 0;
+}
+
+.issue {
+  padding: 16px 0 18px;
+  border-top: 1px solid rgb(var(--foreground) / .045);
+}
+
+.issueType {
+  margin: 0;
+  color: rgb(var(--text-muted));
+  font-size: 10.5px;
+  font-weight: 650;
+  line-height: 16px;
+}
+
+.issue h4 {
+  margin: 4px 0 0;
+  color: rgb(var(--foreground));
+  font-size: 15px;
+  font-weight: 670;
+  line-height: 22px;
+  letter-spacing: -.012em;
+}
+
+.decisionGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  margin-top: 15px;
+}
+
+.decisionLabel {
+  margin: 0;
+  color: rgb(var(--text-muted));
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .055em;
+  line-height: 16px;
+  text-transform: uppercase;
+}
+
+.decisionValue {
+  margin: 5px 0 0;
+  color: rgb(var(--foreground));
+  font-size: 14px;
+  font-weight: 520;
+  line-height: 22px;
+}
+
+.issueEvidence,
+.allFacts,
+.limitations {
+  margin-top: 13px;
+  border-top: 1px solid rgb(var(--foreground) / .045);
+}
+
+.issueEvidence > summary,
+.allFacts > summary,
+.limitations > summary {
+  min-height: 42px;
+  cursor: pointer;
+  list-style: none;
+  color: rgb(var(--text-muted));
+  font-size: 11.5px;
+  font-weight: 560;
+  line-height: 18px;
+}
+
+.explanation {
+  max-width: 46rem;
+  margin: 0 0 12px;
+  color: rgb(var(--text-secondary));
+  font-size: 13px;
+  line-height: 21px;
+}
+
+.factList {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.factList li {
+  display: grid;
+  grid-template-columns: minmax(0, .42fr) minmax(0, .58fr);
+  gap: 12px;
+  color: rgb(var(--text-secondary));
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.factList strong {
+  color: rgb(var(--foreground));
+  font-weight: 610;
+}
+
+.moreIssues,
+.noOpenIssues {
+  margin: 4px 0 12px;
+  color: rgb(var(--text-muted));
+  font-size: 11.5px;
+  line-height: 18px;
+}
+
+.allFactsList {
+  display: grid;
+  gap: 0;
+  padding-bottom: 6px;
+}
+
+.allFact {
+  padding: 12px 0;
+  border-top: 1px solid rgb(var(--foreground) / .04);
+}
+
+.allFact p {
+  display: flex;
+  min-width: 0;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 0;
+  color: rgb(var(--text-secondary));
+  font-size: 12.5px;
+  line-height: 19px;
+}
+
+.allFact strong {
+  color: rgb(var(--foreground));
+  font-weight: 610;
+}
+
+.allFact p span {
+  min-width: 0;
+  overflow: hidden;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.allFact small {
+  display: block;
+  margin-top: 4px;
+  color: rgb(var(--text-muted));
+  font-size: 10.5px;
+  line-height: 16px;
+}
+
+.limitations p {
+  margin: 0 0 8px;
+  color: rgb(var(--text-muted));
+  font-size: 11.5px;
+  line-height: 19px;
+}
+
+.secondaryActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.secondaryActions :global(a),
+.secondaryActions :global(button) {
+  min-height: 36px;
+  border-color: rgb(var(--foreground) / .075) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: rgb(var(--text-secondary)) !important;
+  font-size: 11.5px !important;
+}
+
+.secondaryActions :global(a:hover),
+.secondaryActions :global(button:hover) {
+  border-color: rgb(var(--foreground) / .12) !important;
+  color: rgb(var(--foreground)) !important;
+}
+
+@media (max-width: 560px) {
+  .header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .metrics,
+  .decisionGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .metrics {
+    gap: 12px;
+  }
+
+  .decisionGrid {
+    gap: 15px;
+  }
+
+  .factList li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .whyDetails > summary::before {
+    transition: none;
+  }
+}
