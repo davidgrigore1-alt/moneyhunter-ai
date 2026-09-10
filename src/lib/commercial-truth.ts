@@ -3,6 +3,7 @@ import type { CommercialSignal, Opportunity } from "@/lib/types";
 import { metadataEvidence,type EvidenceReference } from "@/lib/evidence-reference";
 import { buildOpportunityContextIntegrity,type ContextIntegrityCompanyIdentity } from "@/lib/context-integrity/commercial-truth-adapter";
 import type { ContextIntegrityCoverage,ContextIntegrityEvaluation } from "@/lib/context-integrity/types";
+import type { ContextIntegrityPersistenceResult } from "@/lib/context-integrity/lifecycle";
 
 export type TruthState="confirmed"|"needs_review"|"insufficient";
 export type ClaimType="commercial_value"|"offer_exists"|"offer_deadline"|"next_step"|"next_step_due_at"|"owner"|"primary_contact"|"customer_identity"|"meeting_commitment"|"client_response_state"|"deadline"|"approval_requirement";
@@ -19,7 +20,7 @@ export type TruthIssue={
 export type CommercialTruth={
  opportunityId:string;title:string;state:TruthState;evaluatedAt:string;claims:TruthClaim[];topFacts:TruthClaim[];
  issues:TruthIssue[];limitations:string[];sourceCount:number;currentState:OpportunityCommercialState;
- contextIntegrity?:ContextIntegrityEvaluation;
+ contextIntegrity?:ContextIntegrityEvaluation;contextIntegrityPersistence?:ContextIntegrityPersistenceResult;
 };
 export type TruthSegment={
  businessId:string;opportunityId:string;sourceId:string;segmentId:string;title:string;kind:string;

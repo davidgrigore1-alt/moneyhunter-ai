@@ -68,6 +68,32 @@ export type ContextIntegrityExistingCase = ContextIntegrityPersistentSnapshot & 
   resolvedAt: string | null;
 };
 
+
+export type ContextIntegrityPersistenceCase = {
+  id: string;
+  caseKey: string;
+  findingKey: string;
+  state: ContextIntegrityFindingState;
+  rowVersion: number;
+  detectionCount: number;
+  lastDetectedAt: string;
+  lastEvaluatedAt: string;
+  resolutionReason: ContextIntegrityResolutionReason | null;
+  resolvedAt: string | null;
+};
+
+export type ContextIntegrityPersistenceResult = {
+  status: "saved" | "unavailable";
+  created: number;
+  observed: number;
+  changed: number;
+  reopened: number;
+  superseded: number;
+  held: number;
+  cases: ContextIntegrityPersistenceCase[];
+  reason: string | null;
+};
+
 export type ContextIntegrityLifecycleOperation =
   | {
       type: "create";
@@ -331,7 +357,10 @@ export function planContextIntegrityReconciliation(input: {
       continue;
     }
 
-    if (current.findingKey === snapshot.findingKey) {
+    if (
+      current.findingKey === snapshot.findingKey &&
+      current.state !== "superseded"
+    ) {
       operations.push({
         type: "observe",
         id: current.id,

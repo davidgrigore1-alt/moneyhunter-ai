@@ -14,6 +14,7 @@ import { uuidPattern } from "@/lib/google-workspace/drive-types";
 import { assembleCommercialTruth,TRUTH_LIMITS,type TruthSegment,type TruthPrivateContext } from "@/lib/commercial-truth";
 import { CONTEXT_INTEGRITY_ADAPTER_LIMITS,collectContextCustomerIdentityKeys,type ContextIntegrityCompanyIdentity } from "@/lib/context-integrity/commercial-truth-adapter";
 import type { ContextIntegrityCoverage } from "@/lib/context-integrity/types";
+import { reconcileContextIntegrityForOpportunity } from "@/lib/context-integrity/repository";
 
 /** Structured current facts: no model, source segments, Google calls, or document bodies. */
 export const getCurrentCommercialStateForOpportunity=cache(async(opportunityId:string)=>{
@@ -125,8 +126,13 @@ export const getCommercialTruthForOpportunity=cache(async(opportunityId:string)=
   }catch{limitations.push("Contextul privat Gmail/Calendar nu este disponibil pentru această verificare.");}
  }
  const linkedSignals=await getCommercialSignalsForOpportunity(opportunityId);
- return assembleCommercialTruth({businessId:actor.businessId,opportunity,companyName,segments,companyDirectory,companyDirectoryComplete,
+ const truth=assembleCommercialTruth({businessId:actor.businessId,opportunity,companyName,segments,companyDirectory,companyDirectoryComplete,
   contextIntegrityCoverage,privateContext,limitations,linkedSignals});
+ const contextIntegrityPersistence=await reconcileContextIntegrityForOpportunity({
+  businessId:actor.businessId,opportunityId,evaluatedAt:truth.evaluatedAt,evaluation:truth.contextIntegrity!
+ });
+ if(contextIntegrityPersistence.status!=="saved")truth.limitations.push("context_integrity_persistence_unavailable");
+ return {...truth,contextIntegrityPersistence};
 });
 
 /** Explicitly bounded cross-record scope, using the existing RLS client for candidate visibility. */
