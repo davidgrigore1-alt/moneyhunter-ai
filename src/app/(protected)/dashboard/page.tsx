@@ -30,6 +30,8 @@ import { IntegrationBrandIcon } from "@/components/ui/IntegrationBrandIcon";
 import { ContextIntegrityRecoveryQueue } from "@/components/dashboard/ContextIntegrityRecoveryQueue";
 import { getContextIntegrityRecoveryQueue } from "@/lib/context-integrity/recovery-queue-server";
 import { getExecutionIntegrityWorkspaceState } from "@/lib/execution-integrity/server";
+import { RecoveryTimeline } from "@/components/dashboard/RecoveryTimeline";
+import { getRecoveryTimeline } from "@/lib/recovery-timeline/server";
 
 export const dynamic = "force-dynamic";
 
@@ -182,10 +184,13 @@ export default async function DashboardPage(
         ? deriveFirstValueJourney(scopedSignals)
         : null;
 
-    const contextIntegrityRecoveryQueue =
-      await getContextIntegrityRecoveryQueue(
-        scopedOpportunities,
-      ).catch(() => null);
+    const [contextIntegrityRecoveryQueue, recoveryTimeline] =
+      await Promise.all([
+        getContextIntegrityRecoveryQueue(
+          scopedOpportunities,
+        ).catch(() => null),
+        getRecoveryTimeline(scopedOpportunities).catch(() => null),
+      ]);
 
     const visibleDecisionItems = decisionQueue.items.slice(0, 5);
 
@@ -332,6 +337,8 @@ export default async function DashboardPage(
           fx={fx}
           asOf={new Date().toISOString()}
         />
+
+        <RecoveryTimeline model={recoveryTimeline} />
 
         {interventionBrief ? (
           <details className="control-center-disclosure group mt-5">
