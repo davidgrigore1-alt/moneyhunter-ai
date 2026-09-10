@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "reviewedThrough": "20260910030000_grant_communication_audit_insert.sql",
+  "reviewedThrough": "20260910190000_execution_integrity_v1.sql",
   "files": {
     "202606100001_initial_moneyhunter_schema.sql": "16395171050913d2dd0bfee661e8263707059d380a5d5b72742c25899bcc218a",
     "202606100002_phase4_rls_and_workflow.sql": "1703eb8f76fda27e22a0787234ecfabf9f1e0c2d2bc185ddbd068f93053b1ef1",
@@ -65,6 +65,11 @@
     "20260909122033_profile_bootstrap_insert_privileges.sql": "9934900b4d2865ca88607e20f8b16c305395fe312663d244c0abaee9decf7edf",
     "20260909122855_onboarding_insert_privileges.sql": "2daa3e8f56078d3938684b91917ee102b80cf1ce244c7441e6923580f0292a93",
     "20260910030000_grant_communication_audit_insert.sql": "5e1512d1c8feaa23889f0ad0adab52dbc23db2860b9602b0ac8818991d30fd30",
-    "20260910024000_fix_communication_os_scope_trigger.sql": "ef8df8ddc2b1ff3740918183eea5bc3ba914047b4b9c6144b6ca4cbf82006541"
+    "20260910024000_fix_communication_os_scope_trigger.sql": "ef8df8ddc2b1ff3740918183eea5bc3ba914047b4b9c6144b6ca4cbf82006541",
+    "20260910123000_context_integrity_crm_service_role_select.sql": "877ebc16c5605af61cd8239e540bf739f84c71b6f990d326afb523379de995e7",
+    "20260910150000_context_integrity_finding_lifecycle.sql": "cd99444d77a649a9a56d31490a4fabdb60599d00aa24be094af18696d32588b8",
+    "20260910161000_context_integrity_reconciliation_runtime.sql": "633ea28e8d956db0a76843f25bdb3f7de83b9064b912e3105dfb5a502e806162",
+    "20260910173000_context_integrity_human_resolution.sql": "0359666d2cad4be7a9ed8bf4e894fae1805012ee4e640cad39b7264ab4110163",
+    "20260910190000_execution_integrity_v1.sql": "ce28c2f9d13af068414e27bde339525dd2d89002c1c376ac340fff4f1210fc60"
   }
 }

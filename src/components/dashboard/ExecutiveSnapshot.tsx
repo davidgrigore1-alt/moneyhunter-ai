@@ -17,7 +17,18 @@ export function ExecutiveSnapshot({ model }: { model: ExecutionControlCenterMode
   return <section className={styles.snapshot} aria-label="Sinteză executivă">
     <div className={styles.heading}><p>Sinteză executivă</p><a className="focus-ring" href="#execution-queue-title">Mergi la cazuri <span aria-hidden="true">↗</span></a></div>
     <dl className={styles.metrics}>
-      <div><dt>Cazuri în atenție</dt><dd>{total}</dd></div>
+      <div>
+        <dt>Cazuri în atenție</dt>
+        <dd>{total}</dd>
+        {model.trackedExecutionCount ? (
+          <small className={styles.tracked}>
+            {model.trackedExecutionCount}{" "}
+            {model.trackedExecutionCount === 1
+              ? "urmărit persistent"
+              : "urmărite persistent"}
+          </small>
+        ) : null}
+      </div>
       <div><dt>Cazuri cu termen depășit</dt><dd>{model.overdueCount}</dd></div>
       <div><dt>Fără responsabil</dt><dd>{unassigned}</dd></div>
       <div><dt>Expunere estimată</dt><dd className={styles.money}>{currencies.length ? currencies.map(([currency, amount]) => <span key={currency}>{formatProductCurrency(amount, currency)}</span>) : "Fără valori"}</dd></div>

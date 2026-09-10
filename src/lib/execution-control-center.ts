@@ -5,6 +5,11 @@ import type { CommercialIntervention } from "@/lib/commercial-interventions";
 import type { CommercialCommunication } from "@/lib/commercial-execution";
 import type { CommercialSignal, Opportunity } from "@/lib/types";
 import type { WorkspaceDecisionQueue, WorkspaceDecisionItem } from "@/lib/workspace-decision-queue";
+import {
+  executionIntegrityAgeDays,
+  type ExecutionIntegrityCode,
+  type ExecutionIntegrityPersistenceCase
+} from "@/lib/execution-integrity/detector";
 
 export type ExecutionCase = {
   id: string; opportunityId: string; organization: string; opportunityTitle: string;
@@ -16,10 +21,17 @@ export type ExecutionCase = {
   nextAction: { title: string; dueAt: string | null; owner: string | null } | null;
   intervention: { label: string; href: string; explanation: string };
   evidence: EvidenceReference[]; recentActivity: EvidenceReference[];
+  executionIntegrity: {
+    activeCount: number;
+    firstDetectedAt: string;
+    ageDays: number;
+    codes: ExecutionIntegrityCode[];
+  } | null;
 };
 export type ExecutionControlCenterModel = {
   cases: ExecutionCase[]; exposure: Record<string, number>; overdueCount: number;
   sourceState: "available" | "fallback"; waitingCount: number;
+  trackedExecutionCount: number;
 };
 
 const date = (value?: string | null) => value && Number.isFinite(Date.parse(value)) ? value : null;
@@ -39,6 +51,10 @@ export function buildExecutionControlCenter(input: {
   viewer: { profileId: string | null; isManager: boolean };
   communicationsByOpportunityId?: Record<string, CommercialCommunication>;
   documentEvidenceByOpportunityId?: Record<string, EvidenceReference[]>;
+  executionIntegrityByOpportunityId?: Record<
+    string,
+    ExecutionIntegrityPersistenceCase[]
+  >;
   now?: Date;
 }): ExecutionControlCenterModel {
   const now = input.now ?? new Date();
@@ -105,6 +121,28 @@ export function buildExecutionControlCenter(input: {
     const safeAction = ownerMissing ? { label: "Atribuie responsabilul", href: base + "?tab=responsibility" }
       : reviewHref ? { label: "Revizuiește lucrul pregătit", href: reviewHref }
       : state.recommendedSafeIntervention;
+    const persistentBreaks =
+      input.executionIntegrityByOpportunityId?.[id] ?? [];
+    const firstPersistentBreak = persistentBreaks.length
+      ? [...persistentBreaks].sort(
+          (left, right) =>
+            left.firstDetectedAt.localeCompare(right.firstDetectedAt) ||
+            left.id.localeCompare(right.id)
+        )[0]
+      : null;
+    const executionIntegrity = firstPersistentBreak
+      ? {
+          activeCount: persistentBreaks.length,
+          firstDetectedAt: firstPersistentBreak.firstDetectedAt,
+          ageDays: executionIntegrityAgeDays(
+            firstPersistentBreak.firstDetectedAt,
+            now
+          ),
+          codes: Array.from(
+            new Set(persistentBreaks.map((item) => item.code))
+          )
+        }
+      : null;
     cases.push({
       id, opportunityId: id, organization: state.organization.name ?? "Companie neconfirmată", opportunityTitle: state.title,
       value: state.financial.estimatedValue !== null && Number.isFinite(state.financial.estimatedValue) ? state.financial.estimatedValue : null,
@@ -118,10 +156,21 @@ export function buildExecutionControlCenter(input: {
       nextMeetingAt: intervention?.meetingAt ?? null,
       nextAction: state.nextAction ? { title: state.nextAction.title, dueAt: state.nextAction.dueAt, owner: state.nextAction.ownerName } : null,
       intervention: { ...safeAction, href: evidenceHref(safeAction.href) ?? base, explanation: intervention?.recommendation ?? decisions[0].whyItMatters },
-      evidence: unique(evidence), recentActivity
+      evidence: unique(evidence), recentActivity, executionIntegrity
     });
   }
   const exposure: Record<string, number> = {};
   for (const item of cases) if (item.value !== null) Object.defineProperty(exposure, item.currency, { value: (Object.hasOwn(exposure, item.currency) ? exposure[item.currency] : 0) + item.value, enumerable: true, configurable: true });
-  return { cases, exposure, overdueCount: cases.filter((item) => item.overdue).length, sourceState: input.brief ? "available" : "fallback", waitingCount: input.brief?.waitingCount ?? input.queue.countsByType.waiting_for_client };
+  return {
+    cases,
+    exposure,
+    overdueCount: cases.filter((item) => item.overdue).length,
+    sourceState: input.brief ? "available" : "fallback",
+    waitingCount:
+      input.brief?.waitingCount ??
+      input.queue.countsByType.waiting_for_client,
+    trackedExecutionCount: cases.filter(
+      (item) => Boolean(item.executionIntegrity)
+    ).length
+  };
 }

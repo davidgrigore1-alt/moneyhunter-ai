@@ -184,7 +184,18 @@ function CaseDetail({
             De ce acum
           </h3>
 
-          {item.overdue ? (
+          {item.executionIntegrity ? (
+            <span className={styles.trackedCaseAge}>
+              Urmărit ·{" "}
+              {item.executionIntegrity.ageDays === 0
+                ? "astăzi"
+                : `${item.executionIntegrity.ageDays} ${
+                    item.executionIntegrity.ageDays === 1
+                      ? "zi"
+                      : "zile"
+                  }`}
+            </span>
+          ) : item.overdue ? (
             <span className="text-metadata font-medium text-[rgb(var(--warning-text))]">
               Termen depășit
             </span>
@@ -661,6 +672,18 @@ export function ExecutionControlCenter({
                                         : " zile"
                                     }`
                                   : "Termen depășit"}
+                              </span>
+                            ) : null}
+                            {item.executionIntegrity ? (
+                              <span className={styles.trackedCaseChip}>
+                                Urmărit ·{" "}
+                                {item.executionIntegrity.ageDays === 0
+                                  ? "astăzi"
+                                  : `${item.executionIntegrity.ageDays} ${
+                                      item.executionIntegrity.ageDays === 1
+                                        ? "zi"
+                                        : "zile"
+                                    }`}
                               </span>
                             ) : null}<CaseReadiness
                               owner={Boolean(item.owner.id)}

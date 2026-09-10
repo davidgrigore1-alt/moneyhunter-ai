@@ -29,6 +29,7 @@ import { GettingStarted } from "@/components/guidance/GettingStarted";
 import { IntegrationBrandIcon } from "@/components/ui/IntegrationBrandIcon";
 import { ContextIntegrityRecoveryQueue } from "@/components/dashboard/ContextIntegrityRecoveryQueue";
 import { getContextIntegrityRecoveryQueue } from "@/lib/context-integrity/recovery-queue-server";
+import { getExecutionIntegrityWorkspaceState } from "@/lib/execution-integrity/server";
 
 export const dynamic = "force-dynamic";
 
@@ -158,6 +159,12 @@ export default async function DashboardPage(
       scopedOpportunities.map((opportunity) => opportunity.id),
     ).catch(() => ({}));
 
+    const executionIntegrity =
+      await getExecutionIntegrityWorkspaceState({
+        opportunities: scopedOpportunities,
+        signals: scopedSignals,
+      }).catch(() => null);
+
     const executionCenter = buildExecutionControlCenter({
       opportunities: scopedOpportunities,
       signals: scopedSignals,
@@ -166,6 +173,8 @@ export default async function DashboardPage(
       viewer: summary.viewer,
       communicationsByOpportunityId,
       documentEvidenceByOpportunityId,
+      executionIntegrityByOpportunityId:
+        executionIntegrity?.byOpportunityId,
     });
 
     const gettingStarted =
