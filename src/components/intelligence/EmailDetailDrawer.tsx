@@ -52,7 +52,6 @@ export function EmailDetailDrawer({ messageId, onClose, onAsk }: {
   const [email, setEmail] = useState<OwnedGoogleEmailDetail | null>(null);
   const [thread, setThread] = useState<ThreadMessage[]>([]);
   const [html, setHtml] = useState<string | null>(null);
-  const [imagesLoaded, setImagesLoaded] = useState(false);
   const [showOriginal, setShowOriginal] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -65,6 +64,8 @@ export function EmailDetailDrawer({ messageId, onClose, onAsk }: {
   const closeButton = useRef<HTMLButtonElement>(null);
   const returnFocus = useRef<HTMLElement | null>(null);
   const mutationLock = useRef(false);
+  const composerScroll = useRef<HTMLDivElement>(null);
+  const finalSendButton = useRef<HTMLButtonElement>(null);
   const activeMessageId = messageId ?? "";
 
   useEffect(() => {
@@ -76,7 +77,7 @@ export function EmailDetailDrawer({ messageId, onClose, onAsk }: {
     const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
     document.body.style.overflow = "hidden";
     if (scrollbarWidth > 0) document.body.style.paddingRight = `${scrollbarWidth}px`;
-    setEmail(null); setThread([]); setError(""); setLoading(true); setHtml(null); setImagesLoaded(false); setShowOriginal(false);
+    setEmail(null); setThread([]); setError(""); setLoading(true); setHtml(null); setShowOriginal(false);
     setActionResult(null); setDraft(null); setTemplates([]); setDraftMessage("");
     fetch(`/api/integrations/google/email/${encodeURIComponent(activeMessageId)}`, {
       signal: controller.signal, credentials: "same-origin", headers: { Accept: "application/json" }
@@ -87,11 +88,14 @@ export function EmailDetailDrawer({ messageId, onClose, onAsk }: {
     }).catch((reason) => {
       if (!(reason instanceof DOMException && reason.name === "AbortError")) setError(reason instanceof Error ? reason.message : "Emailul nu poate fi încărcat.");
     }).finally(() => setLoading(false));
-    fetch(`/api/integrations/google/email/${encodeURIComponent(activeMessageId)}?view=html`, {
+    fetch(`/api/integrations/google/email/${encodeURIComponent(activeMessageId)}?view=html&images=1`, {
       signal: controller.signal, credentials: "same-origin", headers: { Accept: "application/json" }
     }).then(async (response) => {
       const payload = await response.json() as { html?: string | null };
-      if (response.ok && payload.html) setHtml(payload.html);
+      if (response.ok && payload.html) {
+        setHtml(payload.html);
+        setShowOriginal(true);
+      }
     }).catch(() => undefined);
     const frame = requestAnimationFrame(() => closeButton.current?.focus({ preventScroll: true }));
     const onKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
@@ -109,6 +113,18 @@ export function EmailDetailDrawer({ messageId, onClose, onAsk }: {
     returnFocus.current = null;
     if (target) requestAnimationFrame(() => target.focus({ preventScroll: true }));
   }, [messageId]);
+  useEffect(() => {
+    if (draft?.status !== "ready") return;
+    const frame = requestAnimationFrame(() => {
+      composerScroll.current?.scrollTo({
+        top: composerScroll.current.scrollHeight,
+        behavior: "smooth"
+      });
+      finalSendButton.current?.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [draft?.status]);
+
   if (!messageId) return null;
 
   async function runSourceAction(action: "summarize_email" | "explain_email_relevance" | "prepare_email_followup") {
@@ -223,12 +239,6 @@ export function EmailDetailDrawer({ messageId, onClose, onAsk }: {
     } catch (reason) { setDraftMessage(reason instanceof Error ? reason.message : "Draftul nu a putut fi abandonat."); }
     finally { setDraftBusy(""); }
   }
-  async function loadImages() {
-    const response = await fetch(`/api/integrations/google/email/${encodeURIComponent(activeMessageId)}?view=html&images=1`, { credentials: "same-origin" });
-    const payload = await response.json() as { html?: string | null };
-    if (response.ok && payload.html) { setHtml(payload.html); setImagesLoaded(true); }
-  }
-
   const subject = email?.subject || "Fără subiect";
   const sender = email?.sender ? partyLabel(email.sender) : "Expeditor neidentificat";
 
@@ -245,7 +255,7 @@ export function EmailDetailDrawer({ messageId, onClose, onAsk }: {
 
         {loading ? <div className="grid flex-1 place-items-center"><div className="w-full max-w-xl animate-pulse space-y-3"><div className="h-4 w-48 rounded bg-white/10"/><div className="h-24 rounded-[10px] bg-white/[0.05]"/><div className="h-40 rounded-[10px] bg-white/[0.05]"/></div></div>
         : error ? <div className="grid flex-1 place-items-center px-6 text-center"><div><DocumentMagnifyingGlassIcon className="mx-auto h-7 w-7 text-[#888]"/><p className="mt-3 text-sm font-semibold text-white">Conversația nu este disponibilă</p><p className="mt-1 text-xs text-[#999]">{error}</p></div></div>
-        : email ? <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,1fr)_380px]">
+        : email ? <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,1fr)_410px]">
           <main className="min-h-0 min-w-0 overflow-y-auto overscroll-contain px-5 py-6 sm:px-8">
             <div className="grid gap-2 border-b border-white/10 pb-4 text-xs sm:grid-cols-[5rem_minmax(0,1fr)]">
               <span className="text-[#7f7f7f]">De la</span><span className="break-all font-medium text-[#eee]">{sender}</span>
@@ -267,21 +277,22 @@ export function EmailDetailDrawer({ messageId, onClose, onAsk }: {
             </section> : null}
 
             <div className="mt-7 flex flex-wrap items-center justify-between gap-3">
-              <div><p className="micro-label">Mesaj selectat</p><p className="mt-1 text-[0.6875rem] text-[#777]">Vizualizare curată pentru citire. Originalul HTML rămâne izolat și sanitizat.</p></div>
+              <div><p className="micro-label">Mesaj selectat</p><p className="mt-1 text-[0.6875rem] text-[#777]">Vizualizare fidelă a mesajului, izolată de restul aplicației.</p></div>
               <div className="flex items-center gap-1 rounded-[8px] border border-white/10 bg-black/30 p-1">
-                <button type="button" onClick={() => setShowOriginal(false)} aria-pressed={!showOriginal} className="focus-ring rounded-[6px] px-2.5 py-1.5 text-[0.6875rem] font-semibold text-[#aaa] aria-pressed:bg-white/[0.08] aria-pressed:text-white">Curat</button>
-                <button type="button" disabled={!html} onClick={() => setShowOriginal(true)} aria-pressed={showOriginal} className="focus-ring rounded-[6px] px-2.5 py-1.5 text-[0.6875rem] font-semibold text-[#aaa] aria-pressed:bg-white/[0.08] aria-pressed:text-white disabled:cursor-not-allowed disabled:opacity-40">Original</button>
+                <button type="button" disabled={!html} onClick={() => setShowOriginal(true)} aria-pressed={showOriginal} className="focus-ring rounded-[7px] px-3 py-1.5 text-[0.6875rem] font-semibold text-[#aaa] transition aria-pressed:bg-white/[0.09] aria-pressed:text-white disabled:cursor-not-allowed disabled:opacity-40">Vizual</button>
+                <button type="button" onClick={() => setShowOriginal(false)} aria-pressed={!showOriginal} className="focus-ring rounded-[7px] px-3 py-1.5 text-[0.6875rem] font-semibold text-[#aaa] transition aria-pressed:bg-white/[0.09] aria-pressed:text-white">Text</button>
               </div>
             </div>
-            {showOriginal && html ? <div className="mt-3 overflow-hidden rounded-[12px] border border-neutral-300 bg-white">
-                <div className="flex items-center justify-between gap-3 border-b border-neutral-200 bg-neutral-50 px-3 py-2"><span className="text-[0.6875rem] font-semibold text-neutral-500">HTML sanitizat</span>{!imagesLoaded ? <button type="button" onClick={loadImages} className="focus-ring rounded-[6px] border border-neutral-300 bg-white px-2.5 py-1.5 text-[0.6875rem] font-semibold text-neutral-700 hover:bg-neutral-100">Încarcă imaginile externe</button> : <span className="text-[0.6875rem] font-semibold text-neutral-500">Imagini încărcate</span>}</div>
-                <iframe title="Conținutul sigur al emailului" sandbox="" referrerPolicy="no-referrer" srcDoc={html} className="h-[min(620px,62dvh)] w-full bg-white"/>
+            {showOriginal && html ? <div className="mt-3 overflow-hidden rounded-[14px] border border-white/[0.10] bg-white shadow-[0_18px_50px_rgba(0,0,0,0.18)]">
+                <iframe title="Conținutul vizual al emailului" sandbox="" referrerPolicy="no-referrer" srcDoc={html} className="h-[min(620px,61dvh)] w-full bg-white"/>
               </div>
               : <article className="mt-3 min-h-[320px] rounded-[12px] border border-neutral-200 bg-white px-6 py-6 text-sm leading-7 text-neutral-900">{readableEmailBody(email.body) ? <div className="mx-auto max-w-[78ch] whitespace-pre-wrap break-words">{readableEmailBody(email.body)}</div> : <div className="grid min-h-[250px] place-items-center text-center text-neutral-500"><div><p className="font-semibold text-neutral-700">Conținut text indisponibil</p><p className="mt-1">Textul curat nu este disponibil. Consultă Original dacă există o versiune HTML.</p></div></div>}</article>}
-            <p className="mt-4 text-[0.6875rem] leading-5 text-[#777]">Conținutul este tratat ca date neîncrezute. Scripturile, formularele și resursele remote sunt blocate implicit.</p>
+            <div className="mt-3 flex items-center gap-2 text-[0.625rem] leading-4 text-[#6f6f6f]"><span className="h-1.5 w-1.5 rounded-full bg-[#8d7a49]"/>Conținut izolat. Scripturile și formularele rămân dezactivate; imaginile vizuale sunt preluate prin ReveNew, fără referrer din browser.</div>
           </main>
 
-          <aside className="min-h-0 overflow-y-auto overscroll-contain border-t border-white/10 bg-[#0d0d0d] px-5 py-6 lg:border-l lg:border-t-0">
+          <aside className="flex min-h-0 flex-col overflow-hidden border-t border-white/10 bg-[#0d0d0d] lg:border-l lg:border-t-0">
+            <div ref={composerScroll} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5">
+            <div className={draft ? "hidden" : "block"}>
             <p className="micro-label">Context comercial</p>
             {onAsk ? <button type="button" disabled={Boolean(draftBusy || actionLoading)} onClick={() => onAsk("Ce contează comercial în acest email?")} className="focus-ring mt-3 inline-flex items-center gap-2 rounded-control border border-white/10 px-3 py-2 text-xs font-semibold hover:bg-white/[0.04]"><SparklesIcon className="h-4 w-4" aria-hidden="true" />Întreabă ReveNew</button> : null}
             <p className="mt-2 text-xs leading-5 text-[#aaa]">{email.commercialRelevance === "unlinked" ? "Fără legătură CRM confirmată. Nu este creată nicio asociere speculativă." : "Asociere confirmată cu datele CRM."}</p>
@@ -292,7 +303,9 @@ export function EmailDetailDrawer({ messageId, onClose, onAsk }: {
               <button disabled={Boolean(actionLoading)} type="button" className="focus-ring rounded-[8px] border border-white/10 px-3 py-2 text-xs font-semibold text-[#ddd] hover:bg-white/[0.04]" onClick={() => runSourceAction("explain_email_relevance")}>De ce contează?</button>
             </div>{actionResult ? <div className="mt-3 border-l-2 border-[#d9b969]/40 pl-3 text-xs leading-5 text-[#bbb]">{formatUserFacingText(actionResult.answer, { stripUrls: true })}</div> : null}</div>
 
-            <div className="mt-7 border-t border-white/[0.08] pt-5">
+            </div>
+
+            <div className={draft ? "pt-0" : "mt-7 border-t border-white/[0.08] pt-5"}>
               <div className="flex items-center justify-between gap-3"><p className="micro-label">Răspuns pregătit</p>{draft ? <span className="text-[0.625rem] font-semibold uppercase tracking-[0.1em] text-[#d9b969]">{presentCommunicationState(draft.status).label}</span> : null}</div>
               {!draft ? <><p className="mt-2 text-xs leading-5 text-[#888]">Răspunsul rămâne editabil. Nimic nu se trimite fără aprobarea și confirmarea ta finală.</p><button type="button" disabled={Boolean(draftBusy)} onClick={prepareReply} className="focus-ring mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-[8px] bg-[#d9b969] text-xs font-semibold text-black hover:bg-[#e3c77e] disabled:opacity-60"><ArrowUturnLeftIcon className="h-4 w-4"/>{draftBusy ? "Se pregătește…" : "Deschide composerul"}</button></>
               : <div className="mt-3 space-y-3">
@@ -300,16 +313,26 @@ export function EmailDetailDrawer({ messageId, onClose, onAsk }: {
                 <label className="block"><span className="text-[0.6875rem] text-[#888]">Către</span><input value={draft.to_recipients.join(", ")} disabled={draft.status === "sent"} onChange={(event) => setDraft({ ...draft, to_recipients: event.target.value.split(",").map((value) => value.trim()) })} className="focus-ring mt-1 h-9 w-full rounded-[7px] border border-white/10 bg-black px-2.5 text-xs text-white"/></label>
                 <label className="block"><span className="text-[0.6875rem] text-[#888]">CC</span><input value={draft.cc_recipients.join(", ")} disabled={draft.status === "sent"} onChange={(event) => setDraft({ ...draft, cc_recipients: event.target.value.split(",").map((value) => value.trim()).filter(Boolean) })} className="focus-ring mt-1 h-9 w-full rounded-[7px] border border-white/10 bg-black px-2.5 text-xs text-white"/></label>
                 <label className="block"><span className="text-[0.6875rem] text-[#888]">Subiect</span><input value={draft.subject} disabled={draft.status === "sent"} onChange={(event) => setDraft({ ...draft, subject: event.target.value, status: "draft" })} className="focus-ring mt-1 h-9 w-full rounded-[7px] border border-white/10 bg-black px-2.5 text-xs text-white"/></label>
-                <label className="block"><span className="text-[0.6875rem] text-[#888]">Mesaj</span><textarea value={draft.body} disabled={draft.status === "sent"} onChange={(event) => setDraft({ ...draft, body: event.target.value, status: "draft" })} rows={9} className="focus-ring mt-1 w-full resize-y rounded-[7px] border border-white/10 bg-black p-2.5 text-xs leading-5 text-white"/></label>                {draft.status !== "sent" ? <div><p className="text-[0.6875rem] text-[#888]">Asistență de redactare · versiunea rămâne editabilă</p><div className="mt-1.5 grid grid-cols-2 gap-1.5"><button type="button" disabled={Boolean(draftBusy)} onClick={() => refineDraft("rewrite")} className="focus-ring h-8 rounded-[7px] border border-white/10 text-[0.6875rem] font-semibold text-[#bbb] hover:bg-white/[0.04]">Rescrie</button><button type="button" disabled={Boolean(draftBusy)} onClick={() => refineDraft("shorten")} className="focus-ring h-8 rounded-[7px] border border-white/10 text-[0.6875rem] font-semibold text-[#bbb] hover:bg-white/[0.04]">Scurtează</button><button type="button" disabled={Boolean(draftBusy)} onClick={() => refineDraft("formal")} className="focus-ring h-8 rounded-[7px] border border-white/10 text-[0.6875rem] font-semibold text-[#bbb] hover:bg-white/[0.04]">Mai formal</button><button type="button" disabled={Boolean(draftBusy)} onClick={() => refineDraft("concise")} className="focus-ring h-8 rounded-[7px] border border-white/10 text-[0.6875rem] font-semibold text-[#bbb] hover:bg-white/[0.04]">Mai concis</button></div></div> : null}
-                {draft.status === "ready" ? <div className="rounded-[8px] border border-[#d9b969]/25 bg-[#d9b969]/[0.06] p-3 text-[0.6875rem] leading-5 text-[#d8c28d]"><CheckIcon className="mr-1 inline h-3.5 w-3.5"/>Versiune aprobată. Următorul click inițiază trimiterea reală prin Gmail.</div> : null}
-                {draft.status === "sent" ? <div className="rounded-[8px] border border-emerald-800/40 bg-emerald-950/20 p-3 text-xs text-emerald-300"><CheckIcon className="mr-1 inline h-4 w-4"/>Trimitere confirmată și auditată.</div> : <div className="grid grid-cols-2 gap-2">
-                  <button type="button" disabled={Boolean(draftBusy)} onClick={() => mutateDraft("save")} className="focus-ring h-9 rounded-[8px] border border-white/10 text-xs font-semibold text-white hover:bg-white/[0.04]">Salvează</button>
-                  {draft.status === "ready" ? <button type="button" disabled={Boolean(draftBusy)} onClick={() => mutateDraft("send")} className="focus-ring flex h-9 items-center justify-center gap-1.5 rounded-[8px] bg-[#d9b969] text-xs font-semibold text-black disabled:opacity-60"><PaperAirplaneIcon className="h-4 w-4"/>{draftBusy === "send" ? "Se trimite…" : "Confirmă și trimite"}</button>
-                    : <button type="button" disabled={Boolean(draftBusy) || !draft.body.trim()} onClick={saveAndReadyDraft} className="focus-ring h-9 rounded-[8px] bg-[#d9b969] text-xs font-semibold text-black disabled:opacity-60">Revizuiește și aprobă</button>}<button type="button" disabled={Boolean(draftBusy)} onClick={discardDraft} className="focus-ring col-span-2 h-8 text-[0.6875rem] font-semibold text-[#888] hover:text-red-300">Abandonează draftul</button>
-                </div>}
+                <label className="block"><span className="text-[0.6875rem] text-[#888]">Mesaj</span><textarea value={draft.body} disabled={draft.status === "sent"} onChange={(event) => setDraft({ ...draft, body: event.target.value, status: "draft" })} rows={7} className="focus-ring mt-1 min-h-[148px] w-full resize-none rounded-[9px] border border-white/10 bg-black p-3 text-xs leading-5 text-white"/></label>                {draft.status !== "sent" ? <div><p className="text-[0.6875rem] text-[#888]">Asistență de redactare · versiunea rămâne editabilă</p><div className="mt-1.5 grid grid-cols-2 gap-1.5"><button type="button" disabled={Boolean(draftBusy)} onClick={() => refineDraft("rewrite")} className="focus-ring h-8 rounded-[7px] border border-white/10 text-[0.6875rem] font-semibold text-[#bbb] hover:bg-white/[0.04]">Rescrie</button><button type="button" disabled={Boolean(draftBusy)} onClick={() => refineDraft("shorten")} className="focus-ring h-8 rounded-[7px] border border-white/10 text-[0.6875rem] font-semibold text-[#bbb] hover:bg-white/[0.04]">Scurtează</button><button type="button" disabled={Boolean(draftBusy)} onClick={() => refineDraft("formal")} className="focus-ring h-8 rounded-[7px] border border-white/10 text-[0.6875rem] font-semibold text-[#bbb] hover:bg-white/[0.04]">Mai formal</button><button type="button" disabled={Boolean(draftBusy)} onClick={() => refineDraft("concise")} className="focus-ring h-8 rounded-[7px] border border-white/10 text-[0.6875rem] font-semibold text-[#bbb] hover:bg-white/[0.04]">Mai concis</button></div></div> : null}
               </div>}
-              {draftMessage ? <p role="status" className="mt-3 text-[0.6875rem] leading-5 text-[#c9b372]">{draftMessage}{draftMessage.includes("permisiunea") ? <> <Link href="/apps" className="underline">Deschide Aplicații</Link></> : null}</p> : null}
             </div>
+            </div>
+
+            {draft ? <div className="shrink-0 border-t border-white/[0.09] bg-[#0a0a0a]/95 px-5 py-3 shadow-[0_-18px_48px_rgba(0,0,0,0.42)] backdrop-blur-2xl">
+              <div aria-live="polite">
+                {draft.status === "ready" ? <div className="mb-2.5 flex items-start gap-2.5 rounded-[10px] border border-[#d9b969]/25 bg-[#d9b969]/[0.055] px-3 py-2.5">
+                  <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full border border-[#d9b969]/35 bg-[#d9b969]/10"><CheckIcon className="h-3.5 w-3.5 text-[#e4ca86]"/></span>
+                  <div className="min-w-0"><p className="text-[0.6875rem] font-semibold text-[#ead79d]">Versiune aprobată</p><p className="mt-0.5 text-[0.625rem] leading-4 text-[#9f9272]">Următoarea acțiune este externă: trimitere reală prin Gmail.</p></div>
+                </div> : null}
+                {draft.status === "sent" ? <div className="flex items-center gap-2 rounded-[10px] border border-emerald-800/35 bg-emerald-950/15 px-3 py-2.5 text-xs text-emerald-300"><CheckIcon className="h-4 w-4 shrink-0"/>Trimitere confirmată și auditată.</div> : <div className="grid grid-cols-[0.82fr_1.18fr] gap-2">
+                  <button type="button" disabled={Boolean(draftBusy)} onClick={() => mutateDraft("save")} className="focus-ring h-10 rounded-[10px] border border-white/10 bg-white/[0.015] text-xs font-semibold text-white transition hover:bg-white/[0.05] disabled:opacity-60">Salvează</button>
+                  {draft.status === "ready" ? <button ref={finalSendButton} type="button" disabled={Boolean(draftBusy)} onClick={() => mutateDraft("send")} className="focus-ring flex h-10 items-center justify-center gap-1.5 rounded-[10px] bg-[#d9b969] text-xs font-semibold text-black shadow-[0_8px_24px_rgba(217,185,105,0.14)] transition hover:bg-[#e3c77e] disabled:opacity-60"><PaperAirplaneIcon className="h-4 w-4"/>{draftBusy === "send" ? "Se trimite…" : "Confirmă și trimite"}</button>
+                    : <button type="button" disabled={Boolean(draftBusy) || !draft.body.trim()} onClick={saveAndReadyDraft} className="focus-ring h-10 rounded-[10px] bg-[#d9b969] text-xs font-semibold text-black shadow-[0_8px_24px_rgba(217,185,105,0.12)] transition hover:bg-[#e3c77e] disabled:opacity-60">Revizuiește și aprobă</button>}
+                </div>}
+                {draft.status !== "sent" ? <button type="button" disabled={Boolean(draftBusy)} onClick={discardDraft} className="focus-ring mt-2 h-7 w-full text-[0.625rem] font-semibold text-[#777] transition hover:text-red-300">Abandonează draftul</button> : null}
+                {draftMessage ? <p role="status" className="mt-1.5 text-center text-[0.625rem] leading-4 text-[#c9b372]">{draftMessage}{draftMessage.includes("permisiunea") ? <> <Link href="/apps" className="underline">Deschide Aplicații</Link></> : null}</p> : null}
+              </div>
+            </div> : null}
           </aside>
         </div> : null}
       </section>

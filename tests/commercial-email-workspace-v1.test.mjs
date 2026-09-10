@@ -59,11 +59,20 @@ test("email actions and HTML retrieval stay bound to an owned internal source", 
   assert.doesNotMatch(route, /provider_message_id|refresh_token|access_token|encrypted_refresh/i);
 });
 
-test("viewer isolates sanitized HTML, blocks images by default and uses source-bound actions", () => {
+test("viewer isolates visual HTML, proxies images server-side and uses source-bound actions", () => {
   const drawer = read("src/components/intelligence/EmailDetailDrawer.tsx");
+  const runtime = read("src/lib/google-workspace/email-runtime.ts");
   assert.match(drawer, /sandbox=""/);
   assert.match(drawer, /referrerPolicy="no-referrer"/);
-  assert.match(drawer, /Încarcă imaginile/);
+  assert.match(drawer, /\?view=html&images=1/);
+  assert.match(drawer, />Vizual<\/button>/);
+  assert.match(drawer, />Text<\/button>/);
+  assert.doesNotMatch(drawer, /Încarcă imaginile externe|HTML sanitizat/);
+  assert.match(runtime, /safeRemoteImageUrl/);
+  assert.match(runtime, /gmailInlineImageMap/);
+  assert.match(runtime, /connect-src 'none'/);
+  assert.match(runtime, /form-action 'none'/);
+  assert.match(runtime, /object-src 'none'/);
   assert.match(drawer, /summarize_email/);
   assert.match(drawer, /explain_email_relevance/);
   assert.match(drawer, /prepare_email_followup/);

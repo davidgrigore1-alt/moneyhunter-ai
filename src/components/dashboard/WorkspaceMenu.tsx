@@ -3,11 +3,10 @@
 import Link from "next/link";
 import { type KeyboardEvent as ReactKeyboardEvent, useEffect, useId, useRef, useState } from "react";
 import { ArrowRightOnRectangleIcon, ChevronUpDownIcon, Cog6ToothIcon } from "@heroicons/react/24/outline";
-import { useTheme } from "@/components/theme/ThemeProvider";
-import { WorkspaceIdentityMark } from "@/components/theme/WorkspaceIdentityMark";
 import { cn } from "@/lib/utils";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/status";
+import { WorkspaceIdentityMark } from "@/components/theme/WorkspaceIdentityMark";
 
 type WorkspaceMenuProps = {
   businessName?: string;
@@ -24,9 +23,8 @@ export function WorkspaceMenu({ businessName, userEmail, userName, isDemo = fals
   const triggerRef = useRef<HTMLButtonElement>(null);
   const initialFocusRef = useRef<"first" | "last">("first");
   const menuId = useId();
-  const { identityPreview } = useTheme();
   const displayName = businessName ? (isDemo ? `Demo · ${businessName}` : businessName) : "Spațiu de lucru activ";
-  const resolvedDisplayName = identityPreview?.displayName || displayName;
+  const resolvedDisplayName = displayName;
   const identity = userName || userEmail || "Cont ReveNew";
 
   function getMenuItems() {
@@ -124,7 +122,7 @@ export function WorkspaceMenu({ businessName, userEmail, userName, isDemo = fals
         aria-controls={menuId}
         aria-expanded={open}
       >
-        <WorkspaceIdentityMark displayName={resolvedDisplayName} initials={identityPreview?.initials} compact />
+        <WorkspaceIdentityMark displayName={resolvedDisplayName} compact />
         <span className={cn("min-w-0 flex-1", variant === "header" && "hidden md:block")}>
           <span className="block truncate text-sm font-semibold text-[rgb(var(--foreground))]" title={resolvedDisplayName}>{resolvedDisplayName}</span>
           <span className="block truncate text-[0.6875rem] text-[rgb(var(--text-muted))]" title={identity}>{identity}</span>
@@ -145,7 +143,7 @@ export function WorkspaceMenu({ businessName, userEmail, userName, isDemo = fals
           className={cn("absolute z-50 w-[min(17.5rem,calc(100vw-1.5rem))] rounded-card border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-elevated))] p-1.5 shadow-modal", variant === "sidebar" ? "bottom-full left-0 mb-2" : "right-0 top-11")}
         >
           <div className="flex min-w-0 items-center gap-2.5 px-2.5 py-2">
-            <WorkspaceIdentityMark displayName={resolvedDisplayName} initials={identityPreview?.initials} />
+            <WorkspaceIdentityMark displayName={resolvedDisplayName} />
             <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-[rgb(var(--foreground))]" title={resolvedDisplayName}>{resolvedDisplayName}</p><p className="mt-0.5 truncate text-xs text-[rgb(var(--text-secondary))]" title={userEmail || identity}>{userEmail || identity}</p></div>
           </div>
 

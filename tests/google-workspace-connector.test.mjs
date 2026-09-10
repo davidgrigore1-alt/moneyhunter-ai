@@ -121,7 +121,10 @@ test("Calendar normalization preserves useful fields and limits private events",
 test("initial Gmail and Calendar synchronization is deliberately bounded", () => {
   const sync = read("src/lib/google-workspace/sync.ts");
   assert.match(sync, /GMAIL_INITIAL_DAYS = 90/);
-  assert.match(sync, /GMAIL_MAX_MESSAGES = 500/);
+  assert.match(sync, /GMAIL_MAX_MESSAGES = 75/);
+  assert.match(sync, /GMAIL_FETCH_CONCURRENCY = 1/);
+  assert.match(sync, /GMAIL_FETCH_PACING_MS = 400/);
+  assert.match(sync, /GOOGLE_MAX_ATTEMPTS = 6/);
   assert.match(sync, /MAX_PAGES = 5/);
   assert.match(sync, /newer_than:/);
   assert.match(sync, /-in:spam -in:trash/);

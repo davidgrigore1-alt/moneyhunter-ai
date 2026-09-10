@@ -38,7 +38,6 @@ type SupabaseProfileError = {
 };
 
 type ProfileInsertPayload = {
-  id: string;
   user_id: string;
   full_name: string;
   email: string;
@@ -113,7 +112,6 @@ function classifyProfileBootstrapError(error: unknown): ProfileBootstrapCategory
 
 function profileInsertPayload(authUser: User, fullName?: string): ProfileInsertPayload {
   return {
-    id: randomUUID(),
     user_id: authUser.id,
     full_name: fallbackName(authUser, fullName),
     email: (authUser.email ?? "").trim().toLowerCase()

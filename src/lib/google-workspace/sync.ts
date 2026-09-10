@@ -22,13 +22,15 @@ import type { GoogleConnectionRow, WorkspaceSyncResult, WorkspaceSourceSyncResul
 import { syncSelectedDriveSources } from "@/lib/google-workspace/drive";
 
 const GMAIL_INITIAL_DAYS = 90;
-const GMAIL_MAX_MESSAGES = 500;
+const GMAIL_MAX_MESSAGES = 75;
 const CALENDAR_PAST_DAYS = 60;
 const CALENDAR_FUTURE_DAYS = 120;
 const MAX_PAGES = 5;
-const GMAIL_FETCH_CONCURRENCY = 4;
-const GOOGLE_MAX_ATTEMPTS = 3;
-const GOOGLE_RETRY_BASE_MS = 150;
+const GMAIL_FETCH_CONCURRENCY = 1;
+const GMAIL_FETCH_PACING_MS = 400;
+const GOOGLE_MAX_ATTEMPTS = 6;
+const GOOGLE_RETRY_BASE_MS = 1_000;
+const GOOGLE_RETRY_MAX_MS = 32_000;
 
 const googleRateLimitReasons = new Set([
   "rateLimitExceeded", "userRateLimitExceeded", "dailyLimitExceeded", "quotaExceeded", "RESOURCE_EXHAUSTED"
@@ -52,22 +54,60 @@ function safeErrorCode(error: unknown) {
 }
 
 async function googleFailureCode(response: Response) {
-  if (response.status === 429) return "provider_rate_limited";
-  if (response.status === 403) {
-    const payload = await response.json().catch(() => null) as { error?: { status?: unknown; errors?: Array<{ reason?: unknown }> } } | null;
-    const reasons = [payload?.error?.status, ...(payload?.error?.errors ?? []).map(item => item.reason)]
-      .filter((value): value is string => typeof value === "string");
-    return reasons.some(reason => googleRateLimitReasons.has(reason)) ? "provider_rate_limited" : "provider_permission_denied";
+  const payload = await response.json().catch(() => null) as {
+    error?: {
+      status?: unknown;
+      message?: unknown;
+      errors?: Array<{ reason?: unknown }>;
+    };
+  } | null;
+
+  const reasons = [
+    payload?.error?.status,
+    ...(payload?.error?.errors ?? []).map(item => item.reason)
+  ].filter((value): value is string => typeof value === "string");
+
+  const message = typeof payload?.error?.message === "string" ? payload.error.message : "";
+  const retryAfter = response.headers.get("retry-after");
+
+  if (response.status === 429 || (response.status === 403 && reasons.some(reason => googleRateLimitReasons.has(reason)))) {
+    const code =
+      /concurrent/i.test(message) ? "provider_concurrent_limit"
+      : /bandwidth/i.test(message) ? "provider_bandwidth_limited"
+      : reasons.includes("userRateLimitExceeded") ? "provider_user_rate_limited"
+      : reasons.includes("dailyLimitExceeded") || reasons.includes("quotaExceeded") || reasons.includes("RESOURCE_EXHAUSTED")
+        ? "provider_quota_exhausted"
+        : "provider_rate_limited";
+
+    console.warn("google_api_throttled", {
+      status: response.status,
+      code,
+      reasons: reasons.slice(0, 4),
+      retryAfter: retryAfter ?? null
+    });
+    return code;
   }
+
+  if (response.status === 403) return "provider_permission_denied";
   return response.status === 401 ? "authorization_expired"
     : response.status === 404 || response.status === 410 ? "provider_cursor_invalid"
       : response.status >= 500 ? "provider_temporary_error" : "provider_request_failed";
+}
+
+function retryAfterMs(response: Response) {
+  const raw = response.headers.get("retry-after")?.trim();
+  if (!raw) return 0;
+  const seconds = Number(raw);
+  if (Number.isFinite(seconds) && seconds >= 0) return Math.round(seconds * 1_000);
+  const at = Date.parse(raw);
+  return Number.isFinite(at) ? Math.max(0, at - Date.now()) : 0;
 }
 
 async function googleJson<T>(url: URL, accessToken: string): Promise<T> {
   for (let attempt = 1; attempt <= GOOGLE_MAX_ATTEMPTS; attempt += 1) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15_000);
+    let retryDelay: number | null = null;
     try {
       const response = await fetch(url, {
         headers: { authorization: `Bearer ${accessToken}`, accept: "application/json" },
@@ -75,16 +115,34 @@ async function googleJson<T>(url: URL, accessToken: string): Promise<T> {
         cache: "no-store"
       });
       if (response.ok) return await response.json() as T;
+
       const code = await googleFailureCode(response);
-      const retryable = code === "provider_rate_limited" || response.status >= 500;
-      if (!retryable || attempt === GOOGLE_MAX_ATTEMPTS) throw new GoogleApiError(response.status, code);
+      const retryable = [
+        "provider_rate_limited",
+        "provider_user_rate_limited",
+        "provider_concurrent_limit",
+        "provider_bandwidth_limited",
+        "provider_quota_exhausted"
+      ].includes(code) || response.status >= 500;
+      if (!retryable || attempt === GOOGLE_MAX_ATTEMPTS) {
+        throw new GoogleApiError(response.status, code);
+      }
+
+      const exponential = GOOGLE_RETRY_BASE_MS * 2 ** (attempt - 1);
+      const jittered = exponential + Math.random() * 1_000;
+      retryDelay = Math.min(
+        GOOGLE_RETRY_MAX_MS,
+        Math.max(retryAfterMs(response), jittered)
+      );
     } finally {
       clearTimeout(timeout);
     }
-    const exponential = GOOGLE_RETRY_BASE_MS * 2 ** (attempt - 1);
-    const jittered = exponential * (0.75 + Math.random() * 0.5);
-    await new Promise(resolve => setTimeout(resolve, Math.min(600, jittered)));
+
+    if (retryDelay !== null) {
+      await new Promise(resolve => setTimeout(resolve, retryDelay));
+    }
   }
+
   throw new GoogleApiError(503, "provider_temporary_error");
 }
 
@@ -92,6 +150,9 @@ async function inBatches<T, R>(items: T[], size: number, worker: (item: T) => Pr
   const output: R[] = [];
   for (let index = 0; index < items.length; index += size) {
     output.push(...await Promise.all(items.slice(index, index + size).map(worker)));
+    if (index + size < items.length) {
+      await new Promise(resolve => setTimeout(resolve, GMAIL_FETCH_PACING_MS));
+    }
   }
   return output;
 }
@@ -99,7 +160,14 @@ async function inBatches<T, R>(items: T[], size: number, worker: (item: T) => Pr
 async function gmailMessage(accessToken: string, id: string) {
   const url = new URL(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(id)}`);
   url.searchParams.set("format", "full");
-  return googleJson<GmailMessagePayload>(url, accessToken);
+  try {
+    return await googleJson<GmailMessagePayload>(url, accessToken);
+  } catch (error) {
+    if (error instanceof GoogleApiError && (error.status === 404 || error.status === 410)) {
+      return null;
+    }
+    throw error;
+  }
 }
 
 async function gmailProfile(accessToken: string) {
@@ -120,7 +188,7 @@ async function gmailInitial(connection: GoogleConnectionRow, accessToken: string
     if (!pageToken) break;
   }
   const raw = await inBatches(Array.from(new Set(ids)).slice(0, GMAIL_MAX_MESSAGES), GMAIL_FETCH_CONCURRENCY, (id) => gmailMessage(accessToken, id));
-  const messages = raw.flatMap((item) => normalizeGmailMessage(item, connection.external_email) ?? []);
+  const messages = raw.flatMap((item) => item ? (normalizeGmailMessage(item, connection.external_email) ?? []) : []);
   const profile = await gmailProfile(accessToken);
   return { mode: "initial" as const, messages, deletedIds: [] as string[], historyId: profile.historyId ?? null };
 }
@@ -130,35 +198,76 @@ async function gmailIncremental(connection: GoogleConnectionRow, accessToken: st
   const deleted = new Set<string>();
   let pageToken: string | undefined;
   let latestHistoryId = connection.gmail_history_id;
+  let checkpointHistoryId = connection.gmail_history_id;
+  let bounded = false;
+
   for (let page = 0; page < MAX_PAGES; page += 1) {
     const url = new URL("https://gmail.googleapis.com/gmail/v1/users/me/history");
     url.searchParams.set("startHistoryId", connection.gmail_history_id ?? "");
-    url.searchParams.set("maxResults", "500");
+    url.searchParams.set("maxResults", "100");
     url.searchParams.set("historyTypes", "messageAdded");
     url.searchParams.append("historyTypes", "messageDeleted");
     if (pageToken) url.searchParams.set("pageToken", pageToken);
+
     const result = await googleJson<{
       history?: Array<{
+        id?: string;
         messagesAdded?: Array<{ message?: { id?: string } }>;
         messagesDeleted?: Array<{ message?: { id?: string } }>;
       }>;
       nextPageToken?: string;
       historyId?: string;
     }>(url, accessToken);
+
     for (const item of result.history ?? []) {
-      for (const value of item.messagesAdded ?? []) if (value.message?.id) added.add(value.message.id);
-      for (const value of item.messagesDeleted ?? []) if (value.message?.id) deleted.add(value.message.id);
+      const itemAdded = Array.from(new Set(
+        (item.messagesAdded ?? []).flatMap(value => value.message?.id ? [value.message.id] : [])
+      )).filter(id => !added.has(id));
+
+      if (added.size > 0 && added.size + itemAdded.length > GMAIL_MAX_MESSAGES) {
+        bounded = true;
+        break;
+      }
+      if (added.size === 0 && itemAdded.length > GMAIL_MAX_MESSAGES) {
+        throw new Error("gmail_incremental_window_too_large");
+      }
+
+      for (const id of itemAdded) added.add(id);
+      for (const value of item.messagesDeleted ?? []) {
+        if (value.message?.id) deleted.add(value.message.id);
+      }
+      if (item.id) checkpointHistoryId = item.id;
+
+      if (added.size >= GMAIL_MAX_MESSAGES) {
+        bounded = true;
+        break;
+      }
     }
-    latestHistoryId = result.historyId ?? latestHistoryId;
+
+    if (bounded) break;
+
     pageToken = result.nextPageToken;
-    if (!pageToken) break;
+    if (!pageToken) {
+      latestHistoryId = result.historyId ?? checkpointHistoryId ?? latestHistoryId;
+      break;
+    }
+
+    if (page === MAX_PAGES - 1) {
+      latestHistoryId = checkpointHistoryId ?? latestHistoryId;
+    }
   }
-  const raw = await inBatches(Array.from(added).slice(0, GMAIL_MAX_MESSAGES), GMAIL_FETCH_CONCURRENCY, (id) => gmailMessage(accessToken, id));
+
+  const raw = await inBatches(
+    Array.from(added),
+    GMAIL_FETCH_CONCURRENCY,
+    id => gmailMessage(accessToken, id)
+  );
+
   return {
     mode: "incremental" as const,
-    messages: raw.flatMap((item) => normalizeGmailMessage(item, connection.external_email) ?? []),
-    deletedIds: Array.from(deleted).slice(0, GMAIL_MAX_MESSAGES),
-    historyId: latestHistoryId
+    messages: raw.flatMap((item) => item ? (normalizeGmailMessage(item, connection.external_email) ?? []) : []),
+    deletedIds: Array.from(deleted),
+    historyId: bounded ? (checkpointHistoryId ?? latestHistoryId) : latestHistoryId
   };
 }
 
@@ -326,6 +435,17 @@ export async function syncOwnedGoogleWorkspace():Promise<WorkspaceSyncResult> {
   }
 }
 function publicSyncError(code:string){
- return ["authorization_revoked","provider_permission_denied","scope_not_granted","provider_timeout","provider_rate_limited","provider_cursor_invalid"].includes(code)
+ return [
+  "authorization_revoked",
+  "provider_permission_denied",
+  "scope_not_granted",
+  "provider_timeout",
+  "provider_rate_limited",
+  "provider_user_rate_limited",
+  "provider_concurrent_limit",
+  "provider_bandwidth_limited",
+  "provider_quota_exhausted",
+  "provider_cursor_invalid"
+ ].includes(code)
   ?code:"provider_temporary_error";
 }

@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { previewPlanCookieName, getReveNewAccessMode } from "@/lib/billing/paid-access";
+import { previewPlanCookieNameForBusiness, getReveNewAccessMode } from "@/lib/billing/paid-access";
 import { isPreviewPlanId, type PreviewPlanId } from "@/lib/billing/plans";
 import { getCurrentBusinessForUser } from "@/lib/business/current-business";
 import { safeInternalRedirect } from "@/lib/auth/redirects";
@@ -18,9 +18,10 @@ export async function selectPreviewPlan(planId: PreviewPlanId, redirectTo = "/da
     redirect("/access?reason=invalid_preview_plan");
   }
 
-  await getCurrentBusinessForUser({ redirectIfMissing: true });
+  const currentBusiness = await getCurrentBusinessForUser({ redirectIfMissing: true });
+  if (!currentBusiness) redirect("/onboarding");
 
-  (await cookies()).set(previewPlanCookieName, planId, {
+  (await cookies()).set(previewPlanCookieNameForBusiness(currentBusiness.business.id), planId, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",

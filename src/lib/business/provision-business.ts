@@ -31,7 +31,7 @@ async function ensureOnboardingBusinessSetup({
 }): Promise<OnboardingSetupResult> {
   const { error: memberError } = await supabase
     .from("business_members")
-    .upsert({ business_id: businessId, profile_id: profileId, role: "owner" }, { onConflict: "business_id,profile_id" });
+    .upsert({ business_id: businessId, profile_id: profileId, role: "owner" }, { onConflict: "business_id,profile_id", ignoreDuplicates: true });
 
   if (memberError) {
     console.error("Supabase business member upsert error", { code: memberError.code });

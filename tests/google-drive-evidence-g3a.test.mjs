@@ -515,7 +515,7 @@ function workspaceHarness(options={}){
    return options.drive??{status:"completed",selected:3,synced:2,unchanged:1,failed:0};
   }},
   "@/lib/communication-sequences":{reconcileSequenceExits:async()=>{if(options.reconcileError)throw new Error("PRIVATE reconciliation");}}
- },{fetch:async(url)=>{
+ },{setTimeout:(callback)=>{callback();return 0;},clearTimeout:()=>{},fetch:async(url)=>{
   calls.push(String(url));
   if(options.gmailResponses&&String(url).includes("gmail")){
    const response=options.gmailResponses[Math.min(gmailAttempts,options.gmailResponses.length-1)];gmailAttempts++;
@@ -550,20 +550,26 @@ test("G3A.2 provider sync isolates source failures, skips unauthorized Drive and
   const denied=workspaceHarness({connection:changes});await assert.rejects(denied.service.syncOwnedGoogleWorkspace());assert.equal(denied.refreshes,0);assert.equal(denied.driveCalls,0);
  }
 });
-test("Google 403 reasons distinguish permission denial from retryable quota limits",async()=>{
+test("Google 403 reasons distinguish permission denial from bounded throttle categories",async()=>{
  const permission=workspaceHarness({gmailResponses:[{status:403,reason:"insufficientPermissions"}]});
  assert.equal((await permission.service.syncOwnedGoogleWorkspace()).gmail.errorCategory,"provider_permission_denied");
  assert.equal(permission.gmailAttempts,1);
- for(const reason of ["rateLimitExceeded","userRateLimitExceeded","dailyLimitExceeded","quotaExceeded"]){
+ const categories={
+  rateLimitExceeded:"provider_rate_limited",
+  userRateLimitExceeded:"provider_user_rate_limited",
+  dailyLimitExceeded:"provider_quota_exhausted",
+  quotaExceeded:"provider_quota_exhausted"
+ };
+ for(const [reason,errorCategory] of Object.entries(categories)){
   const limited=workspaceHarness({gmailResponses:[{status:403,reason}]});
-  assert.equal((await limited.service.syncOwnedGoogleWorkspace()).gmail.errorCategory,"provider_rate_limited");
-  assert.equal(limited.gmailAttempts,3);
+  assert.equal((await limited.service.syncOwnedGoogleWorkspace()).gmail.errorCategory,errorCategory);
+  assert.equal(limited.gmailAttempts,6);
  }
 });
 test("Google 429 retries are bounded and a later successful response completes Gmail sync",async()=>{
  const exhausted=workspaceHarness({gmailResponses:[{status:429}]});
  assert.equal((await exhausted.service.syncOwnedGoogleWorkspace()).gmail.errorCategory,"provider_rate_limited");
- assert.equal(exhausted.gmailAttempts,3);
+ assert.equal(exhausted.gmailAttempts,6);
  const recovered=workspaceHarness({gmailResponses:[{status:429},{status:200}]});
  assert.equal((await recovered.service.syncOwnedGoogleWorkspace()).gmail.status,"completed");
  assert.equal(recovered.gmailAttempts,4);

@@ -289,7 +289,7 @@ test("email cards open a safe source-bound detail drawer with controlled send co
   assert.match(cards, /onOpen\(email\.recordId\)/);
   assert.match(cards, /EmailDetailDrawer/);
   assert.match(drawer, /\/api\/integrations\/google\/email\//);
-  assert.match(drawer, /Vizualizare curată pentru citire/);
+  assert.match(drawer, /Vizualizare fidelă a mesajului/);
   assert.match(drawer, /onAsk\?: \(question: string\) => void/);
   assert.match(drawer, /Deschide composerul/);
   assert.match(drawer, /event\.key === "Escape"/);

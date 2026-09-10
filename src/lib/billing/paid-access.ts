@@ -33,6 +33,10 @@ export type PaidAccessContext = {
 
 export const previewPlanCookieName = "revenew_preview_plan";
 
+export function previewPlanCookieNameForBusiness(businessId: string) {
+  return `${previewPlanCookieName}_${businessId}`;
+}
+
 const paidStatusLabels: Record<PaidAccessStatus, string> = {
   active: "Activ",
   none: "Nu ai un plan activ",
@@ -59,8 +63,8 @@ export function getReveNewAccessMode(): ReveNewAccessMode {
   return process.env.NODE_ENV === "production" ? "paid" : "preview";
 }
 
-export async function getPreviewPlan(): Promise<PreviewPlanId | null> {
-  const value = (await cookies()).get(previewPlanCookieName)?.value;
+export async function getPreviewPlan(businessId: string): Promise<PreviewPlanId | null> {
+  const value = (await cookies()).get(previewPlanCookieNameForBusiness(businessId))?.value;
   return isPreviewPlanId(value) ? value : null;
 }
 
@@ -121,7 +125,7 @@ const getCurrentPaidAccessContextCached = cache(async function getCurrentPaidAcc
   }
 
   const accessMode = getReveNewAccessMode();
-  const previewPlan = getPreviewPlanById(await getPreviewPlan());
+  const previewPlan = getPreviewPlanById(await getPreviewPlan(currentBusiness.business.id));
 
   if (accessMode === "preview") {
     return {

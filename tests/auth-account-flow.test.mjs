@@ -81,6 +81,8 @@ test("profile initializer uses authenticated RLS path and omits legacy role by d
 
   assert.ok(payloadMatch, "profileInsertPayload object missing");
   assert.equal(/\brole\b/.test(payloadMatch[1]), false, "profileInsertPayload must not include profiles.role by default");
+  assert.equal(/\bid\s*:/.test(payloadMatch[1]), false, "bootstrap uses the database-generated profile id without an id column INSERT grant");
+  assert.match(payloadMatch[1], /user_id:\s*authUser\.id/, "bootstrap identity comes from the authenticated server user");
   assert.equal(source.includes('select("id,user_id,full_name,email,role")'), false, "profile bootstrap must not select legacy profiles.role");
   assert.equal(source.includes("createSupabaseServerClient()"), true, "profile bootstrap must use authenticated server client");
   assert.equal(source.includes(".eq(\"user_id\", userId).maybeSingle()"), true, "zero profile rows must be normal");
@@ -175,6 +177,7 @@ test("onboarding business creation derives ownership server-side and avoids payl
   assert.equal(provisioning.includes("owner_id"), false);
   assert.equal(provisioning.includes("profile_id: profileId"), true);
   assert.equal(provisioning.includes('role: "owner"'), true);
+  assert.equal(provisioning.includes('onConflict: "business_id,profile_id", ignoreDuplicates: true'), true, "onboarding replay must not require rewriting an owner membership");
   assert.equal(provisioning.includes("const businessId = randomUUID()"), true, "business id must exist before membership provisioning");
   assert.equal(provisioning.includes(".select(\"id\")\n    .single()"), false, "insert must not require SELECT access before owner membership exists");
   assert.equal(provisioning.includes("attemptedPayload"), false);

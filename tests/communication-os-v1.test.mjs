@@ -84,7 +84,7 @@ test("thread reader is bounded, sanitized and retains the page context", () => {
   has(route, "getOwnedGoogleEmailThread");
   has(drawer, "Fir conversație");
   has(drawer, 'sandbox=""');
-  has(drawer, "Conținutul este tratat ca date neîncrezute");
+  has(drawer, "Conținut izolat");
   has(drawer, "Confirmă și trimite");
 });
 

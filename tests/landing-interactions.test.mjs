@@ -142,12 +142,12 @@ test('unconnected public form fails closed and renders accessible isolated statu
   const html=renderToStaticMarkup(React.createElement(DemoRequestForm));
   assert.match(html,/Trimiterea nu este disponibilă momentan/);
   assert.match(html,/<button[^>]+type="submit"[^>]+disabled/);
-  assert.doesNotMatch(html,/Solicitarea a fost preluată/);
+  assert.doesNotMatch(html,/Solicitare preluată/);
   assert.match(html,/aria-describedby="demo-unavailable"/);
   assert.equal((html.match(/ required=""/g)||[]).length,3);
   assert.match(renderToStaticMarkup(React.createElement(DemoSubmissionStatus,{state:'error'})),/role="alert"/);
   assert.match(renderToStaticMarkup(React.createElement(DemoSubmissionStatus,{state:'pending'})),/role="status"/);
-  assert.match(renderToStaticMarkup(React.createElement(DemoSubmissionStatus,{state:'success'})),/Solicitarea a fost preluată/);
+  assert.match(renderToStaticMarkup(React.createElement(DemoSubmissionStatus,{state:'success'})),/Solicitare preluată/);
 });
 test('landing has no provider or private-data boundary and all primary CTAs share one route',()=>{
   const root='src/components/marketing/';

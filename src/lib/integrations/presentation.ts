@@ -79,10 +79,15 @@ const safeErrors: Record<string, string> = {
   provider_permission_denied: "Google nu a permis accesul la această sursă. Verifică autorizarea.",
   scope_not_granted: "Permisiunea necesară nu a fost acordată.",
   provider_timeout: "Google nu a răspuns la timp. Poți relua sincronizarea.",
-  provider_rate_limited: "Limita temporară Google a fost atinsă. Reîncearcă mai târziu.",
+  provider_rate_limited: "Google limitează temporar ritmul de sincronizare. Contextul deja disponibil rămâne neschimbat; reîncearcă peste aproximativ un minut.",
+  provider_user_rate_limited: "Google a limitat temporar ritmul pentru acest cont. Contextul existent rămâne disponibil; reîncearcă după aproximativ un minut.",
+  provider_concurrent_limit: "Gmail este accesat simultan de prea multe procese pentru acest cont. ReveNew a oprit importul în siguranță; reîncearcă după ce activitatea scade.",
+  provider_bandwidth_limited: "Gmail a limitat temporar volumul de date transferat pentru acest cont. Contextul deja disponibil rămâne neschimbat.",
+  provider_quota_exhausted: "Cota Gmail configurată pentru proiectul Google a fost atinsă. Verifică Gmail API → Quotas în Google Cloud înainte de o nouă sincronizare.",
   partial_provider_failure: "Unele surse nu au fost actualizate. Verifică starea fiecărei capabilități.",
   provider_cursor_invalid: "Sincronizarea necesită refacerea ferestrei de context.",
-  provider_temporary_error: "Google este temporar indisponibil. Poți relua sincronizarea."
+  provider_temporary_error: "Google este temporar indisponibil. Poți relua sincronizarea.",
+  gmail_incremental_window_too_large: "Gmail are un lot neobișnuit de mare de schimbări. Contextul existent rămâne neschimbat până la o resincronizare controlată."
 };
 
 export function integrationErrorMessage(code: string | null): string | null {

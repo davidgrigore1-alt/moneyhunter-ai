@@ -85,7 +85,7 @@ test("mobile execution surfaces keep precise actions and responsibility visible"
   assert.match(today, /Revizuiește acțiunea/);
   assert.doesNotMatch(today, />\s*Deschide\s*</);
   assert.match(opportunity, />Responsabil<\/dt><dd[^>]*>\{ownerName \?\? "Neatribuit"\}/);
-  assert.match(access, /Audit de recuperare venituri/);
+  assert.match(access, /Pilot ReveNew/);
 });
 
 test("postpone controls are framed, responsive and use clear Romanian choices", () => {

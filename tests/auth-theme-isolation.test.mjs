@@ -46,6 +46,16 @@ function loader(overrides = {}) {
 const load = loader();
 const { accentThemePresets } = load("src/lib/theme-presets.ts");
 const css = postcss.parse(read("src/app/globals.css"));
+test("standalone bootstrap retry has one viewport-centered bounded card and accessible recovery links", () => {
+  const Page = load("src/app/auth/bootstrap/retry/page.tsx").default;
+  const html = renderToStaticMarkup(React.createElement(Page));
+  assert.match(html, /<main class="[^"]*grid min-h-dvh w-full place-items-center px-4 py-8/);
+  assert.match(html, /<section aria-labelledby="bootstrap-retry-title" class="[^"]*max-w-\[34rem\][^"]*text-left/);
+  assert.equal((html.match(/<section/g) ?? []).length, 1);
+  assert.match(html, /href="\/auth\/bootstrap"/);
+  assert.match(html, /href="\/auth\/switch-account\?/);
+  assert.match(html, /sm:grid-cols-2/);
+});
 function declarations(selector) {
   const result = {};
   css.walkRules(rule => {

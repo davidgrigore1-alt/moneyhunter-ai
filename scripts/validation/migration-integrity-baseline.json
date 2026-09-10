@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "reviewedThrough": "20260909103000_create_company_primary_contact.sql",
+  "reviewedThrough": "20260910030000_grant_communication_audit_insert.sql",
   "files": {
     "202606100001_initial_moneyhunter_schema.sql": "16395171050913d2dd0bfee661e8263707059d380a5d5b72742c25899bcc218a",
     "202606100002_phase4_rls_and_workflow.sql": "1703eb8f76fda27e22a0787234ecfabf9f1e0c2d2bc185ddbd068f93053b1ef1",
@@ -61,6 +61,10 @@
     "20260909090000_workflow_pending_approval_probe.sql": "9a6155fdc05a6480d246066839365803011e20b1d56d025deb989a7c2165cb07",
     "20260909100000_company_primary_contact.sql": "de28bd48763924c4f28dc4f908bcb4fa5c29ea5033bd4133dcee4de86cbdffad",
     "20260909103000_create_company_primary_contact.sql": "eb065d288d1a30bba8a1ecb00ce6dd756fa82384df6a3cb96c9e8dd5c96ddb5b",
-    "20260909011852_marketing_demo_requests.sql": "38dff53e40b0dac0dd1bdc3ecdde56040e6124cdaa64665ccd186c5738eeb77d"
+    "20260909011852_marketing_demo_requests.sql": "38dff53e40b0dac0dd1bdc3ecdde56040e6124cdaa64665ccd186c5738eeb77d",
+    "20260909122033_profile_bootstrap_insert_privileges.sql": "9934900b4d2865ca88607e20f8b16c305395fe312663d244c0abaee9decf7edf",
+    "20260909122855_onboarding_insert_privileges.sql": "2daa3e8f56078d3938684b91917ee102b80cf1ce244c7441e6923580f0292a93",
+    "20260910030000_grant_communication_audit_insert.sql": "5e1512d1c8feaa23889f0ad0adab52dbc23db2860b9602b0ac8818991d30fd30",
+    "20260910024000_fix_communication_os_scope_trigger.sql": "ef8df8ddc2b1ff3740918183eea5bc3ba914047b4b9c6144b6ca4cbf82006541"
   }
 }
