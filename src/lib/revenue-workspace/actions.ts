@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidateCommercialState } from "@/lib/commercial-state-invalidation";
+import { reevaluateExecutionIntegrityAfterMutation } from "@/lib/execution-integrity/immediate";
 import { dispatchStageChangedEvent } from "@/lib/workflow-events";
 import { requirePermission } from "@/lib/authz/require-permission";
 import { requireActivePaidAccess } from "@/lib/billing/paid-access";
@@ -71,8 +71,8 @@ async function eventForOpportunity(input: TrustedEvent) {
   } catch { return { failed: true }; }
 }
 
-function revalidateOpportunity(opportunityId: string) {
-  revalidateCommercialState(opportunityId);
+async function revalidateOpportunity(opportunityId: string) {
+  await reevaluateExecutionIntegrityAfterMutation(opportunityId);
 }
 
 export async function updatePipelineStatus(opportunityId: string, formData: FormData) {
@@ -116,7 +116,7 @@ export async function updatePipelineStatus(opportunityId: string, formData: Form
     description: `Etapa a fost schimbată din ${opportunity.status} în ${nextStatus}.`,
     metadata: { previous_status: opportunity.status, next_status: nextStatus }
   }) : null;
-  revalidateOpportunity(opportunityId);
+  await revalidateOpportunity(opportunityId);
   return { ok: true, ...(eventResult?.failed ? { message: "Etapa a fost salvată. Evaluarea workflow-urilor nu a putut fi finalizată." } : {}) };
 }
 
@@ -175,7 +175,7 @@ export async function createOpportunityTask(opportunityId: string, formData: For
     description: title,
     metadata: { action_id: data.id, due_at: dueAt, assigned_to_profile_id: assignedToProfileId }
   });
-  revalidateOpportunity(opportunityId);
+  await revalidateOpportunity(opportunityId);
   return { ok: true, id: data.id };
 }
 
@@ -210,7 +210,7 @@ export async function completeOpportunityTask(opportunityId: string, actionId: s
     description: data.title ?? "Acțiune finalizată",
     metadata: { action_id: actionId }
   });
-  revalidateOpportunity(opportunityId);
+  await revalidateOpportunity(opportunityId);
   return { ok: true };
 }
 
@@ -257,7 +257,7 @@ export async function updateOpportunityCommercialDetails(opportunityId: string, 
       commercial_type: commercialType
     }
   });
-  revalidateOpportunity(opportunityId);
+  await revalidateOpportunity(opportunityId);
   return { ok: true };
 }
 
@@ -346,7 +346,7 @@ export async function recordOpportunityOutcome(opportunityId: string, formData: 
     description: "Valoarea efectivă a fost confirmată explicit odată cu rezultatul câștigat.",
     metadata: { actual_outcome_amount: amount, currency }
   });
-  revalidateOpportunity(opportunityId);
+  await revalidateOpportunity(opportunityId);
   return { ok: true };
 }
 
@@ -373,6 +373,6 @@ export async function reopenOpportunity(opportunityId: string) {
     description: "Rezultatul anterior rămâne în istoric; oportunitatea este din nou activă.",
     metadata: { previous_lifecycle_status: opportunity.lifecycleStatus ?? opportunity.status }
   });
-  revalidateOpportunity(opportunityId);
+  await revalidateOpportunity(opportunityId);
   return { ok: true };
 }

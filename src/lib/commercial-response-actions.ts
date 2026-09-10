@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { reevaluateExecutionIntegrityAfterMutation } from "@/lib/execution-integrity/immediate";
 import { requirePermission } from "@/lib/authz/require-permission";
 import { requireActivePaidAccess } from "@/lib/billing/paid-access";
 import {
@@ -100,6 +101,7 @@ export async function recordCommercialResponse(opportunityId: string, input: Rec
   await addEvent({ opportunityId, businessId: business.id, profileId, type: "next_action_created", label: "Acțiune următoare confirmată", description: nextActionTitle, metadata: { response_id: response.id, action_id: action.id, due_at: dueAt } });
   if (input.milestone) await addEvent({ opportunityId, businessId: business.id, profileId, type: input.milestone.includes("meeting") ? "meeting_milestone" : input.milestone.includes("proposal") ? "proposal_milestone" : "commercial_milestone", label: "Milestone comercial înregistrat", description: input.milestone, metadata: { response_id: response.id, milestone: input.milestone } });
   if (["unsubscribe", "bounced"].includes(input.category)) await addEvent({ opportunityId, businessId: business.id, profileId, type: input.category === "unsubscribe" ? "unsubscribe_recorded" : "bounced_address_recorded", label: input.category === "unsubscribe" ? "Dezabonare înregistrată" : "Adresă respinsă înregistrată", description: "Outreach-ul viitor este restricționat până la o intervenție controlată.", metadata: { response_id: response.id } });
+  await reevaluateExecutionIntegrityAfterMutation(opportunityId);
   refresh(opportunityId);
   return { ok: true as const, responseId: response.id, actionId: action.id };
 }

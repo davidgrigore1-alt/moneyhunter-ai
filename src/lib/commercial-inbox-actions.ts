@@ -16,23 +16,70 @@ import {
 } from "@/lib/commercial-inbox";
 import { requireActivePaidAccess } from "@/lib/billing/paid-access";
 import { requirePermission } from "@/lib/authz/require-permission";
+import { reevaluateExecutionIntegrityAfterMutation } from "@/lib/execution-integrity/immediate";
+
+function linkedOpportunityIdFromMutation(result: unknown): string | null {
+  if (!result || typeof result !== "object" || Array.isArray(result)) {
+    return null;
+  }
+
+  const row = result as {
+    ok?: unknown;
+    opportunityId?: unknown;
+    signal?: {
+      detectedFromOpportunityId?: unknown;
+      convertedOpportunityId?: unknown;
+    } | null;
+  };
+
+  if (row.ok !== true) return null;
+
+  const candidates = [
+    row.opportunityId,
+    row.signal?.convertedOpportunityId,
+    row.signal?.detectedFromOpportunityId
+  ];
+
+  for (const candidate of candidates) {
+    if (
+      typeof candidate === "string" &&
+      candidate.length > 0 &&
+      candidate.length <= 128
+    ) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
+
+async function settleSignalExecutionIntegrity<T>(result: T): Promise<T> {
+  const opportunityId = linkedOpportunityIdFromMutation(result);
+  if (opportunityId) {
+    await reevaluateExecutionIntegrityAfterMutation(opportunityId);
+  }
+  return result;
+}
 
 export async function createCommercialSignal(input: CommercialSignalInput) {
   await requireActivePaidAccess();
   await requirePermission("signals.create");
-  return createCommercialSignalData(input);
+  const result = await createCommercialSignalData(input);
+  return settleSignalExecutionIntegrity(result);
 }
 
 export async function analyzeCommercialSignal(signalId: string) {
   await requireActivePaidAccess();
   await requirePermission("opportunities.analyze");
-  return analyzeCommercialSignalData(signalId);
+  const result = await analyzeCommercialSignalData(signalId);
+  return settleSignalExecutionIntegrity(result);
 }
 
 export async function approveCommercialSignal(signalId: string, input: SignalApprovalInput) {
   await requireActivePaidAccess();
   await requirePermission("signals.convert");
-  return approveCommercialSignalData(signalId, input);
+  const result = await approveCommercialSignalData(signalId, input);
+  return settleSignalExecutionIntegrity(result);
 }
 
 export async function setCommercialSignalReviewDecision(
@@ -43,37 +90,55 @@ export async function setCommercialSignalReviewDecision(
 ) {
   await requireActivePaidAccess();
   await requirePermission(decision === "postponed" ? "signals.update" : "signals.archive");
-  return setCommercialSignalReviewDecisionData(signalId, decision, reason, reviewDueAt);
+  const result = await setCommercialSignalReviewDecisionData(
+    signalId,
+    decision,
+    reason,
+    reviewDueAt
+  );
+  return settleSignalExecutionIntegrity(result);
 }
 
 export async function rejectCommercialSignal(signalId: string, expectedUpdatedAt: string, reason: string) {
   await requireActivePaidAccess();
   await requirePermission("signals.archive");
-  return rejectCommercialSignalData(signalId, expectedUpdatedAt, reason);
+  const result = await rejectCommercialSignalData(
+    signalId,
+    expectedUpdatedAt,
+    reason
+  );
+  return settleSignalExecutionIntegrity(result);
 }
 
 export async function updateCommercialSignal(id: string, input: CommercialSignalInput) {
   await requireActivePaidAccess();
   await requirePermission("signals.update");
-  return updateCommercialSignalData(id, input);
+  const result = await updateCommercialSignalData(id, input);
+  return settleSignalExecutionIntegrity(result);
 }
 
 export async function ignoreCommercialSignal(id: string) {
   await requireActivePaidAccess();
   await requirePermission("signals.archive");
-  return ignoreCommercialSignalData(id);
+  const result = await ignoreCommercialSignalData(id);
+  return settleSignalExecutionIntegrity(result);
 }
 
 export async function archiveCommercialSignal(id: string, reason?: string) {
   await requireActivePaidAccess();
   await requirePermission("signals.archive");
-  return archiveCommercialSignalData(id, reason);
+  const result = await archiveCommercialSignalData(id, reason);
+  return settleSignalExecutionIntegrity(result);
 }
 
 export async function convertSignalToOpportunity(signalId: string, expectedUpdatedAt: string) {
   await requireActivePaidAccess();
   await requirePermission("signals.convert");
-  return convertSignalToOpportunityData(signalId, expectedUpdatedAt);
+  const result = await convertSignalToOpportunityData(
+    signalId,
+    expectedUpdatedAt
+  );
+  return settleSignalExecutionIntegrity(result);
 }
 
 export async function addCommercialSignalEvent(signalId: string, eventType: string, description: string, metadata: Record<string, unknown> = {}) {
