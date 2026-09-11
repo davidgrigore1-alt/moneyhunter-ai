@@ -5,6 +5,7 @@ import { PrintPilotPackButton } from "@/components/reports/PrintPilotPackButton"
 import { Button } from "@/components/ui/Button";
 import { getEnterprisePilotPack } from "@/lib/enterprise-pilot-pack";
 import { formatCurrency, formatDateTimeWithSeconds } from "@/lib/utils";
+import styles from "@/components/reports/EnterprisePilotPackVisual.module.css";
 
 export const dynamic = "force-dynamic";
 
@@ -37,7 +38,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section id={id} className="pilot-section rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-5 sm:p-6">
+    <section id={id} className={`${styles.section} pilot-section rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface))] p-5 sm:p-6`}>
       <p className="text-label text-[rgb(var(--primary))]">{eyebrow}</p>
       <h2 className="mt-2 text-xl font-semibold tracking-tight text-[rgb(var(--foreground))]">{title}</h2>
       {description ? <p className="mt-2 max-w-3xl text-sm leading-6 text-[rgb(var(--text-muted))]">{description}</p> : null}
@@ -63,7 +64,7 @@ export default async function EnterprisePilotPackPage() {
         </div>
       }
     >
-      <article data-guide-anchor="reports-audit-summary" className="enterprise-pilot-pack space-y-5">
+      <article data-guide-anchor="reports-audit-summary" className={`${styles.root} enterprise-pilot-pack space-y-5`}>
         <div className="hidden border-b border-[rgb(var(--border))] pb-5 print:block">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[rgb(var(--primary))]">ReveNew · Propunere de validare</p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[rgb(var(--foreground))]">{pack.executiveTitle}</h1>

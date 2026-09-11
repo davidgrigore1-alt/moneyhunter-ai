@@ -701,7 +701,7 @@ test("RT-34 drawer has four clear information sections", () => {
   for (const label of [
     "Ce s-a schimbat",
     "Dovezi",
-    "Lifecycle",
+    "Istoric verificabil",
     "Valoare asociată"
   ]) {
     assert.match(component, new RegExp(label));

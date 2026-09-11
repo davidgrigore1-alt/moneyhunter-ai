@@ -1,89 +1,67 @@
-import Link from "next/link";
-import { ArrowRightIcon, CheckCircleIcon, ExclamationTriangleIcon, LockClosedIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
-import { PageShell } from "@/components/dashboard/PageShell";
-import { PrintProofOfValueButton } from "@/components/reports/PrintProofOfValueButton";
-import { Button } from "@/components/ui/Button";
-import { closePilotEngagement, createPilotEngagement, freezePilotBaseline, freezePilotFinal } from "@/lib/pilot-measurement-actions";
+import { PilotProofOfValueExperience } from "@/components/reports/PilotProofOfValueExperience";
+import {
+  getPilotMeasurementWorkspace,
+  pilotContract
+} from "@/lib/pilot-measurement";
 import { comparePilotSnapshots } from "@/lib/pilot-measurement-core";
-import { getPilotMeasurementWorkspace, pilotContract, type PilotMeasurementWorkspace } from "@/lib/pilot-measurement";
-import { formatCurrency, formatDateTimeWithSeconds } from "@/lib/utils";
+import { getPilotRecoveryProof } from "@/lib/pilot-proof-recovery";
 
 export const dynamic = "force-dynamic";
 
-const statusLabels = { draft: "Configurare", active: "Pilot activ", final_frozen: "Situație finală confirmată", closed: "Închis", cancelled: "Anulat" } as const;
-const criterionStatus = { met: "Criteriu îndeplinit", not_met: "Criteriu neîndeplinit", insufficient_data: "Date insuficiente" } as const;
-
-function Section({ id, eyebrow, title, description, children }: { id: string; eyebrow: string; title: string; description?: string; children: React.ReactNode }) {
-  return <section id={id} className="proof-section border-y border-[rgb(var(--border))] bg-[rgb(var(--surface))] px-1 py-5 sm:px-2 sm:py-6">
-    <p className="text-label text-[rgb(var(--primary))]">{eyebrow}</p>
-    <h2 className="mt-2 text-xl font-semibold tracking-tight text-[rgb(var(--foreground))]">{title}</h2>
-    {description ? <p className="mt-2 max-w-4xl text-sm leading-6 text-[rgb(var(--text-muted))]">{description}</p> : null}
-    <div className="mt-5">{children}</div>
-  </section>;
-}
-
-function Metric({ label, value, note }: { label: string; value: string | number; note?: string }) {
-  return <div className="border-l-2 border-[rgb(var(--border-strong))] bg-[rgb(var(--surface-subtle))] px-4 py-3"><p className="text-xs font-medium text-[rgb(var(--text-muted))]">{label}</p><p className="mt-1 text-2xl font-semibold tabular-nums text-[rgb(var(--foreground))]">{value}</p>{note ? <p className="mt-1 text-xs leading-5 text-[rgb(var(--text-faint))]">{note}</p> : null}</div>;
-}
-
-function CurrencyValues({ values, empty }: { values: Array<{ currency: string; value: number }>; empty: string }) {
-  return values.length ? <div className="mt-2 space-y-1">{values.map((item) => <p key={item.currency} className="font-semibold tabular-nums">{formatCurrency(item.value, item.currency)}</p>)}</div> : <p className="mt-2 text-sm font-semibold">{empty}</p>;
-}
-
-function Setup({ workspace }: { workspace: PilotMeasurementWorkspace }) {
-  const today = new Date();
-  const end = new Date(today.getTime() + 14 * 86_400_000);
-  const date = (value: Date) => value.toISOString().slice(0, 10);
-  return <Section id="configurare" eyebrow="A · Contract de măsurare" title="Configurează pilotul înainte de baseline" description="Domeniul, cohorta și criteriile sunt stabilite înainte de a vedea rezultatul final. Pilotul nu trimite mesaje și nu confirmă venit automat.">
-    {!workspace.canManage ? <p className="text-sm text-[rgb(var(--text-muted))]">Poți consulta rapoartele, dar numai un proprietar, administrator sau manager poate crea și confirma un pilot.</p> : <form action={createPilotEngagement} className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2">
-        <label className="text-sm font-medium">Nume pilot<input name="name" required minLength={3} defaultValue="Pilot de execuție comercială" className="field mt-2 w-full" /></label>
-        <label className="text-sm font-medium">Nume afișat clientului<input name="customerFacingName" required minLength={2} defaultValue={workspace.workspaceName} className="field mt-2 w-full" /></label>
-        <label className="text-sm font-medium">Data începerii<input name="startsOn" type="date" required defaultValue={date(today)} className="field mt-2 w-full" /></label>
-        <label className="text-sm font-medium">Data estimată a încheierii<input name="expectedEndsOn" type="date" required defaultValue={date(end)} className="field mt-2 w-full" /></label>
-      </div>
-      <label className="block text-sm font-medium">Domeniul controlat<textarea name="scopeNote" required minLength={3} rows={3} defaultValue="Oportunități selectate pentru verificarea responsabilității, acțiunilor următoare și follow-up-urilor întârziate." className="field mt-2 w-full" /></label>
-      <fieldset><legend className="font-semibold">Cohorta pilotului</legend><p className="mt-1 text-sm text-[rgb(var(--text-muted))]">Selectează lotul care va rămâne neschimbat în comparație. Fluxul este optimizat pentru 20–50 de oportunități.</p><div className="mt-3 grid max-h-80 gap-2 overflow-y-auto rounded-control border border-[rgb(var(--border))] p-3 md:grid-cols-2">{workspace.candidates.map((item) => <label key={item.id} className="flex items-start gap-3 rounded-control p-2 hover:bg-[rgb(var(--surface-muted))]"><input type="checkbox" name="cohort" value={item.id} defaultChecked={item.active} className="mt-1" /><span className="min-w-0 text-sm"><span className="block font-semibold">{item.title}</span><span className="text-[rgb(var(--text-muted))]">{item.company} · {item.estimatedValue > 0 ? formatCurrency(item.estimatedValue, item.currency) : "valoare lipsă"}</span></span></label>)}</div></fieldset>
-      <fieldset><legend className="font-semibold">Criterii de succes</legend><p className="mt-1 text-sm text-[rgb(var(--text-muted))]">Țintele sunt operaționale, nu financiare. Ele vor fi înghețate odată cu baseline-ul.</p><div className="mt-3 grid gap-3 md:grid-cols-2">{[
-        ["owner_coverage_pp", "Creștere acoperire cu responsabil", 20, "puncte procentuale"], ["next_action_coverage_pp", "Creștere acoperire cu acțiune următoare", 20, "puncte procentuale"], ["overdue_followups_reduction", "Reducere follow-up-uri întârziate", 3, "oportunități"], ["stale_opportunities_reduction", "Reducere oportunități inactive", 2, "oportunități"], ["actions_completed", "Acțiuni finalizate înregistrate", 5, "înregistrări"]
-      ].map(([key, label, target, unit]) => <label key={String(key)} className="flex items-center gap-3 rounded-control border border-[rgb(var(--border))] p-3 text-sm"><input type="checkbox" name={`criterion_${key}`} defaultChecked /><span className="min-w-0 flex-1 font-medium">{label}</span><input aria-label={`Țintă ${label}`} name={`target_${key}`} type="number" min="0" max="1000" defaultValue={target} className="field w-20" /><span className="text-xs text-[rgb(var(--text-muted))]">{unit}</span></label>)}</div></fieldset>
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[rgb(var(--border))] pt-5"><p className="max-w-2xl text-xs leading-5 text-[rgb(var(--text-muted))]">La creare, pilotul rămâne în configurare. Baseline-ul oficial apare numai după o previzualizare nouă și confirmare umană explicită.</p><Button type="submit">Creează pilotul</Button></div>
-    </form>}
-  </Section>;
-}
-
-function SnapshotSummary({ snapshot, label }: { snapshot: NonNullable<PilotMeasurementWorkspace["livePreview"]>; label: string }) {
-  const metrics = snapshot.metrics;
-  return <div className="space-y-4"><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><Metric label="Oportunități în cohortă" value={metrics.cohortSize} /><Metric label="Cu responsabil" value={`${metrics.ownerAssigned} / ${metrics.cohortSize}`} /><Metric label="Cu acțiune următoare" value={`${metrics.nextActionDefined} / ${metrics.cohortSize}`} /><Metric label="Follow-up-uri întârziate" value={metrics.overdueFollowUps} /></div><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><Metric label="Oportunități inactive" value={metrics.staleOpportunities} /><Metric label="Excepții identificate" value={metrics.exceptionCount} /><Metric label="Aprobări în așteptare" value={metrics.pendingApprovals} /><Metric label="Informații lipsă" value={metrics.missingDataItems} /></div><div className="grid gap-3 sm:grid-cols-2"><div className="rounded-control border border-[rgb(var(--border))] p-4"><p className="text-xs text-[rgb(var(--text-muted))]">Valoare estimată monitorizată · deduplicată</p><CurrencyValues values={metrics.estimatedValueByCurrency} empty="Nu există valori estimate complete." /><p className="mt-2 text-xs text-[rgb(var(--text-faint))]">Valoare estimată, nu venit confirmat. Monedele rămân separate.</p></div><div className="rounded-control border border-[rgb(var(--border))] p-4"><p className="text-xs text-[rgb(var(--text-muted))]">Venit confirmat de utilizatori</p><CurrencyValues values={metrics.confirmedRevenueByCurrency} empty="Nu există venit confirmat în cohortă." /><p className="mt-2 text-xs text-[rgb(var(--text-faint))]">Numai rezultate câștigate înregistrate explicit de o persoană autorizată.</p></div></div><p className="text-xs leading-5 text-[rgb(var(--text-muted))]">{label} · Definiție {snapshot.definitionVersion} · Fus orar {snapshot.timezone} · Prag de inactivitate {snapshot.comparisonPolicy.staleAfterDays} zile.</p></div>;
-}
-
-export default async function PilotProofOfValuePage(props: { searchParams?: Promise<{ pilot?: string }> }) {
+export default async function PilotProofOfValuePage(props: {
+  searchParams?: Promise<{ pilot?: string }>;
+}) {
   const searchParams = await props.searchParams;
-  const workspace = await getPilotMeasurementWorkspace(searchParams?.pilot);
+  const workspace = await getPilotMeasurementWorkspace(
+    searchParams?.pilot
+  );
   const pilot = workspace.pilot;
-  const previewComparison = pilot && workspace.baseline && workspace.livePreview?.snapshotKind === "final" ? comparePilotSnapshots(pilotContract(pilot), workspace.baseline.snapshot_payload, workspace.livePreview) : null;
-  const comparison = workspace.comparison ?? previewComparison;
-  return <PageShell eyebrow="Pilot controlat" title="Dovadă de valoare pilot" description="Baseline imuabil, aceeași cohortă și comparație verificată între situația inițială și situația finală." breadcrumbs={[{ label: "Rapoarte", href: "/reports" }, { label: "Dovadă de valoare pilot" }]} actions={<div className="flex flex-wrap gap-2 print:hidden">{pilot && ["closed", "cancelled"].includes(pilot.status) ? <Button href="/reports/pilot-proof-of-value?pilot=new" variant="secondary" size="small">Configurează un pilot nou</Button> : null}<Button href="/reports/enterprise-pilot-pack" variant="secondary" size="small">Vezi propunerea pilot</Button>{workspace.final ? <PrintProofOfValueButton /> : null}</div>}>
-    <nav aria-label="Etapele dovezii de valoare" className="print:hidden grid grid-cols-2 overflow-hidden border-y border-[rgb(var(--border))] text-xs font-semibold sm:grid-cols-5">{[["01","Contract"],["02","Baseline"],["03","Situație finală"],["04","Schimbare verificată"],["05","Decizie umană"]].map(([number,label]) => <a key={number} href={number === "01" ? "#contract" : number === "02" ? "#baseline" : number === "03" ? "#final-preview" : number === "04" ? "#comparatie" : "#urmatorul-pas"} className="focus-ring flex min-h-12 items-center gap-2 border-r border-[rgb(var(--border))] px-3 last:border-r-0 hover:bg-[rgb(var(--surface-muted))]"><span className="tabular-nums text-[rgb(var(--primary))]">{number}</span>{label}</a>)}</nav>
-    <article className="pilot-proof-of-value min-w-0 w-full space-y-5">
-      {!workspace.available ? <Section id="indisponibil" eyebrow="Mediu local" title="Modelul persistent nu este încă disponibil" description={workspace.error}><p className="text-sm">Aplică migrarea numai în mediul local autorizat, apoi reîncarcă pagina. Nu folosi date găzduite pentru demonstrație.</p></Section> : null}
-      {workspace.available && !pilot ? <><Section id="gol" eyebrow="Stare pilot" title="Nu există încă un pilot activ" description="Creează un lot controlat, stabilește criteriile înainte de măsurare și verifică baseline-ul înainte de înghețare."><div className="flex items-center gap-3 text-sm"><ShieldCheckIcon className="h-5 w-5 text-[rgb(var(--primary))]" /><span>Control uman obligatoriu. Fără trimitere automată și fără promisiune de venit.</span></div></Section><Setup workspace={workspace} /></> : null}
-      {pilot ? <>
-        <section id="contract" className="proof-section min-w-0 scroll-mt-28 rounded-panel border border-[rgb(var(--border-strong))] bg-[rgb(var(--surface))] p-5 sm:p-6"><div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"><div className="min-w-0"><p className="text-label text-[rgb(var(--primary))]">{statusLabels[pilot.status]}</p><h2 className="mt-2 break-words text-2xl font-semibold">{pilot.customerFacingName}</h2><p className="mt-2 break-words text-sm text-[rgb(var(--text-muted))]">{pilot.name} · {pilot.startsOn} — {pilot.expectedEndsOn} · {pilot.cohortOpportunityIds.length} oportunități</p><p className="mt-3 max-w-3xl text-sm leading-6 text-[rgb(var(--text-secondary))]">{pilot.scopeNote}</p></div><div className="flex items-center gap-2 self-start rounded-full border border-[rgb(var(--border))] px-3 py-1.5 text-xs font-semibold"><LockClosedIcon className="h-4 w-4" />{workspace.baseline ? "Contract înghețat" : "Contract în configurare"}</div></div></section>
-        {pilot.status === "cancelled" ? <Section id="anulat" eyebrow="Pilot anulat" title="Nu există o dovadă finală de valoare" description="Un pilot anulat nu este prezentat ca o comparație finală."><p className="text-sm">Motiv înregistrat: {pilot.cancellationReason ?? "Nespecificat"}. Baseline-ul existent rămâne disponibil pentru audit.</p></Section> : null}
-        {pilot.status === "draft" && workspace.livePreview ? <Section id="baseline-preview" eyebrow="B · Previzualizare baseline" title="Confirmă situația inițială" description="Previzualizarea este recalculată din starea autorizată. La confirmare, serverul generează din nou snapshot-ul oficial; datele din browser nu definesc adevărul."><SnapshotSummary snapshot={workspace.livePreview} label={`Previzualizare generată ${formatDateTimeWithSeconds(workspace.livePreview.capturedAt)}`} /><div className="mt-5 rounded-control border border-[rgb(var(--warning-border))] bg-[rgb(var(--warning-background))] p-4"><p className="font-semibold text-[rgb(var(--warning-text))]">Contractul devine imuabil</p><p className="mt-1 text-sm leading-6 text-[rgb(var(--warning-text))]">Cohorta, criteriile, definiția și politica nu mai pot fi schimbate după această acțiune.</p></div>{workspace.canManage ? <form action={freezePilotBaseline} className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><input type="hidden" name="pilotId" value={pilot.id} /><label className="flex items-start gap-2 text-sm"><input required type="checkbox" name="confirm" value="yes" className="mt-1" /><span>Am verificat domeniul, cohorta, criteriile și limitările.</span></label><Button type="submit">Confirmă și îngheață baseline-ul</Button></form> : null}</Section> : null}
-        {workspace.baseline ? <Section id="baseline" eyebrow="C · Situație inițială" title="Baseline pilot înghețat" description={`Capturat ${formatDateTimeWithSeconds(workspace.baseline.captured_at)} · Amprentă de integritate ${workspace.baseline.integrity_hash.slice(0, 12)}…`}><SnapshotSummary snapshot={workspace.baseline.snapshot_payload} label="OBSERVAT / DERIVAT / CONFIRMAT UMAN, conform clasificării fiecărei metrici" /></Section> : null}
-        {pilot.status === "active" && workspace.livePreview ? <Section id="final-preview" eyebrow="D · Revizuire finală" title="Ce s-a schimbat în aceeași cohortă" description="Aceasta este o previzualizare, nu rezultatul oficial. Oportunitățile noi apărute în timpul pilotului sunt raportate separat și nu schimbă cohorta.">{comparison ? <ComparisonView comparison={comparison} preview /> : null}<div className="mt-5 border-t border-[rgb(var(--border))] pt-5"><SnapshotSummary snapshot={workspace.livePreview} label={`Situație curentă observată ${formatDateTimeWithSeconds(workspace.livePreview.capturedAt)}`} /></div>{workspace.canManage ? <form action={freezePilotFinal} className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><input type="hidden" name="pilotId" value={pilot.id} /><label className="flex items-start gap-2 text-sm"><input required type="checkbox" name="confirm" value="yes" className="mt-1" /><span>Am verificat situația finală, rezultatele confirmate și limitările.</span></label><Button type="submit">Confirmă situația finală</Button></form> : null}</Section> : null}
-        {workspace.final && workspace.comparison ? <><Section id="comparatie" eyebrow="E · Comparație verificată" title="Situație inițială → situație la încheiere" description={`Aceeași cohortă și aceeași definiție · situație finală capturată ${formatDateTimeWithSeconds(workspace.final.captured_at)} · amprentă ${workspace.final.integrity_hash.slice(0, 12)}…`}><ComparisonView comparison={workspace.comparison} /></Section><Section id="control" eyebrow="F · Sistem → om → acțiune → rezultat" title="Ce poate fi susținut de dovezi" description="ReveNew identifică excepțiile; oamenii confirmă relevanța, decid acțiunea și înregistrează rezultatul."><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><Metric label="Excepții identificate" value={workspace.final.snapshot_payload.metrics.exceptionCount} note="Derivate din starea comercială canonică" /><Metric label="Confirmate de echipă" value={workspace.final.snapshot_payload.metrics.humanConfirmedExceptions} note="Decizii umane înregistrate" /><Metric label="Acțiuni finalizate" value={workspace.final.snapshot_payload.metrics.actionsCompleted} note="Înregistrări observate" /><Metric label="Rezultate confirmate" value={workspace.final.snapshot_payload.metrics.confirmedOutcomes} note="Rezultat declarat de utilizator" /></div><Link href="/reports/revenue-recovery-audit" className="focus-ring mt-4 inline-flex rounded-sm text-sm font-semibold text-[rgb(var(--primary))] hover:underline">Deschide dovada <ArrowRightIcon className="ml-1 h-4 w-4" /></Link></Section></> : null}
-        {workspace.comparison ? <Section id="limitari" eyebrow="G · Interpretare prudentă" title="Ce nu putem concluziona din acest pilot"><ul className="space-y-2 text-sm leading-6">{workspace.comparison.limitations.map((item) => <li key={item} className="flex gap-2"><ExclamationTriangleIcon className="mt-1 h-4 w-4 shrink-0 text-[rgb(var(--warning-text))]" />{item}</li>)}</ul><p className="mt-4 text-sm font-semibold">Pilotul nu demonstrează că ReveNew a cauzat venit. Valoarea estimată rămâne separată de venitul confirmat.</p></Section> : null}
-        {pilot.status === "final_frozen" && workspace.canManage ? <Section id="inchidere" eyebrow="H · Confirmare managerială" title="Închide pilotul după revizuire" description="Închiderea păstrează contractul și ambele snapshot-uri read-only. Nu este necesar venit confirmat pentru închidere."><form action={closePilotEngagement} className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><input type="hidden" name="pilotId" value={pilot.id} /><label className="flex items-start gap-2 text-sm"><input required type="checkbox" name="confirm" value="yes" className="mt-1" /><span>Confirm că managementul a revizuit criteriile, dovezile și limitările.</span></label><Button type="submit">Închide pilotul</Button></form></Section> : null}
-        {pilot.status === "closed" ? <Section id="urmatorul-pas" eyebrow="I · Discuție managerială" title="Următorul pas de discutat" description="Decizia comercială rămâne umană și nu este derivată automat din scor."><div className="grid gap-3 sm:grid-cols-2"><Link href="/reports/enterprise-pilot-pack" className="focus-ring rounded-control border border-[rgb(var(--border))] p-4 text-sm font-semibold hover:bg-[rgb(var(--surface-muted))]">Continuarea monitorizării pe un domeniu agreat <ArrowRightIcon className="ml-1 inline h-4 w-4" /></Link><p className="rounded-control border border-[rgb(var(--border))] p-4 text-sm">Alternative legitime: extinderea lotului, ajustarea regulilor, conectarea unei surse suplimentare sau oprirea fără extindere.</p></div></Section> : null}
-      </> : null}
-      <footer className="rounded-panel border border-[rgb(var(--border))] bg-[rgb(var(--surface-subtle))] p-5 text-sm leading-6 text-[rgb(var(--text-muted))]"><div className="flex gap-3"><ShieldCheckIcon className="mt-0.5 h-5 w-5 shrink-0 text-[rgb(var(--primary))]" /><p>Valorile estimate nu sunt venit confirmat. Valoare estimată în pipeline, valoare estimată monitorizată și venit confirmat rămân concepte distincte. AI-ul nu generează metricile pilotului și nu confirmă rezultate. Decizia finală este Continuă / ajustează / oprește. Cadență operațională lunară se discută numai dacă dovezile justifică utilitatea recurentă.</p></div></footer>
-    </article>
-  </PageShell>;
-}
 
-function ComparisonView({ comparison, preview = false }: { comparison: NonNullable<PilotMeasurementWorkspace["comparison"]>; preview?: boolean }) {
-  return <div className="space-y-5"><div className="grid gap-3 sm:grid-cols-3"><Metric label="Criterii îndeplinite" value={comparison.criteriaSummary.met} /><Metric label="Criterii neîndeplinite" value={comparison.criteriaSummary.notMet} /><Metric label="Date insuficiente" value={comparison.criteriaSummary.insufficientData} /></div><div className="overflow-x-auto border-y border-[rgb(var(--border))]"><table className="w-full min-w-[640px] text-left text-sm"><caption className="sr-only">Comparația criteriilor pilotului între baseline și situația finală</caption><thead className="bg-[rgb(var(--surface-muted))] text-xs text-[rgb(var(--text-muted))]"><tr><th scope="col" className="p-3">Criteriu</th><th scope="col" className="p-3">Baseline</th><th scope="col" className="p-3">Final</th><th scope="col" className="p-3">Schimbare observată</th><th scope="col" className="p-3">Evaluare</th></tr></thead><tbody>{comparison.criteria.map((item) => <tr key={item.id} className="border-t border-[rgb(var(--border))]"><th scope="row" className="p-3 text-left font-semibold">{item.explanation}</th><td className="p-3 tabular-nums">{item.baselineValue === null ? "—" : item.baselineValue.toFixed(item.unit === "puncte procentuale" ? 1 : 0)}</td><td className="p-3 tabular-nums">{item.finalValue === null ? "—" : item.finalValue.toFixed(item.unit === "puncte procentuale" ? 1 : 0)}</td><td className="p-3 tabular-nums">{item.change === null ? "Necunoscut" : `${item.change >= 0 ? "+" : ""}${item.change.toFixed(item.unit === "puncte procentuale" ? 1 : 0)} ${item.unit}`}</td><td className="p-3"><span className="inline-flex items-center gap-1 font-semibold">{item.status === "met" ? <CheckCircleIcon className="h-4 w-4 text-[rgb(var(--success-text))]" /> : null}{criterionStatus[item.status]}</span></td></tr>)}</tbody></table></div><div className="grid gap-3 sm:grid-cols-3"><div className="border-l-2 border-[rgb(var(--border-strong))] p-4"><p className="text-xs text-[rgb(var(--text-muted))]">Valoare estimată monitorizată</p><CurrencyValues values={comparison.estimatedValueByCurrency} empty="Fără valoare estimată completă" /><p className="mt-2 text-xs text-[rgb(var(--text-faint))]">Deduplicată pe oportunitate; nu este venit confirmat.</p></div><div className="border-l-2 border-[rgb(var(--border-strong))] p-4"><p className="text-xs text-[rgb(var(--text-muted))]">Venit confirmat</p><CurrencyValues values={comparison.confirmedRevenueByCurrency} empty="Fără venit confirmat" /><p className="mt-2 text-xs text-[rgb(var(--text-faint))]">Numai rezultate uman-confirmate.</p></div><Metric label="Noi în timpul pilotului" value={comparison.newDuringPilotOpportunityIds.length} note="Raportate separat; excluse din comparația cohortei" /></div>{preview ? <p className="text-xs font-semibold text-[rgb(var(--warning-text))]">Previzualizare: evaluarea devine oficială numai după confirmarea situației finale.</p> : null}</div>;
+  const previewComparison =
+    pilot &&
+    workspace.baseline &&
+    workspace.livePreview?.snapshotKind === "final"
+      ? comparePilotSnapshots(
+          pilotContract(pilot),
+          workspace.baseline.snapshot_payload,
+          workspace.livePreview
+        )
+      : null;
+
+  const comparison = workspace.comparison ?? previewComparison;
+
+  const proofSnapshot =
+    workspace.final?.snapshot_payload ??
+    workspace.livePreview ??
+    workspace.baseline?.snapshot_payload ??
+    null;
+
+  const proofStartAt = workspace.baseline?.captured_at ?? null;
+  const proofEndAt =
+    workspace.final?.captured_at ??
+    workspace.livePreview?.capturedAt ??
+    null;
+
+  const recoveryProof =
+    pilot &&
+    proofSnapshot &&
+    proofStartAt &&
+    proofEndAt &&
+    pilot.status !== "draft" &&
+    pilot.status !== "cancelled"
+      ? await getPilotRecoveryProof({
+          pilot,
+          snapshot: proofSnapshot,
+          startAt: proofStartAt,
+          endAt: proofEndAt
+        }).catch(() => null)
+      : null;
+
+  return (
+    <PilotProofOfValueExperience
+      workspace={workspace}
+      comparison={comparison}
+      recoveryProof={recoveryProof}
+    />
+  );
 }

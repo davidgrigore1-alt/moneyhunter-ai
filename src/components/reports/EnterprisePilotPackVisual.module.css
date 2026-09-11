@@ -1,0 +1,79 @@
+.root {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.section {
+  border-color: rgb(var(--foreground) / .07) !important;
+  border-radius: 16px !important;
+  padding: 27px 28px !important;
+  background: rgb(var(--surface)) !important;
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / .016) inset,
+    0 18px 52px rgb(0 0 0 / .035);
+}
+
+.root :global(.rounded-card) {
+  border-color: rgb(var(--foreground) / .07) !important;
+  border-radius: 12px !important;
+  padding: 16px 17px !important;
+  background: rgb(var(--surface-subtle) / .7) !important;
+}
+
+.root :global(.rounded-card) p,
+.root :global(.rounded-card) li {
+  line-height: 1.55;
+}
+
+.root :global(.text-label) {
+  letter-spacing: .075em;
+}
+
+.root :global(.pilot-section > p:first-child) {
+  color: rgb(var(--intelligence)) !important;
+  font-size: 10.5px !important;
+  font-weight: 710 !important;
+}
+
+.root :global(.pilot-section > h2) {
+  margin-top: 6px !important;
+  font-size: 21px !important;
+  line-height: 28px !important;
+  letter-spacing: -.026em !important;
+}
+
+.root :global(.pilot-section > h2 + p) {
+  max-width: 840px !important;
+  margin-top: 7px !important;
+  color: rgb(var(--text-secondary)) !important;
+  font-size: 12.5px !important;
+  line-height: 20px !important;
+}
+
+.root :global(.pilot-section > div:last-child) {
+  margin-top: 19px !important;
+}
+
+.root :global(.status-pill),
+.root :global([class*="rounded-full"]) {
+  font-weight: 620;
+}
+
+@media (max-width: 760px) {
+  .section {
+    padding: 21px 18px !important;
+    border-radius: 14px !important;
+  }
+
+  .root :global(.rounded-card) {
+    padding: 15px !important;
+  }
+}
+
+@media print {
+  .section {
+    box-shadow: none;
+    break-inside: avoid;
+  }
+}
